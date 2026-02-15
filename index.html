@@ -193,8 +193,8 @@
 
         <div class="input-group" id="grp_photo" style="display:block;">
             <label>صورة الوصل/العقد:</label>
-            <!-- تم إضافة capture="environment" لتفعيل الكاميرا مباشرة -->
-            <input type="file" id="photo" accept="image/*" capture="environment">
+            <!-- تم إزالة capture لضمان ظهور خيار الكاميرا في أندرويد -->
+            <input type="file" id="photo" accept="image/*">
         </div>
 
         <button class="submit-btn" onclick="prepareData()" id="btn">مراجعة وإرسال 📤</button>

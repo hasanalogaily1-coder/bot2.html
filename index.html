@@ -2,186 +2,184 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام مجمع الحسين</title>
-    <!-- استدعاء مكتبة تيليجرام (للحصول على بيانات المستخدم فقط) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --ios-bg: #F2F2F7;
-            --ios-card: #FFFFFF;
-            --ios-blue: #007AFF;
-            --ios-text: #000000;
-            --ios-text-secondary: #8E8E93;
-            --ios-separator: #C6C6C8;
-            --ios-input-bg: #E9E9EB;
-            --ios-danger: #FF3B30;
-            --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            --primary-color: #2481cc;
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --border-radius: 16px;
+            --input-bg: #f9f9f9;
         }
 
         body {
-            font-family: var(--font-family);
-            background-color: var(--tg-theme-secondary-bg-color, var(--ios-bg));
-            color: var(--tg-theme-text-color, var(--ios-text));
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, var(--bg-color));
+            color: var(--tg-theme-text-color, var(--text-primary));
+            padding: 15px;
             margin: 0;
-            padding: 20px 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-            touch-action: manipulation;
         }
 
-        .container { width: 100%; max-width: 420px; margin: 0 auto; }
+        .container { 
+            width: 100%; 
+            max-width: 450px; 
+            margin: 0 auto;
+        }
         
         .user-badge {
-            background-color: var(--tg-theme-bg-color, rgba(255, 255, 255, 0.8));
-            color: var(--tg-theme-hint-color, var(--ios-text-secondary));
-            padding: 6px 16px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 500;
-            margin-bottom: 24px;
+            background-color: var(--tg-theme-secondary-bg-color, rgba(36, 129, 204, 0.1));
+            color: var(--tg-theme-text-color, var(--primary-color));
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
             text-align: center;
-            display: table;
-            margin-left: auto;
-            margin-right: auto;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
         }
 
-        h3 {
-            font-size: 28px; font-weight: 700; margin: 0 0 20px 0;
-            color: var(--tg-theme-text-color, #000); letter-spacing: -0.5px;
-            text-align: right; padding-right: 5px;
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
-
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
         .menu-btn {
-            background: var(--tg-theme-bg-color, var(--ios-card));
-            padding: 20px; border: none; border-radius: 18px;
-            font-size: 15px; font-weight: 600; cursor: pointer;
-            color: var(--tg-theme-text-color, var(--ios-text));
-            display: flex; flex-direction: column; align-items: flex-start;
-            justify-content: space-between; height: 110px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-            transition: transform 0.1s; position: relative; overflow: hidden;
+            padding: 20px 15px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            width: 100%;
         }
-        .menu-btn:active { transform: scale(0.96); }
         
-        .menu-btn .icon-box {
-            width: 38px; height: 38px; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; margin-bottom: 10px; pointer-events: none;
+        .menu-btn:active { transform: scale(0.96); }
+        .menu-btn.full-width { grid-column: span 2; flex-direction: row; }
+
+        .btn-contract { background: linear-gradient(135deg, #f1c40f, #f39c12); }
+        .btn-receipt { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .btn-bank { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .btn-expense { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .btn-history { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+
+        .form-section { 
+            display: none; 
+            width: 100%; 
+            background: var(--tg-theme-secondary-bg-color, var(--card-bg));
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+            animation: slideUp 0.3s ease-out;
         }
-        .menu-btn span { pointer-events: none; }
-        .menu-btn.full-width { grid-column: span 2; flex-direction: row; align-items: center; height: auto; padding: 18px 20px; gap: 15px; }
-        .menu-btn.full-width .icon-box { margin-bottom: 0; }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .btn-contract .icon-box { background: #FFF7D6; color: #FF9500; }
-        .btn-receipt .icon-box { background: #E2F9E8; color: #34C759; }
-        .btn-bank .icon-box { background: #E1F2FF; color: #007AFF; }
-        .btn-expense .icon-box { background: #FFEBEA; color: #FF3B30; }
-        .btn-history .icon-box { background: #F2E6FF; color: #AF52DE; }
+        h3 { margin-top: 0; color: var(--tg-theme-text-color, #333); }
 
-        .form-section { display: none; width: 100%; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .ios-card-group {
-            background: var(--tg-theme-bg-color, var(--ios-card));
-            border-radius: 18px; padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 20px;
+        .input-group { margin-bottom: 16px; display: none; }
+        
+        label { 
+            font-weight: 600; font-size: 14px; margin-bottom: 8px; display: block; 
+            color: var(--tg-theme-hint-color, #555); 
         }
-
-        .input-group { margin-bottom: 18px; display: none; }
-        label { font-weight: 500; font-size: 13px; margin-bottom: 8px; display: block; color: var(--tg-theme-hint-color, var(--ios-text-secondary)); text-transform: uppercase; }
+        
         input, select, textarea {
-            width: 100%; padding: 14px 16px; border: none;
-            background-color: var(--tg-theme-secondary-bg-color, var(--ios-input-bg));
-            border-radius: 12px; box-sizing: border-box;
-            color: var(--tg-theme-text-color, var(--ios-text));
-            font-size: 17px; font-family: inherit; -webkit-appearance: none;
+            width: 100%; padding: 14px;
+            border: 2px solid transparent;
+            background-color: var(--tg-theme-bg-color, var(--input-bg));
+            border-radius: 12px;
+            box-sizing: border-box;
+            color: var(--tg-theme-text-color, #000);
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: inherit;
         }
-        input:focus { outline: none; background-color: var(--tg-theme-bg-color, #E1E1E6); }
+        
+        input:focus, select:focus, textarea:focus { 
+            outline: none; background-color: var(--tg-theme-secondary-bg-color, #fff);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(36, 129, 204, 0.1);
+        }
 
-        .photo-upload-box {
-            position: relative; border-radius: 12px;
-            background: var(--tg-theme-secondary-bg-color, var(--ios-input-bg));
-            border: 2px dashed #C7C7CC; text-align: center;
-            height: 100px; display: flex; align-items: center; justify-content: center;
-        }
-        .photo-label { display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--ios-text-secondary); font-size: 14px; }
+        .date-container { display: flex; gap: 8px; }
+        .date-select { flex: 1; text-align: center; cursor: pointer; }
 
         .submit-btn {
-            width: 100%; padding: 16px; margin-top: 10px;
-            background-color: var(--tg-theme-button-color, var(--ios-blue));
-            color: white; border: none; border-radius: 14px;
-            font-size: 17px; font-weight: 600; cursor: pointer;
+            width: 100%; padding: 16px; margin-top: 25px;
+            background: linear-gradient(135deg, #2481cc, #1a6cb0);
+            color: white; border: none; border-radius: 12px;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(36, 129, 204, 0.3);
+            transition: transform 0.2s;
         }
+        .submit-btn:active { transform: scale(0.98); }
+
         .back-btn {
-            background: none; border: none; color: var(--tg-theme-button-color, var(--ios-blue));
-            margin-bottom: 20px; cursor: pointer; font-size: 17px;
-            display: flex; align-items: center; padding: 0; font-weight: 500;
+            background: none; border: none; color: var(--tg-theme-hint-color, #777);
+            margin-bottom: 15px; cursor: pointer; font-size: 14px;
+            display: flex; align-items: center; padding: 0;
         }
 
+        /* السجل */
         .history-card {
-            background: var(--tg-theme-bg-color, var(--ios-card));
-            padding: 16px; margin-bottom: 12px; border-radius: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-            cursor: pointer; border-left: 4px solid transparent;
+            background: var(--tg-theme-secondary-bg-color, #fff);
+            padding: 15px; margin-bottom: 12px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-right: 5px solid #ccc;
+            display: flex; flex-direction: column; gap: 5px;
+            cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; position: relative;
         }
-        .h-header { display: flex; justify-content: space-between; font-size: 13px; color: var(--ios-text-secondary); }
-        .h-title { font-weight: 600; font-size: 17px; color: var(--tg-theme-text-color, #000); }
-        .status-badge { background: rgba(52, 199, 89, 0.15); color: #34C759; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .history-card:active { transform: scale(0.98); }
+        
+        .h-header { display: flex; justify-content: space-between; font-size: 12px; color: #888; }
+        .h-title { font-weight: bold; font-size: 16px; margin-top: 4px; }
+        .h-detail { font-size: 14px; color: var(--tg-theme-hint-color, #555); }
+        .status-success { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;}
+        .edit-hint { position: absolute; left: 15px; bottom: 15px; font-size: 20px; color: #ccc; }
+        .no-history { text-align: center; color: #888; margin-top: 40px; font-style: italic; }
 
-        /* Custom Alert & Modal Styles */
+        /* نافذة التأكيد */
         .modal {
-            display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.4); align-items: center; justify-content: center; backdrop-filter: blur(2px);
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; backdrop-filter: blur(3px);
         }
-        
-        /* Bottom Sheet for Confirm */
-        .bottom-sheet {
-            align-items: flex-end; /* Align to bottom */
-        }
-        .bottom-sheet .modal-content {
-            border-radius: 24px 24px 0 0;
-            width: 100%; max-width: 450px;
-            animation: slideUp 0.3s;
-            padding-bottom: 40px;
-        }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-        /* iOS Alert Style */
-        .ios-alert {
-            background-color: rgba(245, 245, 245, 0.95);
-            width: 270px; border-radius: 14px;
-            text-align: center; overflow: hidden;
-            backdrop-filter: blur(20px);
-            animation: popIn 0.2s;
-        }
-        .alert-title { font-weight: 600; font-size: 17px; margin: 20px 0 5px; color: #000; }
-        .alert-msg { font-size: 13px; color: #000; margin-bottom: 20px; padding: 0 15px; }
-        .alert-btn { 
-            border-top: 1px solid rgba(60, 60, 67, 0.29); 
-            padding: 12px; color: #007AFF; font-weight: 600; font-size: 17px; 
-            cursor: pointer; width: 100%; background: transparent; border-left: none; border-right: none; border-bottom: none;
-        }
-        
         .modal-content {
-            background-color: var(--tg-theme-bg-color, #F2F2F7);
-            padding: 24px; color: var(--tg-theme-text-color, #000);
+            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
+            padding: 25px; border-radius: 20px; width: 85%; max-width: 350px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: right; color: var(--tg-theme-text-color, #000);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .summary-list { background: #fff; border-radius: 12px; padding: 0 16px; margin: 20px 0; }
-        .summary-item { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #E5E5EA; font-size: 15px; }
-        .summary-item:last-child { border-bottom: none; }
+        .summary-list { margin: 20px 0; background: var(--tg-theme-bg-color, #f8f9fa); padding: 15px; border-radius: 12px; font-size: 14px; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #ddd; padding-bottom: 5px; }
+        .summary-item:last-child { border-bottom: none; margin-bottom: 0; }
+        .s-label { font-weight: bold; color: var(--tg-theme-hint-color, #666); }
+        .s-value { font-weight: bold; color: var(--primary-color); }
+        
         .modal-buttons { display: flex; gap: 12px; margin-top: 25px; }
-        .btn-confirm { flex: 1; background: #007AFF; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 16px; }
-        .btn-cancel { flex: 1; background: rgba(142, 142, 147, 0.15); color: #007AFF; border: none; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 16px; }
-        .btn-disabled { opacity: 0.6; pointer-events: none; }
+        .btn-confirm { flex: 2; background: #2ecc71; color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 15px; }
+        .btn-cancel { flex: 1; background: #e74c3c; color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 15px; }
+        .btn-disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(0.5); }
 
-        @keyframes popIn { from { transform: scale(1.1); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -190,388 +188,544 @@
     <div class="user-badge" id="userBadge"></div>
     
     <div id="mainMenu">
-        <h3>الخدمات المتاحة</h3>
+        <h3 style="text-align: center; margin-bottom: 25px; font-size: 20px;">اختر نوع العملية 👇</h3>
         <div class="menu-grid">
-            <button class="menu-btn btn-contract" onclick="openForm('contract')">
-                <div class="icon-box">📄</div><span>عقد جديد</span>
-            </button>
-            <button class="menu-btn btn-receipt" onclick="openForm('receipt')">
-                <div class="icon-box">📥</div><span>وصل قبض</span>
-            </button>
-            <button class="menu-btn btn-bank" onclick="openForm('bank')">
-                <div class="icon-box">🏦</div><span>وصل مصرف</span>
-            </button>
-            <button class="menu-btn btn-expense" onclick="openForm('expense')">
-                <div class="icon-box">💸</div><span>مصاريف</span>
-            </button>
-            <button class="menu-btn btn-history full-width" onclick="showHistory()">
-                <div class="icon-box">🕒</div><span>سجل العمليات السابقة</span>
-            </button>
+            <button class="menu-btn btn-contract" onclick="setupForm('contract')"><span>📄</span> عقد جديد</button>
+            <button class="menu-btn btn-receipt" onclick="setupForm('receipt')"><span>📥</span> وصل قبض</button>
+            <button class="menu-btn btn-bank" onclick="setupForm('bank')"><span>🏦</span> وصل مصرف</button>
+            <button class="menu-btn btn-expense" onclick="setupForm('expense')"><span>💸</span> مصاريف</button>
+            <button class="menu-btn btn-history full-width" onclick="showHistory()"><span>🕒</span> سجل العمليات</button>
         </div>
     </div>
 
     <!-- قسم الفورم -->
     <div id="formSection" class="form-section">
         <button class="back-btn" onclick="showMenu()">
-            <span style="font-size:20px; margin-left:5px;">‹</span> رجوع
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 5px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            رجوع للقائمة
         </button>
-        <h2 id="formTitle" style="margin: 0 0 20px 0; font-size: 28px; font-weight: 700;"></h2>
-        <div class="ios-card-group">
-            <div class="input-group" id="grp_type">
-                <label>نوع العملية</label><select id="transactionType"></select>
+        <h3 id="formTitle" style="text-align: center; margin-bottom: 20px; font-size: 18px;"></h3>
+        
+        <div class="input-group" id="grp_type">
+            <label>نوع العملية:</label>
+            <select id="transactionType"></select>
+        </div>
+
+        <div class="input-group" id="grp_contractNum">
+            <label>رقم العقد:</label>
+            <input type="text" inputmode="numeric" id="contractNum" placeholder="مثلاً: 105">
+        </div>
+
+        <div class="input-group" id="grp_receiptNum">
+            <label id="lbl_receiptNum">رقم الوصل:</label>
+            <input type="text" inputmode="numeric" id="receiptNum">
+        </div>
+
+        <div class="input-group" id="grp_houseNum">
+            <label id="lbl_houseNum">رقم الدار:</label>
+            <input type="text" id="houseNum" inputmode="decimal">
+            <div id="houseHint" class="hint" style="display:none;">يمكنك كتابة عدة أرقام مفصولة بفارزة</div>
+        </div>
+
+        <div class="input-group" id="grp_name">
+            <label>الاسم (صاحب المعاملة):</label>
+            <input type="text" id="name">
+        </div>
+
+        <div class="input-group" id="grp_contractDetails">
+            <label>المقدمة:</label>
+            <input type="text" inputmode="decimal" id="downPayment" class="amount-field">
+            <label style="margin-top:15px;">السعر الكلي:</label>
+            <input type="text" inputmode="decimal" id="totalPrice" class="amount-field">
+        </div>
+
+        <div class="input-group" id="grp_amount">
+            <label>المبلغ:</label>
+            <input type="text" inputmode="decimal" id="amount" class="amount-field">
+        </div>
+
+        <div class="input-group" id="grp_reason">
+            <label>سبب الصرف:</label>
+            <textarea id="reason" rows="3"></textarea>
+        </div>
+
+        <div class="input-group" id="grp_date" style="display:block;">
+            <label>التاريخ:</label>
+            <div class="date-container">
+                <select id="date_day" class="date-select"></select>
+                <select id="date_month" class="date-select"></select>
+                <select id="date_year" class="date-select"></select>
             </div>
-            <div class="input-group" id="grp_contractNum">
-                <label>رقم العقد</label><input type="text" inputmode="numeric" id="contractNum" placeholder="105">
-            </div>
-            <div class="input-group" id="grp_receiptNum">
-                <label>رقم الوصل</label><input type="text" inputmode="numeric" id="receiptNum">
-            </div>
-            <div class="input-group" id="grp_houseNum">
-                <label>رقم الدار</label><input type="text" id="houseNum" inputmode="decimal">
-                <div style="font-size:11px; color:#8E8E93; margin-top:4px;">يمكنك كتابة عدة أرقام</div>
-            </div>
-            <div class="input-group" id="grp_name">
-                <label>الاسم</label><input type="text" id="name">
-            </div>
-            <div class="input-group" id="grp_contractDetails">
-                <label>المقدمة</label><input type="text" inputmode="decimal" id="downPayment" class="amount-field" style="margin-bottom:15px;">
-                <label>السعر الكلي</label><input type="text" inputmode="decimal" id="totalPrice" class="amount-field">
-            </div>
-            <div class="input-group" id="grp_amount">
-                <label>المبلغ</label><input type="text" inputmode="decimal" id="amount" class="amount-field">
-            </div>
-            <div class="input-group" id="grp_reason">
-                <label>السبب</label><textarea id="reason" rows="3"></textarea>
-            </div>
-            <div class="input-group" id="grp_date" style="display:block;">
-                <label>التاريخ</label>
-                <div class="date-container">
-                    <select id="date_day" class="date-select"></select>
-                    <select id="date_month" class="date-select"></select>
-                    <select id="date_year" class="date-select"></select>
+        </div>
+
+        <div class="input-group" id="grp_photo" style="display:block;">
+            <label>صورة الوصل/العقد:</label>
+            <div style="position: relative; overflow: hidden; border-radius: 12px; background: var(--tg-theme-bg-color, #eee);">
+                <input type="file" id="photo" accept="image/*" style="opacity: 0; position: absolute; width:100%; height:100%; z-index: 2; cursor: pointer;">
+                <div style="padding: 15px; text-align: center; color: var(--tg-theme-hint-color, #777); border: 2px dashed #ccc; border-radius: 12px;">
+                    📸 اضغط لالتقاط أو اختيار صورة
                 </div>
             </div>
         </div>
-        <div class="input-group" id="grp_photo" style="display:block;">
-            <div class="photo-upload-box" onclick="document.getElementById('photo').click()">
-                <input type="file" id="photo" accept="image/*" style="opacity: 0; position: absolute; width:100%; height:100%; z-index: 2; cursor: pointer;">
-                <div class="photo-label"><span style="font-size: 24px;">📷</span><span id="photoText">اضغط لإرفاق الصورة</span></div>
-            </div>
-        </div>
-        <button class="submit-btn" onclick="prepareData()" id="btn">مراجعة وإرسال</button>
+
+        <button class="submit-btn" onclick="prepareData()" id="btn">مراجعة وإرسال 📤</button>
     </div>
 
     <!-- قسم السجل -->
     <div id="historySection" class="form-section">
         <button class="back-btn" onclick="showMenu()">
-             <span style="font-size:20px; margin-left:5px;">‹</span> الرئيسية
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 5px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            رجوع للقائمة
         </button>
-        <h3 style="margin-bottom: 10px;">السجل</h3>
+        <h3 style="text-align: center; margin-bottom: 20px;">سجل العمليات 🕒</h3>
+        <p style="text-align: center; font-size: 12px; color: #888; margin-bottom: 15px;">💡 اضغط على أي عملية للتعديل عليها وإعادة إرسالها</p>
         <div id="historyList"></div>
-        <button onclick="clearHistory()" style="background:none; border:none; color: #FF3B30; width:100%; margin-top:20px; font-weight: 500;">مسح السجل</button>
+        <button onclick="clearHistory()" style="background:none; border:none; color: #e74c3c; width:100%; margin-top:25px; cursor:pointer; font-weight: bold; padding: 10px;">مسح السجل</button>
     </div>
 </div>
 
-<!-- نافذة التنبيه المخصصة (تعمل على كل الإصدارات) -->
-<div id="customAlert" class="modal">
-    <div class="ios-alert">
-        <div class="alert-title">تنبيه</div>
-        <div class="alert-msg" id="alertMessage">رسالة</div>
-        <button class="alert-btn" onclick="closeCustomAlert()">موافق</button>
-    </div>
-</div>
-
-<!-- نافذة التأكيد -->
-<div id="confirmModal" class="modal bottom-sheet">
+<div id="confirmModal" class="modal">
     <div class="modal-content">
-        <div style="width: 40px; height: 5px; background: #E5E5EA; border-radius: 10px; margin: 0 auto 20px auto;"></div>
-        <h3 style="text-align: center; margin: 0; font-size: 22px;">ملخص العملية</h3>
+        <h3 style="text-align: center;">🔍 مراجعة البيانات</h3>
         <div class="summary-list" id="summaryContent"></div>
+        <p style="font-size:13px; color:green; text-align:center; font-weight: bold;">هل أنت متأكد من صحة المعلومات؟</p>
         <div class="modal-buttons">
+            <button class="btn-confirm" onclick="finalSend()" id="btnConfirm">نعم، إرسال ✅</button>
             <button class="btn-cancel" onclick="closeModal()" id="btnCancel">تعديل</button>
-            <button class="btn-confirm" onclick="finalSend()" id="btnConfirm">تأكيد وإرسال</button>
         </div>
     </div>
 </div>
 
 <script>
+    // ==========================================
+    // معلومات الاتصال المباشر (الطريقة القديمة)
     const WEBHOOK_URL = "https://hrh1.app.n8n.cloud/webhook/85baeb02-5fd1-4e87-8249-04956c78a414";
     const BOT_TOKEN = "8587976862:AAE8X1osdW9n_fPqr6N4mY2jDwRstEe_GPc"; 
     const CHAT_ID = "5762584781"; 
+    // ==========================================
 
     let currentType = '';
     let pendingPayload = null; 
     let pendingCaption = "";
     
-    // محاولة الحصول على بيانات المستخدم بأمان
-    let dataEntryUser = "مستخدم";
-    let dataEntryChatId = "";
-    try {
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            dataEntryUser = tg.initDataUnsafe.user.first_name;
-            dataEntryChatId = tg.initDataUnsafe.user.id;
-        }
-    } catch (e) { console.log("Telegram init error", e); }
-    
-    document.getElementById('userBadge').innerText = `المستخدم: ${dataEntryUser}`;
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-    // --- دوال النظام الأساسية ---
-    function showCustomAlert(msg) {
-        document.getElementById('alertMessage').innerText = msg;
-        document.getElementById('customAlert').style.display = 'flex';
-    }
-    window.closeCustomAlert = function() {
-        document.getElementById('customAlert').style.display = 'none';
+    const user = tg.initDataUnsafe?.user;
+    const dataEntryUser = user ? `${user.first_name} ${user.last_name || ''}`.trim() : "";
+    const dataEntryChatId = user ? user.id : ""; 
+    
+    if (dataEntryUser) {
+        document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${dataEntryUser}`;
     }
 
     function initDateSelectors() {
-        const dS = document.getElementById('date_day'), mS = document.getElementById('date_month'), yS = document.getElementById('date_year');
+        const daySelect = document.getElementById('date_day');
+        const monthSelect = document.getElementById('date_month');
+        const yearSelect = document.getElementById('date_year');
         const today = new Date();
-        for(let d=1; d<=31; d++) { let o=document.createElement('option'); o.value=d; o.innerText=d; if(d===today.getDate()) o.selected=true; dS.appendChild(o); }
-        for(let m=1; m<=12; m++) { let o=document.createElement('option'); o.value=m; o.innerText=m; if(m===today.getMonth()+1) o.selected=true; mS.appendChild(o); }
-        for(let y=today.getFullYear(); y<=today.getFullYear()+5; y++) { let o=document.createElement('option'); o.value=y; o.innerText=y; if(y===today.getFullYear()) o.selected=true; yS.appendChild(o); }
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth() + 1;
+        const currentDay = today.getDate();
+
+        for (let d = 1; d <= 31; d++) {
+            let opt = document.createElement('option'); opt.value = d; opt.innerHTML = d;
+            if (d === currentDay) opt.selected = true; daySelect.appendChild(opt);
+        }
+        for (let m = 1; m <= 12; m++) {
+            let opt = document.createElement('option'); opt.value = m; opt.innerHTML = m; 
+            if (m === currentMonth) opt.selected = true; monthSelect.appendChild(opt);
+        }
+        for (let y = currentYear - 1; y <= currentYear + 5; y++) {
+            let opt = document.createElement('option'); opt.value = y; opt.innerHTML = y;
+            if (y === currentYear) opt.selected = true; yearSelect.appendChild(opt);
+        }
     }
     initDateSelectors();
 
-    // تنسيق الأرقام
-    function getCleanNumber(val) { return val ? val.replace(/[^\d]/g, '') : ''; }
-    function formatWithCommas(val) { const n = getCleanNumber(val); return n ? parseInt(n).toLocaleString('en-US') : ''; }
+    function normalizeDigits(str) { return str ? str.toString().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; }
+    function getCleanNumber(value) { if (!value) return ''; let normalized = normalizeDigits(value); return normalized.replace(/[^\d]/g, ''); }
+    function formatWithCommas(value) { let cleanValue = getCleanNumber(value); if (!cleanValue) return ''; return parseInt(cleanValue).toLocaleString('en-US'); }
+
+    function validateLimit(id, max, label) {
+        const el = document.getElementById(id);
+        const val = parseFloat(getCleanNumber(el.value));
+        if (isNaN(val) || el.value.trim() === '') return true; 
+        if (val > max) {
+            el.style.border = "2px solid #e74c3c"; 
+            el.focus();
+            tg.showAlert(`عذراً، القيمة المدخلة في حقل "${label}" غير صحيحة أو خارج النطاق المسموح.`);
+            return false;
+        }
+        el.style.border = "2px solid transparent"; 
+        return true;
+    }
+
+    document.querySelectorAll('input').forEach(input => { input.addEventListener('input', () => { input.style.border = "2px solid transparent"; }); });
     
-    document.querySelectorAll('.amount-field').forEach(inp => {
-        inp.addEventListener('input', (e) => {
-            const val = e.target.value;
-            e.target.value = formatWithCommas(val);
+    document.getElementById('photo').addEventListener('change', function() {
+        const fileName = this.files[0] ? `✅ تم اختيار: ${this.files[0].name}` : '📸 اضغط لالتقاط أو اختيار صورة';
+        this.nextElementSibling.innerText = fileName;
+        this.nextElementSibling.style.color = this.files[0] ? '#2ecc71' : '#777';
+        this.nextElementSibling.style.borderColor = this.files[0] ? '#2ecc71' : '#ccc';
+    });
+
+    document.querySelectorAll('.amount-field').forEach(input => {
+        input.addEventListener('input', (e) => {
+            let cursorPosition = e.target.selectionStart;
+            let oldCommas = (e.target.value.slice(0, cursorPosition).match(/,/g) || []).length;
+            e.target.value = formatWithCommas(e.target.value);
+            let newCommas = (e.target.value.slice(0, cursorPosition).match(/,/g) || []).length;
+            let newPos = cursorPosition + (newCommas - oldCommas);
+            e.target.setSelectionRange(newPos, newPos);
         });
     });
 
-    // التنقل
-    window.showMenu = function() {
+    function showMenu() {
         document.getElementById('formSection').style.display = 'none';
         document.getElementById('historySection').style.display = 'none';
         document.getElementById('mainMenu').style.display = 'block';
     }
 
     function hideAllFields() {
-        document.querySelectorAll('.input-group').forEach(g => { 
-            if(g.id!=='grp_date' && g.id!=='grp_photo') g.style.display='none'; 
-        });
+        const groups = document.querySelectorAll('.input-group');
+        groups.forEach(g => { if(g.id !== 'grp_date' && g.id !== 'grp_photo') g.style.display = 'none'; });
+        document.getElementById('houseHint').style.display = 'none';
+        document.getElementById('houseNum').inputmode = 'decimal';
+        document.querySelectorAll('input').forEach(i => i.style.border = "2px solid transparent");
+        
         document.getElementById('photo').value = '';
-        document.getElementById('photoText').innerText = "اضغط لإرفاق الصورة";
-        document.getElementById('photoText').style.color = "#8E8E93";
-        document.querySelector('.photo-upload-box').style.borderColor = "#C7C7CC";
+        const photoLabel = document.getElementById('photo').nextElementSibling;
+        photoLabel.innerText = '📸 اضغط لالتقاط أو اختيار صورة';
+        photoLabel.style.color = '#777';
+        photoLabel.style.borderColor = '#ccc';
     }
 
-    window.openForm = function(type) {
+    function setupForm(type) {
         currentType = type;
         hideAllFields();
         document.getElementById('mainMenu').style.display = 'none';
         document.getElementById('formSection').style.display = 'block';
-        document.querySelectorAll('input:not([type="file"]), textarea').forEach(i => i.value='');
-        
-        const titleMap = { 'contract': 'عقد جديد', 'receipt': 'وصل قبض', 'bank': 'وصل مصرف', 'expense': 'مصاريف' };
-        document.getElementById('formTitle').innerText = titleMap[type];
+        document.querySelectorAll('input:not([type="file"]), textarea').forEach(i => i.value = '');
 
-        if(type === 'contract') {
-            ['grp_contractNum', 'grp_houseNum', 'grp_name', 'grp_contractDetails'].forEach(id => document.getElementById(id).style.display = 'block');
-            document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب)";
-        } else if(type === 'receipt') {
-            ['grp_type', 'grp_receiptNum', 'grp_houseNum', 'grp_amount'].forEach(id => document.getElementById(id).style.display = 'block');
-            document.getElementById('transactionType').innerHTML = '<option value="قسط">قسط</option><option value="دفعة">دفعة</option>';
-            document.getElementById('lbl_receiptNum').innerText = "رقم الوصل (مطلوب)";
-        } else if(type === 'bank') {
-            ['grp_type', 'grp_receiptNum', 'grp_houseNum', 'grp_amount'].forEach(id => document.getElementById(id).style.display = 'block');
-            document.getElementById('transactionType').innerHTML = '<option value="محامي">محامي</option><option value="عمولة">عمولة</option><option value="قرض">قرض</option>';
-            document.getElementById('lbl_receiptNum').innerText = "رقم الوصل (اختياري)";
-        } else if(type === 'expense') {
-            ['grp_houseNum', 'grp_name', 'grp_reason', 'grp_amount'].forEach(id => document.getElementById(id).style.display = 'block');
-            document.getElementById('lbl_houseNum').innerText = "رقم الدار (اختياري)";
+        const title = document.getElementById('formTitle');
+        const typeSelect = document.getElementById('transactionType');
+
+        if (type === 'contract') {
+            title.innerText = '📄 عقد جديد';
+            document.getElementById('grp_contractNum').style.display = 'block';
+            document.getElementById('grp_houseNum').style.display = 'block';
+            document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب):";
+            document.getElementById('grp_name').style.display = 'block';
+            document.getElementById('grp_contractDetails').style.display = 'block';
+        } else if (type === 'receipt') {
+            title.innerText = '📥 وصل قبض';
+            document.getElementById('grp_type').style.display = 'block';
+            typeSelect.innerHTML = '<option value="قسط">قسط</option><option value="دفعة">دفعة</option>';
+            document.getElementById('grp_receiptNum').style.display = 'block';
+            document.getElementById('lbl_receiptNum').innerText = "رقم الوصل (مطلوب):";
+            document.getElementById('grp_houseNum').style.display = 'block';
+            document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب):";
+            document.getElementById('grp_amount').style.display = 'block';
+        } else if (type === 'bank') {
+            title.innerText = '🏦 وصل مصرف';
+            document.getElementById('grp_type').style.display = 'block';
+            typeSelect.innerHTML = '<option value="محامي">محامي</option><option value="عمولة">عمولة</option><option value="قرض">قرض</option>';
+            document.getElementById('grp_receiptNum').style.display = 'block';
+            document.getElementById('lbl_receiptNum').innerText = "رقم الوصل (اختياري):";
+            document.getElementById('grp_houseNum').style.display = 'block';
+            document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب):";
+            document.getElementById('grp_amount').style.display = 'block';
+        } else if (type === 'expense') {
+            title.innerText = '💸 مصاريف';
+            document.getElementById('grp_houseNum').style.display = 'block';
+            document.getElementById('lbl_houseNum').innerText = "رقم الدار (اختياري):";
+            document.getElementById('houseHint').style.display = 'block';
+            document.getElementById('houseNum').inputmode = 'text'; 
+            document.getElementById('grp_name').style.display = 'block';
+            document.getElementById('grp_reason').style.display = 'block';
+            document.getElementById('grp_amount').style.display = 'block';
         }
     }
 
-    // التحقق والتجهيز
-    window.prepareData = function() {
-        const photo = document.getElementById("photo").files[0];
-        if(!photo) { showCustomAlert("⚠️ يرجى إرفاق صورة!"); return; }
+    function prepareData() {
+        const photoInput = document.getElementById("photo").files[0];
+        if (!photoInput) { tg.showAlert("يرجى إرفاق صورة!"); return; }
 
-        const date = `${document.getElementById('date_year').value}-${document.getElementById('date_month').value.padStart(2,'0')}-${document.getElementById('date_day').value.padStart(2,'0')}`;
+        const d = document.getElementById('date_day').value.padStart(2, '0');
+        const m = document.getElementById('date_month').value.padStart(2, '0');
+        const y = document.getElementById('date_year').value;
+        const date = `${y}-${m}-${d}`;
         const name = document.getElementById("name").value.trim();
-        
-        // التحقق من الحدود
-        if(['contract', 'receipt', 'bank'].includes(currentType)) {
-            const house = parseFloat(getCleanNumber(document.getElementById('houseNum').value));
-            if(house > 1178) { showCustomAlert("❌ رقم الدار غير صحيح (تجاوز الحد المسموح)"); return; }
-        }
 
-        // بناء البيانات
-        pendingPayload = {
-            operation_type: currentType, date: date, name: name, 
-            data_entry_user: dataEntryUser, data_entry_chat_id: dataEntryChatId,
-            timestamp: new Date().toISOString()
+        let payload = { 
+            operation_type: currentType, 
+            date: date, 
+            name: name, 
+            data_entry_user: dataEntryUser, 
+            data_entry_chat_id: dataEntryChatId, 
+            timestamp: new Date().toISOString() 
         };
 
-        if(currentType === 'contract') {
-            const cNum = document.getElementById('contractNum').value;
-            const total = document.getElementById('totalPrice').value;
-            if(!cNum || !name || !total) { showCustomAlert("يرجى ملء كافة الحقول!"); return; }
-            pendingPayload.contract_num = cNum;
-            pendingPayload.house_num = document.getElementById('houseNum').value;
-            pendingPayload.down_payment = getCleanNumber(document.getElementById('downPayment').value);
-            pendingPayload.total_price = getCleanNumber(total);
-        } else if(currentType === 'receipt' || currentType === 'bank') {
-            const amount = document.getElementById('amount').value;
-            if(!amount) { showCustomAlert("يرجى كتابة المبلغ!"); return; }
-            pendingPayload.sub_type = document.getElementById('transactionType').value;
-            pendingPayload.receipt_num = document.getElementById('receiptNum').value || "-";
-            pendingPayload.house_num = document.getElementById('houseNum').value;
-            pendingPayload.amount = getCleanNumber(amount);
-        } else if(currentType === 'expense') {
-            const amount = document.getElementById('amount').value;
-            const reason = document.getElementById('reason').value;
-            if(!amount || !reason) { showCustomAlert("يرجى كتابة المبلغ والسبب!"); return; }
-            pendingPayload.house_num = document.getElementById('houseNum').value || "عام";
-            pendingPayload.reason = reason;
-            pendingPayload.amount = getCleanNumber(amount);
+        if (['contract', 'receipt', 'bank'].includes(currentType)) {
+            if (!validateLimit('houseNum', 1178, 'رقم الدار')) return;
         }
 
-        // بناء الكابشن
-        pendingCaption = buildCaption(pendingPayload);
-        
-        // عرض الملخص
-        let html = "";
-        const labels = { 'contract_num':'رقم العقد', 'house_num':'الدار', 'name':'الاسم', 'amount':'المبلغ', 'total_price':'السعر الكلي' };
-        for(let k in pendingPayload) {
-            if(labels[k]) html += `<div class="summary-item"><span class="s-label">${labels[k]}</span><span class="s-value">${pendingPayload[k]}</span></div>`;
+        if (currentType === 'contract') {
+            if (!validateLimit('contractNum', 999999, 'رقم العقد')) return;
+            if (!validateLimit('totalPrice', 500000000, 'السعر الكلي')) return;
+            if (!validateLimit('downPayment', 150000000, 'المقدمة')) return;
+
+            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
+            if (name.split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
+            const cNum = document.getElementById('contractNum').value;
+            const hNum = document.getElementById('houseNum').value;
+            const down = document.getElementById('downPayment').value; 
+            const total = document.getElementById('totalPrice').value;
+            if (!cNum || !hNum || !down || !total) { tg.showAlert("يرجى ملء كافة حقول العقد!"); return; }
+            payload.contract_num = cNum; payload.house_num = hNum; payload.down_payment = getCleanNumber(down); payload.total_price = getCleanNumber(total);
+        } else if (currentType === 'receipt') {
+            if (!validateLimit('receiptNum', 999999, 'رقم الوصل')) return;
+            if (!validateLimit('amount', 150000000, 'المبلغ')) return;
+
+            const subType = document.getElementById('transactionType').value;
+            const rNum = document.getElementById('receiptNum').value;
+            const hNum = document.getElementById('houseNum').value;
+            const amount = document.getElementById('amount').value;
+            if (!rNum || !hNum || !amount) { tg.showAlert("يرجى ملء كافة حقول الوصل!"); return; }
+            payload.sub_type = subType; payload.receipt_num = rNum; payload.house_num = hNum; payload.amount = getCleanNumber(amount);
+        } else if (currentType === 'bank') {
+            if (!validateLimit('receiptNum', 999999, 'رقم الوصل')) return;
+            if (!validateLimit('amount', 150000000, 'المبلغ')) return;
+
+            const subType = document.getElementById('transactionType').value;
+            const hNum = document.getElementById('houseNum').value;
+            const amount = document.getElementById('amount').value;
+            if (!hNum || !amount) { tg.showAlert("يرجى ملء رقم الدار والمبلغ!"); return; }
+            payload.sub_type = subType; payload.receipt_num = document.getElementById('receiptNum').value || "-"; payload.house_num = hNum; payload.amount = getCleanNumber(amount);
+        } else if (currentType === 'expense') {
+            if (!validateLimit('amount', 150000000, 'المبلغ')) return;
+
+            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
+            if (name.split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
+            const reason = document.getElementById('reason').value;
+            const amount = document.getElementById('amount').value;
+            const hNum = document.getElementById('houseNum').value || "عام";
+            if (!reason || !amount) { tg.showAlert("يرجى ذكر السبب والمبلغ!"); return; }
+            payload.house_num = hNum; payload.reason = reason; payload.amount = getCleanNumber(amount);
         }
-        document.getElementById('summaryContent').innerHTML = html;
+
+        // بناء النص (Caption)
+        pendingCaption = buildCaption(payload);
+        pendingPayload = payload;
+
+        let summaryHtml = "";
+        const labelMap = { 'contract_num': 'رقم العقد', 'house_num': 'رقم الدار', 'name': 'الاسم', 'down_payment': 'المقدمة', 'total_price': 'السعر الكلي', 'date': 'التاريخ', 'sub_type': 'النوع', 'receipt_num': 'رقم الوصل', 'amount': 'المبلغ', 'reason': 'السبب' };
+        for (const [key, value] of Object.entries(payload)) {
+            if(['data_entry_user', 'data_entry_chat_id', 'timestamp', 'operation_type'].includes(key)) continue;
+            let label = labelMap[key] || key;
+            summaryHtml += `<div class="summary-item"><span class="s-label">${label}:</span><span class="s-value">${value}</span></div>`;
+        }
+        
+        document.getElementById('summaryContent').innerHTML = summaryHtml;
         document.getElementById('confirmModal').style.display = 'flex';
     }
 
-    function buildCaption(d) {
+    function buildCaption(data) {
+        const footer = data.data_entry_user ? `\n\n👨‍💻 *بواسطة:* ${data.data_entry_user}` : "";
         let t = "";
-        const u = d.data_entry_user ? `\n\n👨‍💻 *بواسطة:* ${d.data_entry_user}` : "";
-        if(d.operation_type==='contract') t=`📄 *عقد جديد*\n🔢 عقد: ${d.contract_num}\n🏠 دار: ${d.house_num}\n👤 ${d.name}\n💰 مقدمة: ${d.down_payment}\n💵 كلي: ${d.total_price}`;
-        else if(d.operation_type==='receipt') t=`📥 *وصل قبض* (${d.sub_type})\n🔢 وصل: ${d.receipt_num}\n🏠 دار: ${d.house_num}\n💰 مبلغ: ${d.amount}`;
-        else if(d.operation_type==='bank') t=`🏦 *وصل مصرف* (${d.sub_type})\n🔢 وصل: ${d.receipt_num}\n🏠 دار: ${d.house_num}\n💰 مبلغ: ${d.amount}`;
-        else t=`💸 *مصاريف*\n🏠 دار: ${d.house_num}\n👤 ${d.name}\n📝 ${d.reason}\n💰 مبلغ: ${d.amount}`;
-        return t + `\n📅 ${d.date}` + u;
+        
+        if (data.operation_type === 'contract') {
+            t = `📄 *عقد جديد*\n\n` +
+                `🔢 *رقم العقد:* ${data.contract_num}\n` +
+                `🏠 *رقم الدار:* ${data.house_num}\n` +
+                `👤 *الاسم:* ${data.name}\n` +
+                `💰 *المقدمة:* ${data.down_payment}\n` +
+                `💵 *السعر الكلي:* ${data.total_price}`;
+        } else if (data.operation_type === 'receipt') {
+            t = `📥 *وصل قبض* (${data.sub_type})\n\n` +
+                `🔢 *رقم الوصل:* ${data.receipt_num}\n` +
+                `🏠 *رقم الدار:* ${data.house_num}\n` +
+                `💰 *المبلغ:* ${data.amount}`;
+        } else if (data.operation_type === 'bank') {
+            t = `🏦 *وصل مصرف* (${data.sub_type})\n\n` +
+                `🔢 *رقم الوصل:* ${data.receipt_num}\n` +
+                `🏠 *رقم الدار:* ${data.house_num}\n` +
+                `💰 *المبلغ:* ${data.amount}`;
+        } else if (data.operation_type === 'expense') {
+            t = `💸 *مصاريف*\n\n` +
+                `🏠 *رقم الدار:* ${data.house_num}\n` +
+                `👤 *الاسم:* ${data.name}\n` +
+                `📝 *السبب:* ${data.reason}\n` +
+                `💰 *المبلغ:* ${data.amount}`;
+        }
+        
+        return t + `\n📅 *التاريخ:* ${data.date}` + footer;
     }
 
-    window.closeModal = function() { document.getElementById('confirmModal').style.display = 'none'; }
+    function closeModal() {
+        document.getElementById('confirmModal').style.display = 'none';
+        pendingPayload = null;
+    }
 
-    // الإرسال النهائي
-    window.finalSend = function() {
-        if(!pendingPayload) return;
-        const btn = document.getElementById('btnConfirm');
-        const btnCancel = document.getElementById('btnCancel');
+    function saveToHistory(payload) {
+        try {
+            let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
+            let item = { 
+                type: payload.operation_type, 
+                title: payload.operation_type === 'contract' ? `عقد ${payload.contract_num}` : (payload.operation_type === 'expense' ? 'مصاريف' : `وصل ${payload.sub_type || ''}`), 
+                detail: payload.amount || payload.total_price || '', 
+                timestamp: new Date().toLocaleString('ar-EG'),
+                fullData: payload 
+            };
+            history.unshift(item);
+            if (history.length > 20) history = history.slice(0, 20);
+            localStorage.setItem('appHistory', JSON.stringify(history));
+        } catch (e) { console.warn("History save failed:", e); }
+    }
+
+    function showHistory() {
+        document.getElementById('mainMenu').style.display = 'none';
+        document.getElementById('formSection').style.display = 'none';
+        document.getElementById('historySection').style.display = 'block';
+        const list = document.getElementById('historyList');
+        let history = [];
+        try { history = JSON.parse(localStorage.getItem('appHistory') || '[]'); } catch(e){}
+        list.innerHTML = "";
+        if (history.length === 0) { list.innerHTML = '<div class="no-history">لا توجد عمليات سابقة</div>'; return; }
+        
+        history.forEach((item, index) => {
+            const card = document.createElement('div'); 
+            card.className = 'history-card';
+            let borderCol = item.type === 'contract' ? '#f39c12' : (item.type === 'receipt' ? '#2ecc71' : (item.type === 'bank' ? '#3498db' : '#e74c3c'));
+            card.style.borderRightColor = borderCol;
+            
+            card.onclick = () => loadFromHistory(index);
+            
+            card.innerHTML = `
+                <div class="h-header">
+                    <span>${item.timestamp}</span>
+                    <span class="status-success">تم ✅</span>
+                </div>
+                <div class="h-title">${item.title}</div>
+                <div class="h-detail">${item.detail}</div>
+                <div class="edit-hint">✏️</div>
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    function loadFromHistory(index) {
+        let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
+        let item = history[index];
+        if(!item || !item.fullData) {
+            tg.showAlert('عذراً، بيانات هذه العملية قديمة ولا يمكن تعديلها.');
+            return;
+        }
+
+        const data = item.fullData;
+        
+        document.getElementById('historySection').style.display = 'none';
+        setupForm(data.operation_type);
+
+        if(data.name) document.getElementById('name').value = data.name;
+        if(data.contract_num) document.getElementById('contractNum').value = data.contract_num;
+        if(data.house_num) document.getElementById('houseNum').value = data.house_num;
+        if(data.receipt_num && data.receipt_num !== '-') document.getElementById('receiptNum').value = data.receipt_num;
+        if(data.reason) document.getElementById('reason').value = data.reason;
+        
+        if(data.amount) document.getElementById('amount').value = formatWithCommas(data.amount);
+        if(data.down_payment) document.getElementById('downPayment').value = formatWithCommas(data.down_payment);
+        if(data.total_price) document.getElementById('totalPrice').value = formatWithCommas(data.total_price);
+        
+        if(data.sub_type) {
+            const select = document.getElementById('transactionType');
+            for(let i=0; i<select.options.length; i++) {
+                if(select.options[i].value === data.sub_type) {
+                    select.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if(data.date) {
+            let [y, m, d] = data.date.split('-');
+            document.getElementById('date_year').value = y;
+            document.getElementById('date_month').value = parseInt(m);
+            document.getElementById('date_day').value = parseInt(d);
+        }
+
+        tg.showAlert('تم استرجاع البيانات. ⚠️ يرجى إعادة اختيار الصورة قبل الإرسال.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function clearHistory() { if(confirm('هل أنت متأكد من مسح السجل؟')) { localStorage.removeItem('appHistory'); showHistory(); } }
+
+    function finalSend() {
+        if (!pendingPayload) return;
+        
+        const btn = document.getElementById("btnConfirm");
+        const btnCancel = document.getElementById("btnCancel");
+        const originalText = btn.innerText;
         btn.innerText = "جاري الإرسال...";
         btn.disabled = true;
         btn.classList.add('btn-disabled');
-        btnCancel.style.display = 'none';
+        btnCancel.style.display = 'none'; 
 
-        const photo = document.getElementById("photo").files[0];
+        const photoFile = document.getElementById("photo").files[0];
+
+        // 1. إرسال إلى Webhook (للحفظ)
+        const webhookData = new FormData();
+        if(photoFile) webhookData.append("photo", photoFile);
+        for (const [key, value] of Object.entries(pendingPayload)) { webhookData.append(key, value); }
+        webhookData.append("json_data", JSON.stringify(pendingPayload));
         
-        // 1. Webhook (Data Only)
-        const fdWeb = new FormData();
-        if(photo) fdWeb.append("photo", photo);
-        fdWeb.append("json_data", JSON.stringify(pendingPayload));
-        const p1 = fetch(WEBHOOK_URL, {method:'POST', body:fdWeb}).catch(e=>console.log(e));
+        const p1 = fetch(WEBHOOK_URL, { method: "POST", body: webhookData });
 
-        // 2. Telegram Direct (Message)
-        const fdTg = new FormData();
-        fdTg.append("chat_id", CHAT_ID);
-        fdTg.append("caption", pendingCaption);
-        fdTg.append("parse_mode", "Markdown");
-        if(photo) fdTg.append("photo", photo);
+        // 2. إرسال إلى المدير (أنت) عبر Telegram API المباشر
+        const adminData = new FormData();
+        adminData.append("chat_id", CHAT_ID);
+        adminData.append("caption", pendingCaption);
+        if(photoFile) adminData.append("photo", photoFile);
+        adminData.append("parse_mode", "Markdown");
         
-        const p2 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {method:'POST', body:fdTg});
+        const p2 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: adminData });
 
-        // 3. User Copy
-        let p3 = Promise.resolve();
-        if(dataEntryChatId && String(dataEntryChatId) !== String(CHAT_ID)) {
-            const fdUser = new FormData();
-            fdUser.append("chat_id", dataEntryChatId);
-            fdUser.append("caption", "✅ *تم الإرسال بنجاح*\n\n" + pendingCaption);
-            fdUser.append("parse_mode", "Markdown");
-            if(photo) fdUser.append("photo", photo);
-            p3 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {method:'POST', body:fdUser}).catch(e=>{});
+        // 3. إرسال إلى المستخدم (إذا لم يكن هو المدير)
+        let p3 = Promise.resolve({ ok: true });
+        if (dataEntryChatId && String(dataEntryChatId) !== String(CHAT_ID)) {
+            const userData = new FormData();
+            userData.append("chat_id", dataEntryChatId);
+            userData.append("caption", "✅ *تم رفع البيانات بنجاح!*\n\n" + pendingCaption);
+            if(photoFile) userData.append("photo", photoFile);
+            userData.append("parse_mode", "Markdown");
+            p3 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: userData }).catch(() => ({ ok: true }));
         }
 
-        Promise.all([p2, p3]).then(res => {
-            if(res[0].ok) {
-                saveHistory(pendingPayload);
+        Promise.all([p1, p2, p3])
+        .then(results => {
+            // نعتبر العملية ناجحة إذا نجح إرسال المدير (p2) أو الويب هوك (p1)
+            // نتجاهل أخطاء المستخدم (p3)
+            if (results[1].ok || results[0].ok) {
+                saveToHistory(pendingPayload);
                 closeModal();
-                showCustomAlert("✅ تم الإرسال بنجاح!");
+                tg.showAlert("✅ تم الإرسال بنجاح!");
                 showMenu();
             } else {
-                throw new Error("Telegram Error");
+                throw new Error("فشل الاتصال بالسيرفر وتيليجرام");
             }
-        }).catch(e => {
-            showCustomAlert("⚠️ حدث خطأ في الاتصال، حاول مجدداً.");
-        }).finally(() => {
-            btn.innerText = "تأكيد وإرسال";
+        })
+        .catch(err => {
+            tg.showAlert("⚠️ تنبيه: حدث خطأ في الاتصال، لكن قد تكون البيانات وصلت.");
+            console.error(err);
+        })
+        .finally(() => {
+            btn.innerText = originalText;
             btn.disabled = false;
             btn.classList.remove('btn-disabled');
             btnCancel.style.display = 'block';
         });
     }
-
-    // السجل
-    function saveHistory(data) {
-        let h = JSON.parse(localStorage.getItem('appHistory') || '[]');
-        h.unshift({ ...data, ts: new Date().toLocaleDateString('ar-EG') });
-        if(h.length>20) h=h.slice(0,20);
-        localStorage.setItem('appHistory', JSON.stringify(h));
-    }
-
-    window.showHistory = function() {
-        document.getElementById('mainMenu').style.display = 'none';
-        document.getElementById('historySection').style.display = 'block';
-        const list = document.getElementById('historyList');
-        const h = JSON.parse(localStorage.getItem('appHistory') || '[]');
-        list.innerHTML = h.length ? '' : '<div class="no-history">لا توجد عمليات</div>';
-        
-        h.forEach((item, idx) => {
-            const div = document.createElement('div');
-            div.className = 'history-card';
-            div.onclick = () => loadHistory(item);
-            let border = item.operation_type === 'contract' ? '#FF9500' : '#34C759';
-            div.style.borderLeftColor = border;
-            div.innerHTML = `
-                <div class="h-header"><span>${item.ts}</span><span class="status-badge">تم</span></div>
-                <div class="h-title">${item.operation_type === 'contract' ? 'عقد ' + item.contract_num : 'عملية مالية'}</div>
-                <div class="h-detail">${item.amount || item.total_price || ''}</div>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    function loadHistory(data) {
-        showCustomAlert("⚠️ تم استرجاع البيانات. يرجى إعادة اختيار الصورة.");
-        openForm(data.operation_type);
-        // تعبئة بسيطة للحقول المتوفرة
-        if(data.name) document.getElementById('name').value = data.name;
-        if(data.contract_num) document.getElementById('contractNum').value = data.contract_num;
-        if(data.house_num) document.getElementById('houseNum').value = data.house_num;
-        if(data.amount) document.getElementById('amount').value = formatWithCommas(data.amount);
-    }
-
-    window.clearHistory = function() {
-        localStorage.removeItem('appHistory');
-        showHistory();
-    }
-
-    // تحسين زر اختيار الصورة
-    document.getElementById('photo').addEventListener('change', function() {
-        const txt = document.getElementById('photoText');
-        const box = document.querySelector('.photo-upload-box');
-        if(this.files[0]) {
-            txt.innerText = "تم اختيار: " + this.files[0].name;
-            txt.style.color = "#34C759";
-            box.style.borderColor = "#34C759";
-        }
-    });
 </script>
 
 </body>

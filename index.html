@@ -97,6 +97,7 @@
         .progress-bar-bg { width: 100%; height: 8px; background: #eee; border-radius: 4px; margin-top: 15px; overflow: hidden; }
         .progress-bar-fill { height: 100%; width: 0%; background: #2481cc; border-radius: 4px; transition: width 0.3s ease; }
         .loading-text { font-weight: bold; color: #333; margin-bottom: 5px; }
+        .loading-hint { font-size: 11px; color: #666; margin-top: 8px; }
 
         .success-box { text-align: center; color: white; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .checkmark-circle { width: 80px; height: 80px; background: #2ecc71; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.5); }
@@ -227,7 +228,7 @@
         <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="progressBar"></div>
         </div>
-        <p style="font-size:10px; color:#999; margin-top:10px;">يرجى الانتظار حتى اكتمال الرفع</p>
+        <p class="loading-hint">قد يستغرق رفع الصورة وقتاً حسب سرعة الإنترنت</p>
     </div>
 </div>
 
@@ -581,21 +582,21 @@
         }
     }
 
-    // --- نظام الإرسال الجديد (المحاكاة + Fetch) ---
-    // هذا النظام يستخدم fetch المضمون لكن مع شريط تحميل "بصري" لتهدئة المستخدم
+    // --- نظام الإرسال الجديد ---
+    // يستخدم Fetch العادي مع مؤقت وشريط وهمي لراحة المستخدم
     
     function showLoading() {
         document.getElementById('loadingOverlay').style.display = 'flex';
         const bar = document.getElementById('progressBar');
         let width = 0;
-        // محاكاة التقدم حتى 90%
+        // محاكاة التقدم حتى 95%
         const interval = setInterval(() => {
-            if (width < 90) {
-                width += Math.random() * 5;
-                if (width > 90) width = 90;
+            if (width < 95) {
+                width += (Math.random() * 3); // أبطأ قليلاً
+                if(width > 95) width = 95;
                 bar.style.width = width + '%';
             }
-        }, 300);
+        }, 500);
         return interval;
     }
 
@@ -605,7 +606,7 @@
         setTimeout(() => {
             document.getElementById('loadingOverlay').style.display = 'none';
             document.getElementById('progressBar').style.width = '0%';
-        }, 300);
+        }, 500);
     }
 
     function finalSend() {
@@ -625,17 +626,24 @@
         for (const [key, value] of Object.entries(pendingPayload)) {
             formData.append(key, value);
         }
-        // Fail-safe JSON
         formData.append("json_data", JSON.stringify(pendingPayload));
 
-        // 2. استخدام fetch (الطريقة المضمونة)
+        // إعداد متحكم لقطع الاتصال إذا طال الانتظار أكثر من 60 ثانية
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); 
+
+        // 2. استخدام fetch مع keepalive
         fetch(WEBHOOK_URL, {
             method: "POST",
-            body: formData
+            body: formData,
+            signal: controller.signal,
+            keepalive: true // يساعد في استمرار الطلب في الخلفية
         })
         .then(response => {
-            // عند نجاح الاستجابة ننهي التحميل
+            clearTimeout(timeoutId);
             finishLoading(loadingInterval);
+            
+            // قبول أي رد ناجح (200-299)
             if (response.ok) {
                 saveToHistory(pendingPayload);
                 document.getElementById('successOverlay').style.display = 'flex';
@@ -644,12 +652,17 @@
                     showMenu();
                 }, 2500);
             } else {
-                throw new Error("حدث خطأ في السيرفر (" + response.status + ")");
+                tg.showAlert("تم استلام رد غير متوقع من الخادم: " + response.status);
             }
         })
         .catch(err => {
+            clearTimeout(timeoutId);
             finishLoading(loadingInterval);
-            tg.showAlert("خطأ في الإرسال: " + err.message);
+            if (err.name === 'AbortError') {
+                 tg.showAlert("انتهت مهلة الانتظار (60 ثانية). تحقق من سرعة النت أو إعدادات n8n.");
+            } else {
+                 tg.showAlert("خطأ في الإرسال: " + err.message);
+            }
         });
     }
 </script>

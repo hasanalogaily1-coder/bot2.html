@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام مجمع الحسين - الإصدار المعدل</title>
+    <title>نظام مجمع الحسين - الإصدار السريع</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
@@ -18,7 +18,6 @@
         }
         .container { width: 100%; max-width: 400px; }
         
-        /* القائمة الرئيسية */
         .menu-btn {
             width: 100%; padding: 15px; margin: 8px 0;
             border: none; border-radius: 12px;
@@ -34,7 +33,6 @@
         .btn-expense { background-color: #e74c3c; }
         .btn-history { background-color: #8e44ad; }
 
-        /* الحقول */
         .form-section { display: none; width: 100%; animation: slideIn 0.3s; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -100,6 +98,7 @@
         .progress-bar-bg { width: 100%; height: 8px; background: #eee; border-radius: 4px; margin-top: 15px; overflow: hidden; }
         .progress-bar-fill { height: 100%; width: 0%; background: #2481cc; border-radius: 4px; transition: width 0.3s ease; }
         .loading-text { font-weight: bold; color: #333; margin-bottom: 5px; }
+        .cancel-upload { margin-top: 15px; color: red; font-size: 12px; background: none; border: none; cursor: pointer; text-decoration: underline; }
 
         .success-box { text-align: center; color: white; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .checkmark-circle { width: 80px; height: 80px; background: #2ecc71; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.5); }
@@ -230,6 +229,7 @@
         <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="progressBar"></div>
         </div>
+        <button class="cancel-upload" onclick="cancelUpload()">إلغاء الإرسال</button>
     </div>
 </div>
 
@@ -244,15 +244,13 @@
 </div>
 
 <script>
-    // ==========================================
     const WEBHOOK_URL = "https://hrh1.app.n8n.cloud/webhook/85baeb02-5fd1-4e87-8249-04956c78a414";
-    // تم حذف توكن البوت والـ Chat ID من هنا لمنع مشاكل الحظر
-    // ==========================================
 
     let currentType = '';
-    // تغيير: استخدام كائن عادي بدلاً من FormData في المرحلة الأولى لضمان سلامة البيانات
     let pendingPayload = null; 
     let pendingCaption = "";
+    let abortController = null; // للتحكم في إلغاء الطلب
+    let loadingInterval = null; // للتحكم في شريط التحميل
     
     const tg = window.Telegram.WebApp;
     tg.expand();
@@ -402,21 +400,18 @@
         }
     }
 
-    // دالة جديدة لتجميع البيانات في كائن (Object) أولاً
     function prepareData() {
         document.querySelectorAll('input').forEach(i => i.style.border = "1px solid #ccc");
         const photoInput = document.getElementById("photo").files[0];
         
         if (!photoInput) { tg.showAlert("يرجى إرفاق صورة!"); return; }
 
-        // 1. جمع البيانات الأساسية
         const d = document.getElementById('date_day').value.padStart(2, '0');
         const m = document.getElementById('date_month').value.padStart(2, '0');
         const y = document.getElementById('date_year').value;
         const date = `${y}-${m}-${d}`;
         const name = document.getElementById("name").value.trim();
 
-        // 2. إنشاء كائن البيانات (Payload Object)
         let payload = {
             operation_type: currentType,
             date: date,
@@ -426,7 +421,6 @@
             timestamp: new Date().toISOString()
         };
 
-        // 3. التحقق والملء حسب النوع
         if (currentType === 'contract') {
             if (!validateLimit('contractNum', 999999, 'رقم العقد')) return;
             if (!validateLimit('totalPrice', 500000000, 'السعر الكلي')) return;
@@ -495,13 +489,9 @@
             payload.amount = getCleanNumber(amount);
         }
 
-        // 4. بناء الكابشن
         payload.caption = buildCaption(payload);
-        
-        // 5. حفظ البيانات في المتغير العام
         pendingPayload = payload;
 
-        // 6. عرض الملخص
         let summaryHtml = "";
         const labelMap = {
             'contract_num': 'رقم العقد', 'house_num': 'رقم الدار', 'name': 'الاسم',
@@ -597,14 +587,13 @@
         document.getElementById('loadingOverlay').style.display = 'flex';
         let width = 0;
         const bar = document.getElementById('progressBar');
-        const interval = setInterval(() => {
-            if (width < 90) { width += Math.random() * 10; bar.style.width = width + '%'; }
-        }, 300);
-        return interval;
+        loadingInterval = setInterval(() => {
+            if (width < 90) { width += Math.random() * 5; bar.style.width = width + '%'; }
+        }, 500);
     }
 
-    function hideLoading(interval) {
-        clearInterval(interval);
+    function hideLoading() {
+        if(loadingInterval) clearInterval(loadingInterval);
         document.getElementById('progressBar').style.width = '100%';
         setTimeout(() => {
             document.getElementById('loadingOverlay').style.display = 'none';
@@ -612,13 +601,24 @@
         }, 300);
     }
 
+    function cancelUpload() {
+        if (abortController) {
+            abortController.abort();
+            hideLoading();
+            tg.showAlert("تم إلغاء الإرسال من قبلك.");
+        }
+    }
+
     function finalSend() {
         if (!pendingPayload) return;
         
         closeModal();
-        const loadInterval = showLoading();
+        showLoading();
         
-        // 1. إنشاء FormData طازج هنا لضمان وجود الملف
+        // إعداد متحكم الإلغاء والمهلة (30 ثانية)
+        abortController = new AbortController();
+        const timeoutId = setTimeout(() => abortController.abort(), 30000); // 30 ثانية timeout
+
         const formData = new FormData();
         const photoFile = document.getElementById("photo").files[0];
         
@@ -626,22 +626,19 @@
             formData.append("photo", photoFile);
         }
 
-        // 2. إضافة جميع الحقول النصية بشكل فردي
         for (const [key, value] of Object.entries(pendingPayload)) {
             formData.append(key, value);
         }
-
-        // 3. إضافة حقل JSON كامل (الحل لمشكلة ضياع الحقول)
-        // هذا الحقل يحتوي على كل البيانات كنص، n8n يمكنه قراءته بسهولة
         formData.append("json_data", JSON.stringify(pendingPayload));
 
-        // 4. إرسال طلب واحد فقط لـ Webhook
         fetch(WEBHOOK_URL, {
             method: "POST",
-            body: formData
+            body: formData,
+            signal: abortController.signal
         })
         .then(response => {
-            hideLoading(loadInterval);
+            clearTimeout(timeoutId);
+            hideLoading();
             if (response.ok) {
                 saveToHistory(pendingPayload);
                 document.getElementById('successOverlay').style.display = 'flex';
@@ -650,12 +647,17 @@
                     showMenu();
                 }, 2500);
             } else {
-                throw new Error("فشل الاستجابة من الخادم (" + response.statusText + ")");
+                throw new Error("فشل الخادم: " + response.statusText);
             }
         })
         .catch(err => {
-            hideLoading(loadInterval);
-            tg.showAlert("حدث خطأ في الإرسال: " + err.message);
+            clearTimeout(timeoutId);
+            hideLoading();
+            if (err.name === 'AbortError') {
+                tg.showAlert("انتهت مهلة الاتصال! (النت بطيء أو n8n تأخر في الرد).");
+            } else {
+                tg.showAlert("خطأ في الإرسال: " + err.message);
+            }
         });
     }
 </script>

@@ -7,14 +7,13 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            /* iOS System Colors */
             --ios-bg: #F2F2F7;
             --ios-card: #FFFFFF;
             --ios-blue: #007AFF;
             --ios-text: #000000;
             --ios-text-secondary: #8E8E93;
             --ios-separator: #E5E5EA;
-            --ios-input-bg: #E9E9EB; /* ناعم جداً */
+            --ios-input-bg: #E9E9EB;
             --ios-danger: #FF3B30;
             --ios-success: #34C759;
             --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -31,6 +30,7 @@
             align-items: center;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
+            touch-action: manipulation;
         }
 
         .container { 
@@ -39,7 +39,6 @@
             margin: 0 auto;
         }
         
-        /* شريط المستخدم - ستايل الـ Pill */
         .user-badge {
             background-color: var(--tg-theme-bg-color, rgba(255, 255, 255, 0.8));
             color: var(--tg-theme-hint-color, var(--ios-text-secondary));
@@ -56,7 +55,6 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
 
-        /* العناوين */
         h3 {
             font-size: 28px;
             font-weight: 700;
@@ -67,7 +65,6 @@
             padding-right: 5px;
         }
 
-        /* القائمة الرئيسية - ستايل الـ Widgets */
         .menu-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -92,6 +89,7 @@
             transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .menu-btn:active { transform: scale(0.96); }
@@ -105,7 +103,10 @@
             justify-content: center;
             font-size: 20px;
             margin-bottom: 10px;
+            pointer-events: none;
         }
+
+        .menu-btn span { pointer-events: none; }
 
         .menu-btn.full-width {
             grid-column: span 2;
@@ -117,14 +118,12 @@
         }
         .menu-btn.full-width .icon-box { margin-bottom: 0; }
 
-        /* ألوان الأيقونات */
         .btn-contract .icon-box { background: #FFF7D6; color: #FF9500; }
         .btn-receipt .icon-box { background: #E2F9E8; color: #34C759; }
         .btn-bank .icon-box { background: #E1F2FF; color: #007AFF; }
         .btn-expense .icon-box { background: #FFEBEA; color: #FF3B30; }
         .btn-history .icon-box { background: #F2E6FF; color: #AF52DE; }
 
-        /* أقسام الفورم */
         .form-section { 
             display: none; 
             width: 100%; 
@@ -136,7 +135,6 @@
             to { opacity: 1; transform: translateX(0); } 
         }
 
-        /* البطاقة البيضاء للحقول */
         .ios-card-group {
             background: var(--tg-theme-bg-color, var(--ios-card));
             border-radius: 18px;
@@ -166,10 +164,10 @@
             border-radius: 12px;
             box-sizing: border-box;
             color: var(--tg-theme-text-color, var(--ios-text));
-            font-size: 17px; /* حجم خط الآيفون القياسي */
+            font-size: 17px;
             transition: background 0.2s;
             font-family: inherit;
-            -webkit-appearance: none; /* إزالة ستايل المتصفح الافتراضي */
+            -webkit-appearance: none;
         }
         
         input:focus, select:focus, textarea:focus { 
@@ -177,7 +175,6 @@
             background-color: var(--tg-theme-bg-color, #E1E1E6);
         }
 
-        /* حقل الصورة */
         .photo-upload-box {
             position: relative;
             border-radius: 12px;
@@ -202,7 +199,6 @@
             gap: 5px;
         }
 
-        /* الأزرار */
         .submit-btn {
             width: 100%; 
             padding: 16px; 
@@ -234,7 +230,6 @@
         .date-container { display: flex; gap: 10px; }
         .date-select { flex: 1; text-align: center; font-weight: 500;}
 
-        /* السجل */
         .history-card {
             background: var(--tg-theme-bg-color, var(--ios-card));
             padding: 16px; 
@@ -246,7 +241,7 @@
             gap: 6px;
             cursor: pointer;
             position: relative;
-            border-left: 4px solid transparent; /* شريط ملون صغير */
+            border-left: 4px solid transparent;
         }
         
         .h-header { display: flex; justify-content: space-between; font-size: 13px; color: var(--ios-text-secondary); }
@@ -262,12 +257,11 @@
             font-size: 12px; 
         }
 
-        /* النوافذ المنبثقة (Modal) */
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.4); align-items: flex-end; justify-content: center; backdrop-filter: blur(4px);
         }
-        /* Bottom Sheet Style */
+        
         .modal-content {
             background-color: var(--tg-theme-bg-color, #F2F2F7);
             padding: 24px; 
@@ -278,7 +272,7 @@
             text-align: right; 
             color: var(--tg-theme-text-color, #000);
             animation: slideUpModal 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            padding-bottom: 40px; /* Safe area for mobile */
+            padding-bottom: 40px;
         }
         
         .summary-list { 
@@ -314,19 +308,19 @@
     <div id="mainMenu">
         <h3>الخدمات المتاحة</h3>
         <div class="menu-grid">
-            <button class="menu-btn btn-contract" onclick="setupForm('contract')">
+            <button class="menu-btn btn-contract" onclick="openTransactionForm('contract')">
                 <div class="icon-box">📄</div>
                 <span>عقد جديد</span>
             </button>
-            <button class="menu-btn btn-receipt" onclick="setupForm('receipt')">
+            <button class="menu-btn btn-receipt" onclick="openTransactionForm('receipt')">
                 <div class="icon-box">📥</div>
                 <span>وصل قبض</span>
             </button>
-            <button class="menu-btn btn-bank" onclick="setupForm('bank')">
+            <button class="menu-btn btn-bank" onclick="openTransactionForm('bank')">
                 <div class="icon-box">🏦</div>
                 <span>وصل مصرف</span>
             </button>
-            <button class="menu-btn btn-expense" onclick="setupForm('expense')">
+            <button class="menu-btn btn-expense" onclick="openTransactionForm('expense')">
                 <div class="icon-box">💸</div>
                 <span>مصاريف</span>
             </button>
@@ -460,6 +454,17 @@
         document.getElementById('userBadge').innerText = `المستخدم: ${dataEntryUser}`;
     }
 
+    // Helper function for alerts to support older Telegram versions
+    function safeShowAlert(message) {
+        // showPopup is supported from version 6.2
+        if (tg.isVersionAtLeast && tg.isVersionAtLeast('6.2')) {
+            tg.showAlert(message);
+        } else {
+            // Fallback for older versions or non-Telegram environments
+            alert(message);
+        }
+    }
+
     function initDateSelectors() {
         const daySelect = document.getElementById('date_day');
         const monthSelect = document.getElementById('date_month');
@@ -496,7 +501,7 @@
             el.style.border = "1px solid #FF3B30"; 
             el.style.background = "#FFF0F0";
             el.focus();
-            tg.showAlert(`تنبيه: القيمة في حقل "${label}" غير صحيحة.`);
+            safeShowAlert(`تنبيه: القيمة في حقل "${label}" غير صحيحة.`);
             return false;
         }
         el.style.border = "none"; 
@@ -540,11 +545,19 @@
         });
     });
 
+    // إدارة زر الرجوع
+    function handleBackButton() {
+        showMenu();
+    }
+
     function showMenu() {
         document.getElementById('formSection').style.display = 'none';
         document.getElementById('historySection').style.display = 'none';
         document.getElementById('mainMenu').style.display = 'block';
-        tg.BackButton.hide();
+        if (tg.BackButton) {
+            tg.BackButton.hide();
+            tg.BackButton.offClick(handleBackButton);
+        }
     }
 
     function hideAllFields() {
@@ -553,67 +566,81 @@
         document.getElementById('houseHint').style.display = 'none';
         document.getElementById('houseNum').inputmode = 'decimal';
         
-        // Reset photo
+        // Reset photo UI
         document.getElementById('photo').value = '';
-        document.getElementById('photoText').innerText = "اضغط لإرفاق الصورة";
-        document.getElementById('photoText').style.color = "var(--ios-text-secondary)";
-        document.querySelector('.photo-upload-box').style.borderColor = "#C7C7CC";
-        document.querySelector('.photo-upload-box').style.background = "var(--ios-input-bg)";
+        const photoText = document.getElementById('photoText');
+        if(photoText) {
+            photoText.innerText = "اضغط لإرفاق الصورة";
+            photoText.style.color = "var(--ios-text-secondary)";
+            photoText.style.fontWeight = "normal";
+        }
+        const photoBox = document.querySelector('.photo-upload-box');
+        if(photoBox) {
+            photoBox.style.borderColor = "#C7C7CC";
+            photoBox.style.background = "var(--ios-input-bg)";
+        }
     }
 
-    function setupForm(type) {
-        currentType = type;
-        hideAllFields();
-        document.getElementById('mainMenu').style.display = 'none';
-        document.getElementById('formSection').style.display = 'block';
-        document.querySelectorAll('input:not([type="file"]), textarea').forEach(i => { i.value = ''; i.style.border='none'; i.style.background='var(--ios-input-bg)'; });
-        
-        tg.BackButton.show();
-        tg.BackButton.onClick(() => showMenu());
+    // جعل الدالة متاحة عالمياً
+    window.openTransactionForm = function(type) {
+        try {
+            currentType = type;
+            hideAllFields();
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('formSection').style.display = 'block';
+            document.querySelectorAll('input:not([type="file"]), textarea').forEach(i => { i.value = ''; i.style.border='none'; i.style.background='var(--ios-input-bg)'; });
+            
+            if (tg.BackButton) {
+                tg.BackButton.show();
+                tg.BackButton.onClick(handleBackButton);
+            }
 
-        const title = document.getElementById('formTitle');
-        const typeSelect = document.getElementById('transactionType');
+            const title = document.getElementById('formTitle');
+            const typeSelect = document.getElementById('transactionType');
 
-        if (type === 'contract') {
-            title.innerText = 'عقد جديد';
-            document.getElementById('grp_contractNum').style.display = 'block';
-            document.getElementById('grp_houseNum').style.display = 'block';
-            document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب)";
-            document.getElementById('grp_name').style.display = 'block';
-            document.getElementById('grp_contractDetails').style.display = 'block';
-        } else if (type === 'receipt') {
-            title.innerText = 'وصل قبض';
-            document.getElementById('grp_type').style.display = 'block';
-            typeSelect.innerHTML = '<option value="قسط">قسط</option><option value="دفعة">دفعة</option>';
-            document.getElementById('grp_receiptNum').style.display = 'block';
-            document.getElementById('lbl_receiptNum').innerText = "رقم الوصل (مطلوب)";
-            document.getElementById('grp_houseNum').style.display = 'block';
-            document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب)";
-            document.getElementById('grp_amount').style.display = 'block';
-        } else if (type === 'bank') {
-            title.innerText = 'وصل مصرف';
-            document.getElementById('grp_type').style.display = 'block';
-            typeSelect.innerHTML = '<option value="محامي">محامي</option><option value="عمولة">عمولة</option><option value="قرض">قرض</option>';
-            document.getElementById('grp_receiptNum').style.display = 'block';
-            document.getElementById('lbl_receiptNum').innerText = "رقم الوصل (اختياري)";
-            document.getElementById('grp_houseNum').style.display = 'block';
-            document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب)";
-            document.getElementById('grp_amount').style.display = 'block';
-        } else if (type === 'expense') {
-            title.innerText = 'مصاريف';
-            document.getElementById('grp_houseNum').style.display = 'block';
-            document.getElementById('lbl_houseNum').innerText = "رقم الدار (اختياري)";
-            document.getElementById('houseHint').style.display = 'block';
-            document.getElementById('houseNum').inputmode = 'text'; 
-            document.getElementById('grp_name').style.display = 'block';
-            document.getElementById('grp_reason').style.display = 'block';
-            document.getElementById('grp_amount').style.display = 'block';
+            if (type === 'contract') {
+                title.innerText = 'عقد جديد';
+                document.getElementById('grp_contractNum').style.display = 'block';
+                document.getElementById('grp_houseNum').style.display = 'block';
+                document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب)";
+                document.getElementById('grp_name').style.display = 'block';
+                document.getElementById('grp_contractDetails').style.display = 'block';
+            } else if (type === 'receipt') {
+                title.innerText = 'وصل قبض';
+                document.getElementById('grp_type').style.display = 'block';
+                typeSelect.innerHTML = '<option value="قسط">قسط</option><option value="دفعة">دفعة</option>';
+                document.getElementById('grp_receiptNum').style.display = 'block';
+                document.getElementById('lbl_receiptNum').innerText = "رقم الوصل (مطلوب)";
+                document.getElementById('grp_houseNum').style.display = 'block';
+                document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب)";
+                document.getElementById('grp_amount').style.display = 'block';
+            } else if (type === 'bank') {
+                title.innerText = 'وصل مصرف';
+                document.getElementById('grp_type').style.display = 'block';
+                typeSelect.innerHTML = '<option value="محامي">محامي</option><option value="عمولة">عمولة</option><option value="قرض">قرض</option>';
+                document.getElementById('grp_receiptNum').style.display = 'block';
+                document.getElementById('lbl_receiptNum').innerText = "رقم الوصل (اختياري)";
+                document.getElementById('grp_houseNum').style.display = 'block';
+                document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب)";
+                document.getElementById('grp_amount').style.display = 'block';
+            } else if (type === 'expense') {
+                title.innerText = 'مصاريف';
+                document.getElementById('grp_houseNum').style.display = 'block';
+                document.getElementById('lbl_houseNum').innerText = "رقم الدار (اختياري)";
+                document.getElementById('houseHint').style.display = 'block';
+                document.getElementById('houseNum').inputmode = 'text'; 
+                document.getElementById('grp_name').style.display = 'block';
+                document.getElementById('grp_reason').style.display = 'block';
+                document.getElementById('grp_amount').style.display = 'block';
+            }
+        } catch(e) {
+            safeShowAlert("حدث خطأ في فتح النموذج: " + e.message);
         }
     }
 
     function prepareData() {
         const photoInput = document.getElementById("photo").files[0];
-        if (!photoInput) { tg.showAlert("يرجى إرفاق صورة!"); return; }
+        if (!photoInput) { safeShowAlert("يرجى إرفاق صورة!"); return; }
 
         const d = document.getElementById('date_day').value.padStart(2, '0');
         const m = document.getElementById('date_month').value.padStart(2, '0');
@@ -639,13 +666,13 @@
             if (!validateLimit('totalPrice', 500000000, 'السعر الكلي')) return;
             if (!validateLimit('downPayment', 150000000, 'المقدمة')) return;
 
-            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
-            if (name.split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
+            if (!name) { safeShowAlert("يرجى كتابة الاسم!"); return; }
+            if (name.split(/\s+/).length < 3) { safeShowAlert("يرجى كتابة الاسم الثلاثي!"); return; }
             const cNum = document.getElementById('contractNum').value;
             const hNum = document.getElementById('houseNum').value;
             const down = document.getElementById('downPayment').value; 
             const total = document.getElementById('totalPrice').value;
-            if (!cNum || !hNum || !down || !total) { tg.showAlert("يرجى ملء كافة حقول العقد!"); return; }
+            if (!cNum || !hNum || !down || !total) { safeShowAlert("يرجى ملء كافة حقول العقد!"); return; }
             payload.contract_num = cNum; payload.house_num = hNum; payload.down_payment = getCleanNumber(down); payload.total_price = getCleanNumber(total);
         } else if (currentType === 'receipt') {
             if (!validateLimit('receiptNum', 999999, 'رقم الوصل')) return;
@@ -655,7 +682,7 @@
             const rNum = document.getElementById('receiptNum').value;
             const hNum = document.getElementById('houseNum').value;
             const amount = document.getElementById('amount').value;
-            if (!rNum || !hNum || !amount) { tg.showAlert("يرجى ملء كافة حقول الوصل!"); return; }
+            if (!rNum || !hNum || !amount) { safeShowAlert("يرجى ملء كافة حقول الوصل!"); return; }
             payload.sub_type = subType; payload.receipt_num = rNum; payload.house_num = hNum; payload.amount = getCleanNumber(amount);
         } else if (currentType === 'bank') {
             if (!validateLimit('receiptNum', 999999, 'رقم الوصل')) return;
@@ -664,17 +691,17 @@
             const subType = document.getElementById('transactionType').value;
             const hNum = document.getElementById('houseNum').value;
             const amount = document.getElementById('amount').value;
-            if (!hNum || !amount) { tg.showAlert("يرجى ملء رقم الدار والمبلغ!"); return; }
+            if (!hNum || !amount) { safeShowAlert("يرجى ملء رقم الدار والمبلغ!"); return; }
             payload.sub_type = subType; payload.receipt_num = document.getElementById('receiptNum').value || "-"; payload.house_num = hNum; payload.amount = getCleanNumber(amount);
         } else if (currentType === 'expense') {
             if (!validateLimit('amount', 150000000, 'المبلغ')) return;
 
-            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
-            if (name.split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
+            if (!name) { safeShowAlert("يرجى كتابة الاسم!"); return; }
+            if (name.split(/\s+/).length < 3) { safeShowAlert("يرجى كتابة الاسم الثلاثي!"); return; }
             const reason = document.getElementById('reason').value;
             const amount = document.getElementById('amount').value;
             const hNum = document.getElementById('houseNum').value || "عام";
-            if (!reason || !amount) { tg.showAlert("يرجى ذكر السبب والمبلغ!"); return; }
+            if (!reason || !amount) { safeShowAlert("يرجى ذكر السبب والمبلغ!"); return; }
             payload.house_num = hNum; payload.reason = reason; payload.amount = getCleanNumber(amount);
         }
 
@@ -746,13 +773,15 @@
         } catch (e) { console.warn("History save failed:", e); }
     }
 
-    function showHistory() {
+    window.showHistory = function() {
         document.getElementById('mainMenu').style.display = 'none';
         document.getElementById('formSection').style.display = 'none';
         document.getElementById('historySection').style.display = 'block';
         
-        tg.BackButton.show();
-        tg.BackButton.onClick(() => showMenu());
+        if(tg.BackButton) {
+            tg.BackButton.show();
+            tg.BackButton.onClick(handleBackButton);
+        }
 
         const list = document.getElementById('historyList');
         let history = [];
@@ -764,7 +793,6 @@
             const card = document.createElement('div'); 
             card.className = 'history-card';
             
-            // تخصيص اللون الجانبي
             let borderColor = 'transparent';
             if (item.type === 'contract') borderColor = '#FF9500';
             else if (item.type === 'receipt') borderColor = '#34C759';
@@ -790,14 +818,14 @@
         let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
         let item = history[index];
         if(!item || !item.fullData) {
-            tg.showAlert('عذراً، بيانات هذه العملية قديمة ولا يمكن تعديلها.');
+            safeShowAlert('عذراً، بيانات هذه العملية قديمة ولا يمكن تعديلها.');
             return;
         }
 
         const data = item.fullData;
         
         document.getElementById('historySection').style.display = 'none';
-        setupForm(data.operation_type);
+        openTransactionForm(data.operation_type);
 
         if(data.name) document.getElementById('name').value = data.name;
         if(data.contract_num) document.getElementById('contractNum').value = data.contract_num;
@@ -826,13 +854,15 @@
             document.getElementById('date_day').value = parseInt(d);
         }
 
-        tg.showAlert('تم استرجاع البيانات. ⚠️ يرجى إعادة اختيار الصورة قبل الإرسال.');
+        safeShowAlert('تم استرجاع البيانات. ⚠️ يرجى إعادة اختيار الصورة قبل الإرسال.');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function clearHistory() { if(confirm('هل أنت متأكد من مسح السجل؟')) { localStorage.removeItem('appHistory'); showHistory(); } }
+    window.clearHistory = function() { 
+        if(confirm('هل أنت متأكد من مسح السجل؟')) { localStorage.removeItem('appHistory'); showHistory(); } 
+    }
 
-    function finalSend() {
+    window.finalSend = function() {
         if (!pendingPayload) return;
         
         const btn = document.getElementById("btnConfirm");
@@ -878,14 +908,14 @@
             if (results[1].ok || results[0].ok) {
                 saveToHistory(pendingPayload);
                 closeModal();
-                tg.showAlert("✅ تم الإرسال بنجاح!");
+                safeShowAlert("✅ تم الإرسال بنجاح!");
                 showMenu();
             } else {
                 throw new Error("فشل الاتصال بالسيرفر وتيليجرام");
             }
         })
         .catch(err => {
-            tg.showAlert("⚠️ تنبيه: حدث خطأ في الاتصال، لكن قد تكون البيانات وصلت.");
+            safeShowAlert("⚠️ تنبيه: حدث خطأ في الاتصال، لكن قد تكون البيانات وصلت.");
             console.error(err);
         })
         .finally(() => {

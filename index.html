@@ -229,6 +229,7 @@
         <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="progressBar"></div>
         </div>
+        <div style="font-size:12px; color:#777; margin-top:5px;" id="uploadStatus">0%</div>
         <button class="cancel-upload" onclick="cancelUpload()">إلغاء الإرسال</button>
     </div>
 </div>
@@ -249,8 +250,7 @@
     let currentType = '';
     let pendingPayload = null; 
     let pendingCaption = "";
-    let abortController = null; // للتحكم في إلغاء الطلب
-    let loadingInterval = null; // للتحكم في شريط التحميل
+    let xhr = null; // متغير للتحكم في الطلب XHR
     
     const tg = window.Telegram.WebApp;
     tg.expand();
@@ -585,27 +585,21 @@
 
     function showLoading() {
         document.getElementById('loadingOverlay').style.display = 'flex';
-        let width = 0;
-        const bar = document.getElementById('progressBar');
-        loadingInterval = setInterval(() => {
-            if (width < 90) { width += Math.random() * 5; bar.style.width = width + '%'; }
-        }, 500);
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('uploadStatus').innerText = "0%";
     }
 
     function hideLoading() {
-        if(loadingInterval) clearInterval(loadingInterval);
-        document.getElementById('progressBar').style.width = '100%';
-        setTimeout(() => {
-            document.getElementById('loadingOverlay').style.display = 'none';
-            document.getElementById('progressBar').style.width = '0%';
-        }, 300);
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('uploadStatus').innerText = "0%";
     }
 
     function cancelUpload() {
-        if (abortController) {
-            abortController.abort();
+        if (xhr) {
+            xhr.abort();
             hideLoading();
-            tg.showAlert("تم إلغاء الإرسال من قبلك.");
+            tg.showAlert("تم إلغاء الإرسال.");
         }
     }
 
@@ -615,31 +609,33 @@
         closeModal();
         showLoading();
         
-        // إعداد متحكم الإلغاء والمهلة (30 ثانية)
-        abortController = new AbortController();
-        const timeoutId = setTimeout(() => abortController.abort(), 30000); // 30 ثانية timeout
-
+        // استخدام XMLHttpRequest بدلاً من fetch لضمان التوافق والموثوقية
+        xhr = new XMLHttpRequest();
+        // إضافة رقم عشوائي لمنع الكاش
+        xhr.open("POST", WEBHOOK_URL + "?t=" + new Date().getTime(), true);
+        
         const formData = new FormData();
         const photoFile = document.getElementById("photo").files[0];
-        
-        if(photoFile) {
-            formData.append("photo", photoFile);
-        }
+        if(photoFile) formData.append("photo", photoFile);
 
         for (const [key, value] of Object.entries(pendingPayload)) {
             formData.append(key, value);
         }
         formData.append("json_data", JSON.stringify(pendingPayload));
 
-        fetch(WEBHOOK_URL, {
-            method: "POST",
-            body: formData,
-            signal: abortController.signal
-        })
-        .then(response => {
-            clearTimeout(timeoutId);
-            hideLoading();
-            if (response.ok) {
+        // متابعة تقدم الرفع (Upload Progress)
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = Math.round((e.loaded / e.total) * 100);
+                document.getElementById('progressBar').style.width = percentComplete + '%';
+                document.getElementById('loadingText').innerText = `جاري الرفع... ${percentComplete}%`;
+                document.getElementById('uploadStatus').innerText = `${percentComplete}%`;
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                hideLoading();
                 saveToHistory(pendingPayload);
                 document.getElementById('successOverlay').style.display = 'flex';
                 setTimeout(() => {
@@ -647,18 +643,17 @@
                     showMenu();
                 }, 2500);
             } else {
-                throw new Error("فشل الخادم: " + response.statusText);
+                hideLoading();
+                tg.showAlert("فشل الإرسال! الرمز: " + xhr.status);
             }
-        })
-        .catch(err => {
-            clearTimeout(timeoutId);
+        };
+
+        xhr.onerror = function() {
             hideLoading();
-            if (err.name === 'AbortError') {
-                tg.showAlert("انتهت مهلة الاتصال! (النت بطيء أو n8n تأخر في الرد).");
-            } else {
-                tg.showAlert("خطأ في الإرسال: " + err.message);
-            }
-        });
+            tg.showAlert("حدث خطأ في الشبكة أو الاتصال.");
+        };
+
+        xhr.send(formData);
     }
 </script>
 

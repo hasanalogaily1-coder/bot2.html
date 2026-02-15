@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام مجمع الحسين - الإصدار السريع</title>
+    <title>نظام مجمع الحسين</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
@@ -83,8 +83,7 @@
         .h-header { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 5px; }
         .h-title { font-weight: bold; font-size: 15px; margin-bottom: 3px; }
         .h-detail { font-size: 13px; color: #555; }
-        .h-status { font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
-        .status-success { background: #e8f5e9; color: #2e7d32; }
+        .status-success { background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px;}
         .no-history { text-align: center; color: #888; margin-top: 30px; font-style: italic; }
 
         /* النوافذ */
@@ -98,7 +97,6 @@
         .progress-bar-bg { width: 100%; height: 8px; background: #eee; border-radius: 4px; margin-top: 15px; overflow: hidden; }
         .progress-bar-fill { height: 100%; width: 0%; background: #2481cc; border-radius: 4px; transition: width 0.3s ease; }
         .loading-text { font-weight: bold; color: #333; margin-bottom: 5px; }
-        .cancel-upload { margin-top: 15px; color: red; font-size: 12px; background: none; border: none; cursor: pointer; text-decoration: underline; }
 
         .success-box { text-align: center; color: white; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .checkmark-circle { width: 80px; height: 80px; background: #2ecc71; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.5); }
@@ -229,8 +227,7 @@
         <div class="progress-bar-bg">
             <div class="progress-bar-fill" id="progressBar"></div>
         </div>
-        <div style="font-size:12px; color:#777; margin-top:5px;" id="uploadStatus">0%</div>
-        <button class="cancel-upload" onclick="cancelUpload()">إلغاء الإرسال</button>
+        <p style="font-size:10px; color:#999; margin-top:10px;">يرجى الانتظار حتى اكتمال الرفع</p>
     </div>
 </div>
 
@@ -245,12 +242,13 @@
 </div>
 
 <script>
+    // ==========================================
     const WEBHOOK_URL = "https://hrh1.app.n8n.cloud/webhook/85baeb02-5fd1-4e87-8249-04956c78a414";
+    // ==========================================
 
     let currentType = '';
     let pendingPayload = null; 
     let pendingCaption = "";
-    let xhr = null; // متغير للتحكم في الطلب XHR
     
     const tg = window.Telegram.WebApp;
     tg.expand();
@@ -583,59 +581,62 @@
         }
     }
 
+    // --- نظام الإرسال الجديد (المحاكاة + Fetch) ---
+    // هذا النظام يستخدم fetch المضمون لكن مع شريط تحميل "بصري" لتهدئة المستخدم
+    
     function showLoading() {
         document.getElementById('loadingOverlay').style.display = 'flex';
-        document.getElementById('progressBar').style.width = '0%';
-        document.getElementById('uploadStatus').innerText = "0%";
+        const bar = document.getElementById('progressBar');
+        let width = 0;
+        // محاكاة التقدم حتى 90%
+        const interval = setInterval(() => {
+            if (width < 90) {
+                width += Math.random() * 5;
+                if (width > 90) width = 90;
+                bar.style.width = width + '%';
+            }
+        }, 300);
+        return interval;
     }
 
-    function hideLoading() {
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.getElementById('progressBar').style.width = '0%';
-        document.getElementById('uploadStatus').innerText = "0%";
-    }
-
-    function cancelUpload() {
-        if (xhr) {
-            xhr.abort();
-            hideLoading();
-            tg.showAlert("تم إلغاء الإرسال.");
-        }
+    function finishLoading(interval) {
+        clearInterval(interval);
+        document.getElementById('progressBar').style.width = '100%';
+        setTimeout(() => {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.getElementById('progressBar').style.width = '0%';
+        }, 300);
     }
 
     function finalSend() {
         if (!pendingPayload) return;
         
         closeModal();
-        showLoading();
+        const loadingInterval = showLoading();
         
-        // استخدام XMLHttpRequest بدلاً من fetch لضمان التوافق والموثوقية
-        xhr = new XMLHttpRequest();
-        // إضافة رقم عشوائي لمنع الكاش
-        xhr.open("POST", WEBHOOK_URL + "?t=" + new Date().getTime(), true);
-        
+        // 1. تجهيز البيانات
         const formData = new FormData();
         const photoFile = document.getElementById("photo").files[0];
-        if(photoFile) formData.append("photo", photoFile);
+        
+        if(photoFile) {
+            formData.append("photo", photoFile);
+        }
 
         for (const [key, value] of Object.entries(pendingPayload)) {
             formData.append(key, value);
         }
+        // Fail-safe JSON
         formData.append("json_data", JSON.stringify(pendingPayload));
 
-        // متابعة تقدم الرفع (Upload Progress)
-        xhr.upload.onprogress = function(e) {
-            if (e.lengthComputable) {
-                const percentComplete = Math.round((e.loaded / e.total) * 100);
-                document.getElementById('progressBar').style.width = percentComplete + '%';
-                document.getElementById('loadingText').innerText = `جاري الرفع... ${percentComplete}%`;
-                document.getElementById('uploadStatus').innerText = `${percentComplete}%`;
-            }
-        };
-
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                hideLoading();
+        // 2. استخدام fetch (الطريقة المضمونة)
+        fetch(WEBHOOK_URL, {
+            method: "POST",
+            body: formData
+        })
+        .then(response => {
+            // عند نجاح الاستجابة ننهي التحميل
+            finishLoading(loadingInterval);
+            if (response.ok) {
                 saveToHistory(pendingPayload);
                 document.getElementById('successOverlay').style.display = 'flex';
                 setTimeout(() => {
@@ -643,17 +644,13 @@
                     showMenu();
                 }, 2500);
             } else {
-                hideLoading();
-                tg.showAlert("فشل الإرسال! الرمز: " + xhr.status);
+                throw new Error("حدث خطأ في السيرفر (" + response.status + ")");
             }
-        };
-
-        xhr.onerror = function() {
-            hideLoading();
-            tg.showAlert("حدث خطأ في الشبكة أو الاتصال.");
-        };
-
-        xhr.send(formData);
+        })
+        .catch(err => {
+            finishLoading(loadingInterval);
+            tg.showAlert("خطأ في الإرسال: " + err.message);
+        });
     }
 </script>
 

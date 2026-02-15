@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام مجمع الحسين</title>
+    <title>نظام مجمع الحسين - الإصدار المعدل</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
@@ -32,7 +32,6 @@
         .btn-receipt { background-color: #2ecc71; }
         .btn-bank { background-color: #3498db; }
         .btn-expense { background-color: #e74c3c; }
-        /* زر السجل الجديد */
         .btn-history { background-color: #8e44ad; }
 
         /* الحقول */
@@ -53,7 +52,6 @@
         }
         input:focus, select:focus, textarea:focus { outline: 2px solid #2481cc; border-color: transparent; }
 
-        /* تنسيق خاص لقوائم التاريخ */
         .date-container { display: flex; gap: 10px; }
         .date-select {
             flex: 1; text-align: center; cursor: pointer;
@@ -73,13 +71,12 @@
         }
         .hint { font-size: 11px; color: #888; margin-top: 2px; }
 
-        /* شريط المستخدم */
         .user-badge {
             font-size: 12px; color: var(--tg-theme-hint-color, #888);
             margin-bottom: 15px; text-align: center;
         }
 
-        /* --- تصميم السجل (History) --- */
+        /* تنسيق السجل */
         .history-card {
             background: var(--tg-theme-secondary-bg-color, #fff);
             padding: 12px; margin-bottom: 10px; border-radius: 8px;
@@ -92,27 +89,24 @@
         .status-success { background: #e8f5e9; color: #2e7d32; }
         .no-history { text-align: center; color: #888; margin-top: 30px; font-style: italic; }
 
-        /* --- نوافذ التحميل والنجاح --- */
+        /* النوافذ */
         .overlay {
             display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.7); align-items: center; justify-content: center; flex-direction: column;
             backdrop-filter: blur(4px);
         }
         
-        /* شريط التحميل */
         .progress-box { width: 80%; background: white; padding: 20px; border-radius: 12px; text-align: center; }
         .progress-bar-bg { width: 100%; height: 8px; background: #eee; border-radius: 4px; margin-top: 15px; overflow: hidden; }
         .progress-bar-fill { height: 100%; width: 0%; background: #2481cc; border-radius: 4px; transition: width 0.3s ease; }
         .loading-text { font-weight: bold; color: #333; margin-bottom: 5px; }
 
-        /* أنميشن النجاح */
         .success-box { text-align: center; color: white; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .checkmark-circle { width: 80px; height: 80px; background: #2ecc71; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; box-shadow: 0 4px 15px rgba(46, 204, 113, 0.5); }
         .checkmark { width: 40px; height: 20px; border-bottom: 5px solid white; border-right: 5px solid white; transform: rotate(45deg) translate(-2px, -2px); opacity: 0; animation: checkDraw 0.4s 0.3s forwards ease-out; }
         @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes checkDraw { from { width: 0; height: 0; opacity: 0; } to { width: 40px; height: 20px; opacity: 1; } }
 
-        /* تنسيق نافذة التأكيد (المراجعة) */
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; backdrop-filter: blur(2px);
@@ -143,11 +137,9 @@
         <button class="menu-btn btn-receipt" onclick="setupForm('receipt')">وصل قبض 📥</button>
         <button class="menu-btn btn-bank" onclick="setupForm('bank')">وصل مصرف 🏦</button>
         <button class="menu-btn btn-expense" onclick="setupForm('expense')">مصاريف 💸</button>
-        <!-- زر السجل الجديد -->
         <button class="menu-btn btn-history" onclick="showHistory()">سجل العمليات 🕒</button>
     </div>
 
-    <!-- قسم الفورم -->
     <div id="formSection" class="form-section">
         <button class="back-btn" onclick="showMenu()">🔙 رجوع للقائمة</button>
         <h3 id="formTitle" style="text-align: center; margin-bottom: 15px;"></h3>
@@ -198,9 +190,9 @@
         <div class="input-group" id="grp_date" style="display:block;">
             <label>التاريخ:</label>
             <div class="date-container">
-                <select id="date_day" class="date-select" aria-label="اليوم"></select>
-                <select id="date_month" class="date-select" aria-label="الشهر"></select>
-                <select id="date_year" class="date-select" aria-label="السنة"></select>
+                <select id="date_day" class="date-select"></select>
+                <select id="date_month" class="date-select"></select>
+                <select id="date_year" class="date-select"></select>
             </div>
         </div>
 
@@ -212,7 +204,6 @@
         <button class="submit-btn" onclick="prepareData()" id="btn">مراجعة وإرسال 📤</button>
     </div>
 
-    <!-- قسم السجل (History) -->
     <div id="historySection" class="form-section">
         <button class="back-btn" onclick="showMenu()">🔙 رجوع للقائمة</button>
         <h3 style="text-align: center; margin-bottom: 15px;">سجل العمليات 🕒</h3>
@@ -221,7 +212,6 @@
     </div>
 </div>
 
-<!-- نافذة التأكيد -->
 <div id="confirmModal" class="modal">
     <div class="modal-content">
         <h3>🔍 مراجعة البيانات</h3>
@@ -234,7 +224,6 @@
     </div>
 </div>
 
-<!-- 1. نافذة التحميل (Progress) -->
 <div id="loadingOverlay" class="overlay">
     <div class="progress-box">
         <div class="loading-text" id="loadingText">جاري المعالجة...</div>
@@ -244,26 +233,25 @@
     </div>
 </div>
 
-<!-- 2. نافذة النجاح (Success) -->
 <div id="successOverlay" class="overlay">
     <div class="success-box">
         <div class="checkmark-circle">
             <div class="checkmark"></div>
         </div>
         <h2>تم الإرسال بنجاح!</h2>
-        <p>تم حفظ البيانات وإشعار المدير.</p>
+        <p>تم حفظ البيانات بنجاح.</p>
     </div>
 </div>
 
 <script>
     // ==========================================
     const WEBHOOK_URL = "https://hrh1.app.n8n.cloud/webhook/85baeb02-5fd1-4e87-8249-04956c78a414";
-    const BOT_TOKEN = "8587976862:AAE8X1osdW9n_fPqr6N4mY2jDwRstEe_GPc"; 
-    const CHAT_ID = "5762584781"; 
+    // تم حذف توكن البوت والـ Chat ID من هنا لمنع مشاكل الحظر
     // ==========================================
 
     let currentType = '';
-    let pendingFormData = null;
+    // تغيير: استخدام كائن عادي بدلاً من FormData في المرحلة الأولى لضمان سلامة البيانات
+    let pendingPayload = null; 
     let pendingCaption = "";
     
     const tg = window.Telegram.WebApp;
@@ -287,29 +275,22 @@
         const currentDay = today.getDate();
 
         for (let d = 1; d <= 31; d++) {
-            let opt = document.createElement('option');
-            opt.value = d; opt.innerHTML = d;
-            if (d === currentDay) opt.selected = true;
-            daySelect.appendChild(opt);
+            let opt = document.createElement('option'); opt.value = d; opt.innerHTML = d;
+            if (d === currentDay) opt.selected = true; daySelect.appendChild(opt);
         }
         for (let m = 1; m <= 12; m++) {
-            let opt = document.createElement('option');
-            opt.value = m; opt.innerHTML = m; 
-            if (m === currentMonth) opt.selected = true;
-            monthSelect.appendChild(opt);
+            let opt = document.createElement('option'); opt.value = m; opt.innerHTML = m; 
+            if (m === currentMonth) opt.selected = true; monthSelect.appendChild(opt);
         }
         for (let y = currentYear - 1; y <= currentYear + 5; y++) {
-            let opt = document.createElement('option');
-            opt.value = y; opt.innerHTML = y;
-            if (y === currentYear) opt.selected = true;
-            yearSelect.appendChild(opt);
+            let opt = document.createElement('option'); opt.value = y; opt.innerHTML = y;
+            if (y === currentYear) opt.selected = true; yearSelect.appendChild(opt);
         }
     }
     initDateSelectors();
 
-    // --- دوال مساعدة ---
     function normalizeDigits(str) { 
-        return str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)); 
+        return str ? str.toString().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; 
     }
     
     function getCleanNumber(value) { 
@@ -324,15 +305,11 @@
         return parseInt(cleanValue).toLocaleString('en-US'); 
     }
 
-    // دالة التحقق من الحدود القصوى
     function validateLimit(id, max, label) {
         const el = document.getElementById(id);
         const val = parseFloat(getCleanNumber(el.value));
         
-        if (isNaN(val)) { 
-            el.style.border = "1px solid #ccc"; 
-            return true; 
-        }
+        if (isNaN(val) || el.value.trim() === '') return true; 
         
         if (val > max) {
             el.style.border = "2px solid red"; 
@@ -340,15 +317,12 @@
             tg.showAlert(`خطأ: ${label} لا يمكن أن يتجاوز ${max.toLocaleString('en-US')}`);
             return false;
         }
-        
         el.style.border = "1px solid #ccc"; 
         return true;
     }
 
     document.querySelectorAll('input').forEach(input => { 
-        input.addEventListener('input', () => { 
-            input.style.border = "1px solid #ccc"; 
-        }); 
+        input.addEventListener('input', () => { input.style.border = "1px solid #ccc"; }); 
     });
     
     document.querySelectorAll('.amount-field').forEach(input => {
@@ -428,164 +402,154 @@
         }
     }
 
+    // دالة جديدة لتجميع البيانات في كائن (Object) أولاً
     function prepareData() {
         document.querySelectorAll('input').forEach(i => i.style.border = "1px solid #ccc");
         const photoInput = document.getElementById("photo").files[0];
         
+        if (!photoInput) { tg.showAlert("يرجى إرفاق صورة!"); return; }
+
+        // 1. جمع البيانات الأساسية
         const d = document.getElementById('date_day').value.padStart(2, '0');
         const m = document.getElementById('date_month').value.padStart(2, '0');
         const y = document.getElementById('date_year').value;
         const date = `${y}-${m}-${d}`;
-        const name = document.getElementById("name").value;
-        
-        if (!photoInput) { tg.showAlert("يرجى إرفاق صورة!"); return; }
-        
-        // التحقق من الحدود (Validations)
-        if (['contract', 'receipt', 'bank'].includes(currentType)) {
-            if (!validateLimit('houseNum', 1178, 'رقم الدار')) return;
-        }
-        
+        const name = document.getElementById("name").value.trim();
+
+        // 2. إنشاء كائن البيانات (Payload Object)
+        let payload = {
+            operation_type: currentType,
+            date: date,
+            name: name,
+            data_entry_user: dataEntryUser,
+            data_entry_chat_id: dataEntryChatId,
+            timestamp: new Date().toISOString()
+        };
+
+        // 3. التحقق والملء حسب النوع
         if (currentType === 'contract') {
             if (!validateLimit('contractNum', 999999, 'رقم العقد')) return;
             if (!validateLimit('totalPrice', 500000000, 'السعر الكلي')) return;
             if (!validateLimit('downPayment', 150000000, 'المقدمة')) return;
-        }
-        
-        if (['receipt', 'bank'].includes(currentType)) {
-            if (!validateLimit('receiptNum', 999999, 'رقم الوصل')) return;
-            if (!validateLimit('amount', 150000000, 'المبلغ')) return;
-        }
-        
-        if (currentType === 'expense') {
-            if (!validateLimit('amount', 150000000, 'المبلغ')) return;
-        }
-
-        const formData = new FormData();
-        formData.append("operation_type", currentType);
-        formData.append("date", date);
-        formData.append("name", name);
-        formData.append("photo", photoInput);
-        formData.append("data_entry_user", dataEntryUser);
-        formData.append("data_entry_chat_id", dataEntryChatId);
-
-        let summaryHtml = "";
-        if (name) summaryHtml += `<div class="summary-item"><span class="s-label">الاسم:</span><span class="s-value">${name}</span></div>`;
-        summaryHtml += `<div class="summary-item"><span class="s-label">التاريخ:</span><span class="s-value">${date}</span></div>`;
-
-        let caption = "";
-        const footer = dataEntryUser ? `\n👨‍💻 *بواسطة:* ${dataEntryUser} (ID: ${dataEntryChatId})` : "";
-
-        // بناء الـ Caption وحفظ بيانات السجل
-        let historyData = {
-            type: currentType,
-            date: date,
-            timestamp: new Date().toLocaleString('ar-EG')
-        };
-
-        if (currentType === 'contract') {
-            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
-            if (name.trim().split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
             
+            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
+            if (name.split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
+
             const cNum = document.getElementById('contractNum').value;
             const hNum = document.getElementById('houseNum').value;
             const down = document.getElementById('downPayment').value; 
             const total = document.getElementById('totalPrice').value;
-            
+
             if (!cNum || !hNum || !down || !total) { tg.showAlert("يرجى ملء كافة حقول العقد!"); return; }
-            
-            formData.append("contract_num", cNum);
-            formData.append("house_num", hNum);
-            formData.append("down_payment", getCleanNumber(down));
-            formData.append("total_price", getCleanNumber(total));
-            
-            summaryHtml += `<div class="summary-item"><span class="s-label">رقم العقد:</span><span class="s-value">${cNum}</span></div>`;
-            summaryHtml += `<div class="summary-item"><span class="s-label">رقم الدار:</span><span class="s-value">${hNum}</span></div>`;
-            
-            caption = `📄 *عقد جديد*\n\n` + `🔢 *رقم العقد:* ${cNum}\n` + `🏠 *رقم الدار:* ${hNum}\n` + `👤 *الاسم:* ${name}\n` + `💰 *المقدمة:* ${down}\n` + `💵 *السعر الكلي:* ${total}\n` + `📅 *التاريخ:* ${date}` + footer;
-            
-            historyData.title = `عقد رقم ${cNum}`;
-            historyData.detail = `دار ${hNum} - ${name}`;
-            
+
+            payload.contract_num = cNum;
+            payload.house_num = hNum;
+            payload.down_payment = getCleanNumber(down);
+            payload.total_price = getCleanNumber(total);
+
         } else if (currentType === 'receipt') {
+            if (!validateLimit('receiptNum', 999999, 'رقم الوصل')) return;
+            if (!validateLimit('amount', 150000000, 'المبلغ')) return;
+
             const subType = document.getElementById('transactionType').value;
             const rNum = document.getElementById('receiptNum').value;
             const hNum = document.getElementById('houseNum').value;
             const amount = document.getElementById('amount').value;
-            
+
             if (!rNum || !hNum || !amount) { tg.showAlert("يرجى ملء كافة حقول الوصل!"); return; }
-            
-            formData.append("sub_type", subType);
-            formData.append("receipt_num", rNum);
-            formData.append("house_num", hNum);
-            formData.append("amount", getCleanNumber(amount));
-            
-            summaryHtml += `<div class="summary-item"><span class="s-label">النوع:</span><span class="s-value">${subType}</span></div>`;
-            
-            caption = `📥 *وصل قبض*\n\n` + `📌 *النوع:* ${subType}\n` + `🔢 *رقم الوصل:* ${rNum}\n` + `🏠 *رقم الدار:* ${hNum}\n` + `💰 *المبلغ:* ${amount}\n` + `📅 *التاريخ:* ${date}` + footer;
-            
-            historyData.title = `وصل قبض (${subType})`;
-            historyData.detail = `دار ${hNum} - ${amount}`;
-            
+
+            payload.sub_type = subType;
+            payload.receipt_num = rNum;
+            payload.house_num = hNum;
+            payload.amount = getCleanNumber(amount);
+
         } else if (currentType === 'bank') {
+            if (!validateLimit('receiptNum', 999999, 'رقم الوصل')) return;
+            if (!validateLimit('amount', 150000000, 'المبلغ')) return;
+
             const subType = document.getElementById('transactionType').value;
-            const rNum = document.getElementById('receiptNum').value || "-";
             const hNum = document.getElementById('houseNum').value;
             const amount = document.getElementById('amount').value;
-            
+
             if (!hNum || !amount) { tg.showAlert("يرجى ملء رقم الدار والمبلغ!"); return; }
-            
-            formData.append("sub_type", subType);
-            formData.append("receipt_num", document.getElementById('receiptNum').value);
-            formData.append("house_num", hNum);
-            formData.append("amount", getCleanNumber(amount));
-            
-            summaryHtml += `<div class="summary-item"><span class="s-label">النوع:</span><span class="s-value">${subType}</span></div>`;
-            
-            caption = `🏦 *وصل مصرف*\n\n` + `📌 *النوع:* ${subType}\n` + `🔢 *رقم الوصل:* ${rNum}\n` + `🏠 *رقم الدار:* ${hNum}\n` + `💰 *المبلغ:* ${amount}\n` + `📅 *التاريخ:* ${date}` + footer;
-            
-            historyData.title = `وصل مصرف (${subType})`;
-            historyData.detail = `دار ${hNum} - ${amount}`;
-            
+
+            payload.sub_type = subType;
+            payload.receipt_num = document.getElementById('receiptNum').value || "-";
+            payload.house_num = hNum;
+            payload.amount = getCleanNumber(amount);
+
         } else if (currentType === 'expense') {
-            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
-            if (name.trim().split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
+            if (!validateLimit('amount', 150000000, 'المبلغ')) return;
             
+            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
+            if (name.split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
+
             const reason = document.getElementById('reason').value;
             const amount = document.getElementById('amount').value;
             const hNum = document.getElementById('houseNum').value || "عام";
-            
+
             if (!reason || !amount) { tg.showAlert("يرجى ذكر السبب والمبلغ!"); return; }
-            
-            formData.append("house_num", hNum);
-            formData.append("reason", reason);
-            formData.append("amount", getCleanNumber(amount));
-            
-            caption = `💸 *مصاريف*\n\n` + `🏠 *رقم الدار:* ${hNum}\n` + `👤 *الاسم:* ${name}\n` + `📝 *السبب:* ${reason}\n` + `💰 *المبلغ:* ${amount}\n` + `📅 *التاريخ:* ${date}` + footer;
-            
-            historyData.title = `مصاريف`;
-            historyData.detail = `${amount} - ${name}`;
+
+            payload.house_num = hNum;
+            payload.reason = reason;
+            payload.amount = getCleanNumber(amount);
         }
 
-        pendingFormData = formData;
-        pendingCaption = caption;
-        // حفظ بيانات السجل مؤقتاً لتخزينها عند النجاح
-        pendingFormData.historyData = historyData;
+        // 4. بناء الكابشن
+        payload.caption = buildCaption(payload);
+        
+        // 5. حفظ البيانات في المتغير العام
+        pendingPayload = payload;
 
+        // 6. عرض الملخص
+        let summaryHtml = "";
+        const labelMap = {
+            'contract_num': 'رقم العقد', 'house_num': 'رقم الدار', 'name': 'الاسم',
+            'down_payment': 'المقدمة', 'total_price': 'السعر الكلي', 'date': 'التاريخ',
+            'sub_type': 'النوع', 'receipt_num': 'رقم الوصل', 'amount': 'المبلغ', 'reason': 'السبب'
+        };
+
+        for (const [key, value] of Object.entries(payload)) {
+            if(['data_entry_user', 'data_entry_chat_id', 'timestamp', 'caption', 'operation_type'].includes(key)) continue;
+            let label = labelMap[key] || key;
+            summaryHtml += `<div class="summary-item"><span class="s-label">${label}:</span><span class="s-value">${value}</span></div>`;
+        }
+        
         document.getElementById('summaryContent').innerHTML = summaryHtml;
         document.getElementById('confirmModal').style.display = 'flex';
     }
 
-    function closeModal() {
-        document.getElementById('confirmModal').style.display = 'none';
-        pendingFormData = null;
-        pendingCaption = "";
+    function buildCaption(data) {
+        const footer = data.data_entry_user ? `\n👨‍💻 *بواسطة:* ${data.data_entry_user}` : "";
+        let t = "";
+        
+        if (data.operation_type === 'contract') {
+            t = `📄 *عقد جديد*\n🔢 عقد: ${data.contract_num}\n🏠 دار: ${data.house_num}\n👤 ${data.name}\n💰 مقدمة: ${data.down_payment}\n💵 كلي: ${data.total_price}`;
+        } else if (data.operation_type === 'receipt') {
+            t = `📥 *وصل قبض* (${data.sub_type})\n🔢 وصل: ${data.receipt_num}\n🏠 دار: ${data.house_num}\n💰 مبلغ: ${data.amount}`;
+        } else if (data.operation_type === 'bank') {
+            t = `🏦 *وصل مصرف* (${data.sub_type})\n🔢 وصل: ${data.receipt_num}\n🏠 دار: ${data.house_num}\n💰 مبلغ: ${data.amount}`;
+        } else if (data.operation_type === 'expense') {
+            t = `💸 *مصاريف*\n🏠 دار: ${data.house_num}\n👤 ${data.name}\n📝 ${data.reason}\n💰 مبلغ: ${data.amount}`;
+        }
+        return t + `\n📅 ${data.date}` + footer;
     }
 
-    // --- دوال السجل (History) ---
-    function saveToHistory(data) {
+    function closeModal() {
+        document.getElementById('confirmModal').style.display = 'none';
+        pendingPayload = null;
+    }
+
+    function saveToHistory(payload) {
         let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
-        history.unshift(data); // إضافة في البداية
-        if (history.length > 10) history = history.slice(0, 10); // الاحتفاظ بآخر 10 فقط
+        let item = {
+            type: payload.operation_type,
+            title: payload.operation_type === 'contract' ? `عقد ${payload.contract_num}` : (payload.operation_type === 'expense' ? 'مصاريف' : `وصل ${payload.sub_type || ''}`),
+            detail: payload.amount || payload.total_price || '',
+            timestamp: new Date().toLocaleString('ar-EG')
+        };
+        history.unshift(item);
+        if (history.length > 10) history = history.slice(0, 10);
         localStorage.setItem('appHistory', JSON.stringify(history));
     }
 
@@ -606,9 +570,6 @@
         history.forEach(item => {
             const card = document.createElement('div');
             card.className = 'history-card';
-            let colorClass = 'status-success';
-            
-            // تحديد لون الشريط الجانبي حسب النوع
             let borderCol = '#ccc';
             if (item.type === 'contract') borderCol = '#f39c12';
             else if (item.type === 'receipt') borderCol = '#2ecc71';
@@ -617,10 +578,7 @@
             card.style.borderRightColor = borderCol;
 
             card.innerHTML = `
-                <div class="h-header">
-                    <span>${item.timestamp}</span>
-                    <span class="h-status ${colorClass}">تم الإرسال ✅</span>
-                </div>
+                <div class="h-header"><span>${item.timestamp}</span><span class="h-status status-success">تم ✅</span></div>
                 <div class="h-title">${item.title}</div>
                 <div class="h-detail">${item.detail}</div>
             `;
@@ -635,22 +593,12 @@
         }
     }
 
-    // --- دوال الأنيميشن والتحميل ---
     function showLoading() {
         document.getElementById('loadingOverlay').style.display = 'flex';
         let width = 0;
         const bar = document.getElementById('progressBar');
-        const text = document.getElementById('loadingText');
-        
-        // محاكاة تحميل
         const interval = setInterval(() => {
-            if (width >= 90) clearInterval(interval);
-            else {
-                width += Math.random() * 10;
-                bar.style.width = width + '%';
-                if(width > 30) text.innerText = "جاري رفع البيانات...";
-                if(width > 60) text.innerText = "جاري إرسال الإشعار...";
-            }
+            if (width < 90) { width += Math.random() * 10; bar.style.width = width + '%'; }
         }, 300);
         return interval;
     }
@@ -664,70 +612,50 @@
         }, 300);
     }
 
-    function showSuccess() {
-        const overlay = document.getElementById('successOverlay');
-        overlay.style.display = 'flex';
-        // إغلاق تلقائي بعد 2.5 ثانية
-        setTimeout(() => {
-            overlay.style.display = 'none';
-            showMenu(); // العودة للقائمة الرئيسية
-        }, 2500);
-    }
-
-    // --- الإرسال النهائي ---
     function finalSend() {
-        if (!pendingFormData) return;
-        const btnConfirm = document.getElementById("btnConfirm");
-        const photoFile = pendingFormData.get('photo'); 
+        if (!pendingPayload) return;
         
-        closeModal(); // إغلاق نافذة التأكيد
-        const loadInterval = showLoading(); // بدء شريط التحميل
-
-        // 1. إرسال إلى n8n
-        const p1 = fetch(WEBHOOK_URL, {
-            method: "POST",
-            body: pendingFormData
-        });
-
-        // 2. إرسال إلى المدير (أنت)
-        const adminFormData = new FormData();
-        adminFormData.append("chat_id", CHAT_ID);
-        adminFormData.append("caption", pendingCaption);
-        adminFormData.append("photo", photoFile);
-        adminFormData.append("parse_mode", "Markdown");
-
-        const p2 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-            method: "POST",
-            body: adminFormData
-        });
-
-        // 3. إرسال نسخة للمستخدم
-        let p3 = Promise.resolve({ ok: true }); 
-        if (dataEntryChatId && String(dataEntryChatId) !== String(CHAT_ID)) {
-            const userFormData = new FormData();
-            userFormData.append("chat_id", dataEntryChatId);
-            userFormData.append("caption", "✅ *تم رفع البيانات بنجاح!*\n\n" + pendingCaption);
-            userFormData.append("photo", photoFile);
-            userFormData.append("parse_mode", "Markdown");
-            p3 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: userFormData }).catch(e => ({ ok: false }));
+        closeModal();
+        const loadInterval = showLoading();
+        
+        // 1. إنشاء FormData طازج هنا لضمان وجود الملف
+        const formData = new FormData();
+        const photoFile = document.getElementById("photo").files[0];
+        
+        if(photoFile) {
+            formData.append("photo", photoFile);
         }
 
-        Promise.all([p1, p2, p3])
-        .then(results => {
+        // 2. إضافة جميع الحقول النصية بشكل فردي
+        for (const [key, value] of Object.entries(pendingPayload)) {
+            formData.append(key, value);
+        }
+
+        // 3. إضافة حقل JSON كامل (الحل لمشكلة ضياع الحقول)
+        // هذا الحقل يحتوي على كل البيانات كنص، n8n يمكنه قراءته بسهولة
+        formData.append("json_data", JSON.stringify(pendingPayload));
+
+        // 4. إرسال طلب واحد فقط لـ Webhook
+        fetch(WEBHOOK_URL, {
+            method: "POST",
+            body: formData
+        })
+        .then(response => {
             hideLoading(loadInterval);
-            if (results[0].ok && results[1].ok) {
-                // حفظ في السجل المحلي عند النجاح
-                if (pendingFormData.historyData) saveToHistory(pendingFormData.historyData);
-                // إظهار أنيميشن النجاح
-                showSuccess();
+            if (response.ok) {
+                saveToHistory(pendingPayload);
+                document.getElementById('successOverlay').style.display = 'flex';
+                setTimeout(() => {
+                    document.getElementById('successOverlay').style.display = 'none';
+                    showMenu();
+                }, 2500);
             } else {
-                tg.showAlert("تم الإرسال ولكن قد يكون حدث خطأ بسيط في الشبكة.");
-                showMenu();
+                throw new Error("فشل الاستجابة من الخادم (" + response.statusText + ")");
             }
         })
         .catch(err => {
             hideLoading(loadInterval);
-            tg.showAlert("حدث خطأ في الاتصال!");
+            tg.showAlert("حدث خطأ في الإرسال: " + err.message);
         });
     }
 </script>

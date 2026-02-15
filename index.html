@@ -476,6 +476,7 @@
 
         if (currentType === 'contract') {
             if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
+            if (name.trim().split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
 
             const cNum = document.getElementById('contractNum').value;
             const hNum = document.getElementById('houseNum').value;
@@ -556,6 +557,7 @@
 
         } else if (currentType === 'expense') {
             if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
+            if (name.trim().split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
 
             const reason = document.getElementById('reason').value;
             const amount = document.getElementById('amount').value;

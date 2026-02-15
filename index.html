@@ -46,6 +46,20 @@
         }
         input:focus, select:focus, textarea:focus { outline: 2px solid #2481cc; border-color: transparent; }
 
+        /* تنسيق خاص لقوائم التاريخ */
+        .date-container {
+            display: flex;
+            gap: 10px;
+        }
+        .date-select {
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+            -webkit-appearance: none; /* لتحسين المظهر في iOS */
+            -moz-appearance: none;
+            appearance: none;
+        }
+
         .submit-btn {
             width: 100%; padding: 14px; margin-top: 20px;
             background-color: var(--tg-theme-button-color, #2481cc);
@@ -164,9 +178,17 @@
             <textarea id="reason" rows="2"></textarea>
         </div>
 
+        <!-- قسم التاريخ الجديد (قوائم منسدلة) -->
         <div class="input-group" id="grp_date" style="display:block;">
             <label>التاريخ:</label>
-            <input type="date" id="date">
+            <div class="date-container">
+                <!-- اليوم -->
+                <select id="date_day" class="date-select" aria-label="اليوم"></select>
+                <!-- الشهر -->
+                <select id="date_month" class="date-select" aria-label="الشهر"></select>
+                <!-- السنة -->
+                <select id="date_year" class="date-select" aria-label="السنة"></select>
+            </div>
         </div>
 
         <div class="input-group" id="grp_photo" style="display:block;">
@@ -218,8 +240,49 @@
         document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${dataEntryUser} (ID: ${dataEntryChatId})`;
     }
 
-    document.getElementById('date').valueAsDate = new Date();
+    // --- تهيئة قوائم التاريخ (جديد) ---
+    function initDateSelectors() {
+        const daySelect = document.getElementById('date_day');
+        const monthSelect = document.getElementById('date_month');
+        const yearSelect = document.getElementById('date_year');
 
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth() + 1; // الأشهر تبدأ من 0
+        const currentDay = today.getDate();
+
+        // تعبئة الأيام (1-31)
+        for (let d = 1; d <= 31; d++) {
+            let opt = document.createElement('option');
+            opt.value = d;
+            opt.innerHTML = d;
+            if (d === currentDay) opt.selected = true;
+            daySelect.appendChild(opt);
+        }
+
+        // تعبئة الأشهر (1-12) - أرقام فقط
+        for (let m = 1; m <= 12; m++) {
+            let opt = document.createElement('option');
+            opt.value = m;
+            opt.innerHTML = m; 
+            if (m === currentMonth) opt.selected = true;
+            monthSelect.appendChild(opt);
+        }
+
+        // تعبئة السنوات (السنة الحالية - 1 إلى +5)
+        for (let y = currentYear - 1; y <= currentYear + 5; y++) {
+            let opt = document.createElement('option');
+            opt.value = y;
+            opt.innerHTML = y;
+            if (y === currentYear) opt.selected = true;
+            yearSelect.appendChild(opt);
+        }
+    }
+    
+    // تشغيل تهيئة التاريخ عند التحميل
+    initDateSelectors();
+
+    // --- الدوال المساعدة ---
     function normalizeDigits(str) {
         return str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
     }
@@ -268,7 +331,8 @@
         document.getElementById('formSection').style.display = 'block';
         
         document.querySelectorAll('input, textarea').forEach(i => {
-            if(i.id !== 'date' && i.type !== 'file') i.value = '';
+            // لا نصفر حقول التاريخ لأنها قوائم منسدلة
+            if(i.id !== 'photo' && !i.id.startsWith('date_')) i.value = '';
         });
 
         const title = document.getElementById('formTitle');
@@ -319,7 +383,13 @@
     // تجهيز البيانات
     function prepareData() {
         const photoInput = document.getElementById("photo").files[0];
-        const date = document.getElementById("date").value;
+        
+        // تجميع التاريخ من القوائم (السنة-الشهر-اليوم)
+        const d = document.getElementById('date_day').value.padStart(2, '0');
+        const m = document.getElementById('date_month').value.padStart(2, '0');
+        const y = document.getElementById('date_year').value;
+        const date = `${y}-${m}-${d}`;
+
         const name = document.getElementById("name").value;
         
         if (!photoInput) { tg.showAlert("يرجى إرفاق صورة!"); return; }

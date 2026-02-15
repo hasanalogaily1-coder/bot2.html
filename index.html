@@ -438,12 +438,22 @@
             if (!validateLimit('houseNum', 1178, 'رقم الدار')) return;
         }
 
-        // 2. السعر الكلي لا يتجاوز 500 مليون
+        // 2. رقم العقد لا يتجاوز 6 خانات (999,999)
+        if (currentType === 'contract') {
+            if (!validateLimit('contractNum', 999999, 'رقم العقد')) return;
+        }
+
+        // 3. رقم الوصل لا يتجاوز 6 خانات (999,999)
+        if (['receipt', 'bank'].includes(currentType)) {
+            if (!validateLimit('receiptNum', 999999, 'رقم الوصل')) return;
+        }
+
+        // 4. السعر الكلي لا يتجاوز 500 مليون
         if (currentType === 'contract') {
             if (!validateLimit('totalPrice', 500000000, 'السعر الكلي')) return;
         }
 
-        // 3. المبالغ الأخرى (المقدمة، المبلغ في الوصلات والمصاريف) لا تتجاوز 150 مليون
+        // 5. المبالغ الأخرى (المقدمة، المبلغ في الوصلات والمصاريف) لا تتجاوز 150 مليون
         if (currentType === 'contract') {
             if (!validateLimit('downPayment', 150000000, 'المقدمة')) return;
         } else {

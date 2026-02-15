@@ -55,7 +55,7 @@
             flex: 1;
             text-align: center;
             cursor: pointer;
-            -webkit-appearance: none; /* لتحسين المظهر في iOS */
+            -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
         }
@@ -343,7 +343,7 @@
             document.getElementById('grp_contractNum').style.display = 'block';
             document.getElementById('grp_houseNum').style.display = 'block';
             document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب):";
-            document.getElementById('grp_name').style.display = 'block';
+            document.getElementById('grp_name').style.display = 'block'; // الاسم مطلوب هنا
             document.getElementById('grp_contractDetails').style.display = 'block';
 
         } else if (type === 'receipt') {
@@ -354,7 +354,7 @@
             document.getElementById('lbl_receiptNum').innerText = "رقم الوصل (مطلوب):";
             document.getElementById('grp_houseNum').style.display = 'block';
             document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب):";
-            document.getElementById('grp_name').style.display = 'block';
+            // تم إخفاء حقل الاسم هنا
             document.getElementById('grp_amount').style.display = 'block';
 
         } else if (type === 'bank') {
@@ -365,7 +365,7 @@
             document.getElementById('lbl_receiptNum').innerText = "رقم الوصل (اختياري):";
             document.getElementById('grp_houseNum').style.display = 'block';
             document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب):";
-            document.getElementById('grp_name').style.display = 'block';
+            // تم إخفاء حقل الاسم هنا
             document.getElementById('grp_amount').style.display = 'block';
 
         } else if (type === 'expense') {
@@ -374,7 +374,7 @@
             document.getElementById('lbl_houseNum').innerText = "رقم الدار (اختياري):";
             document.getElementById('houseHint').style.display = 'block';
             document.getElementById('houseNum').inputmode = 'text'; 
-            document.getElementById('grp_name').style.display = 'block';
+            document.getElementById('grp_name').style.display = 'block'; // الاسم مطلوب هنا
             document.getElementById('grp_reason').style.display = 'block';
             document.getElementById('grp_amount').style.display = 'block';
         }
@@ -393,7 +393,7 @@
         const name = document.getElementById("name").value;
         
         if (!photoInput) { tg.showAlert("يرجى إرفاق صورة!"); return; }
-        if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
+        // تم إزالة التحقق العام من الاسم هنا ليتم داخل الحالات الخاصة
 
         const formData = new FormData();
         formData.append("operation_type", currentType);
@@ -405,7 +405,10 @@
         formData.append("data_entry_user", dataEntryUser);
         formData.append("data_entry_chat_id", dataEntryChatId);
 
-        let summaryHtml = `<div class="summary-item"><span class="s-label">الاسم:</span><span class="s-value">${name}</span></div>`;
+        let summaryHtml = "";
+        if (name) {
+            summaryHtml += `<div class="summary-item"><span class="s-label">الاسم:</span><span class="s-value">${name}</span></div>`;
+        }
         summaryHtml += `<div class="summary-item"><span class="s-label">التاريخ:</span><span class="s-value">${date}</span></div>`;
 
         let caption = "";
@@ -414,6 +417,8 @@
         const footer = dataEntryUser ? `\n👨‍💻 *بواسطة:* ${dataEntryUser} (ID: ${dataEntryChatId})` : "";
 
         if (currentType === 'contract') {
+            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
+
             const cNum = document.getElementById('contractNum').value;
             const hNum = document.getElementById('houseNum').value;
             const down = document.getElementById('downPayment').value; 
@@ -461,7 +466,7 @@
                       `📌 *النوع:* ${subType}\n` +
                       `🔢 *رقم الوصل:* ${rNum}\n` +
                       `🏠 *رقم الدار:* ${hNum}\n` +
-                      `👤 *الاسم:* ${name}\n` +
+                      // لا يوجد اسم هنا
                       `💰 *المبلغ:* ${amount}\n` +
                       `📅 *التاريخ:* ${date}` + footer;
 
@@ -487,11 +492,13 @@
                       `📌 *النوع:* ${subType}\n` +
                       `🔢 *رقم الوصل:* ${rNum}\n` +
                       `🏠 *رقم الدار:* ${hNum}\n` +
-                      `👤 *الاسم:* ${name}\n` +
+                      // لا يوجد اسم هنا
                       `💰 *المبلغ:* ${amount}\n` +
                       `📅 *التاريخ:* ${date}` + footer;
 
         } else if (currentType === 'expense') {
+            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
+
             const reason = document.getElementById('reason').value;
             const amount = document.getElementById('amount').value;
             const hNum = document.getElementById('houseNum').value || "عام";
@@ -545,29 +552,48 @@
             body: pendingFormData
         });
 
-        // 2. إرسال إلى تليجرام
-        const tgFormData = new FormData();
-        tgFormData.append("chat_id", CHAT_ID);
-        tgFormData.append("caption", pendingCaption);
-        tgFormData.append("photo", photoFile);
-        tgFormData.append("parse_mode", "Markdown");
+        // 2. إرسال إلى المدير (أنت)
+        const adminFormData = new FormData();
+        adminFormData.append("chat_id", CHAT_ID);
+        adminFormData.append("caption", pendingCaption);
+        adminFormData.append("photo", photoFile);
+        adminFormData.append("parse_mode", "Markdown");
 
         const p2 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
             method: "POST",
-            body: tgFormData
+            body: adminFormData
         });
 
-        Promise.all([p1, p2])
+        // 3. إرسال نسخة للمستخدم (المدخل) إذا كان مختلفاً عن المدير
+        let p3 = Promise.resolve({ ok: true }); 
+
+        if (dataEntryChatId && String(dataEntryChatId) !== String(CHAT_ID)) {
+            const userFormData = new FormData();
+            userFormData.append("chat_id", dataEntryChatId);
+            userFormData.append("caption", "✅ *تم رفع البيانات بنجاح!*\n\n" + pendingCaption);
+            userFormData.append("photo", photoFile);
+            userFormData.append("parse_mode", "Markdown");
+
+            p3 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                method: "POST",
+                body: userFormData
+            }).catch(e => {
+                console.error("فشل إرسال نسخة المستخدم", e);
+                return { ok: false };
+            });
+        }
+
+        Promise.all([p1, p2, p3])
         .then(results => {
             const n8nRes = results[0];
-            const tgRes = results[1];
+            const adminRes = results[1];
 
-            if (n8nRes.ok && tgRes.ok) {
-                tg.showAlert("تم الإرسال وحفظ البيانات بنجاح! ✅");
+            if (n8nRes.ok && adminRes.ok) {
+                tg.showAlert("تم الإرسال وحفظ البيانات بنجاح! ✅\nوصلت نسخة إليك أيضاً.");
                 closeModal();
                 showMenu();
             } else {
-                tg.showAlert("قد يكون حدث خطأ في إحدى عمليات الإرسال.");
+                tg.showAlert("تم الإرسال ولكن قد يكون حدث خطأ بسيط في الشبكة.");
                 closeModal();
                 showMenu();
             }

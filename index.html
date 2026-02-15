@@ -43,6 +43,7 @@
             background-color: var(--tg-theme-secondary-bg-color, #ffffff);
             color: var(--tg-theme-text-color, #000);
             font-size: 16px;
+            transition: border-color 0.3s; /* تأثير حركي عند تغير لون الحدود */
         }
         input:focus, select:focus, textarea:focus { outline: 2px solid #2481cc; border-color: transparent; }
 
@@ -300,6 +301,35 @@
         return parseInt(cleanValue).toLocaleString('en-US');
     }
 
+    // دالة تحقق جديدة لضبط الحدود وتغيير لون الحقل
+    function validateLimit(id, max, label) {
+        const el = document.getElementById(id);
+        const val = parseFloat(getCleanNumber(el.value));
+        
+        // إذا كان الحقل فارغاً، لا نفحص الحد الأقصى هنا (يتم فحصه في "مطلوب")
+        if (isNaN(val)) {
+            el.style.border = "1px solid #ccc";
+            return true;
+        }
+
+        if (val > max) {
+            el.style.border = "2px solid red"; // تلوين الحقل بالأحمر
+            el.focus();
+            tg.showAlert(`خطأ: ${label} لا يمكن أن يتجاوز ${max.toLocaleString('en-US')}`);
+            return false;
+        }
+        
+        el.style.border = "1px solid #ccc"; // إعادة اللون الطبيعي
+        return true;
+    }
+
+    // إعادة تعيين ألوان الحقول عند الكتابة
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', () => {
+            input.style.border = "1px solid #ccc";
+        });
+    });
+
     document.querySelectorAll('.amount-field').forEach(input => {
         input.addEventListener('input', (e) => {
             let cursorPosition = e.target.selectionStart;
@@ -323,6 +353,9 @@
         });
         document.getElementById('houseHint').style.display = 'none';
         document.getElementById('houseNum').inputmode = 'decimal';
+        
+        // إعادة تعيين الحدود عند تغيير الصفحة
+        document.querySelectorAll('input').forEach(i => i.style.border = "1px solid #ccc");
     }
 
     function setupForm(type) {
@@ -383,6 +416,9 @@
 
     // تجهيز البيانات
     function prepareData() {
+        // إعادة تعيين جميع الحدود قبل الفحص
+        document.querySelectorAll('input').forEach(i => i.style.border = "1px solid #ccc");
+
         const photoInput = document.getElementById("photo").files[0];
         
         // تجميع التاريخ من القوائم (السنة-الشهر-اليوم)
@@ -394,8 +430,29 @@
         const name = document.getElementById("name").value;
         
         if (!photoInput) { tg.showAlert("يرجى إرفاق صورة!"); return; }
-        // تم إزالة التحقق العام من الاسم هنا ليتم داخل الحالات الخاصة
+        
+        // التحقق من الحدود القصوى (Validations)
+        
+        // 1. رقم الدار لا يتجاوز 1178 (في العقد والقبض والمصرف)
+        if (['contract', 'receipt', 'bank'].includes(currentType)) {
+            if (!validateLimit('houseNum', 1178, 'رقم الدار')) return;
+        }
 
+        // 2. السعر الكلي لا يتجاوز 500 مليون
+        if (currentType === 'contract') {
+            if (!validateLimit('totalPrice', 500000000, 'السعر الكلي')) return;
+        }
+
+        // 3. المبالغ الأخرى (المقدمة، المبلغ في الوصلات والمصاريف) لا تتجاوز 150 مليون
+        if (currentType === 'contract') {
+            if (!validateLimit('downPayment', 150000000, 'المقدمة')) return;
+        } else {
+            // لباقي الأنواع (receipt, bank, expense)
+            if (!validateLimit('amount', 150000000, 'المبلغ')) return;
+        }
+
+
+        // إكمال جمع البيانات
         const formData = new FormData();
         formData.append("operation_type", currentType);
         formData.append("date", date);

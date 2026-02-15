@@ -96,11 +96,18 @@
         .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
         .btn-confirm { flex: 1; background: #2ecc71; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-cancel { flex: 1; background: #e74c3c; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        /* شريط المستخدم */
+        .user-badge {
+            font-size: 12px; color: var(--tg-theme-hint-color, #888);
+            margin-bottom: 15px; text-align: center;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div class="user-badge" id="userBadge"></div>
     
     <div id="mainMenu">
         <h3 style="text-align: center; margin-bottom: 20px;">اختر نوع العملية 👇</h3>
@@ -136,7 +143,7 @@
         </div>
 
         <div class="input-group" id="grp_name">
-            <label>الاسم:</label>
+            <label>الاسم (صاحب المعاملة):</label>
             <input type="text" id="name">
         </div>
 
@@ -197,8 +204,19 @@
     let currentType = '';
     let pendingFormData = null; // بيانات n8n
     let pendingCaption = "";    // نص رسالة تليجرام
+    
+    // إعداد التليجرام وسحب اسم المستخدم والآيدي
     const tg = window.Telegram.WebApp;
     tg.expand();
+
+    const user = tg.initDataUnsafe?.user;
+    const dataEntryUser = user ? `${user.first_name} ${user.last_name || ''}`.trim() : "";
+    const dataEntryChatId = user ? user.id : ""; // سحب الآيدي
+    
+    // عرض اسم المستخدم في الأعلى للتأكد
+    if (dataEntryUser) {
+        document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${dataEntryUser} (ID: ${dataEntryChatId})`;
+    }
 
     document.getElementById('date').valueAsDate = new Date();
 
@@ -312,16 +330,23 @@
         formData.append("date", date);
         formData.append("name", name);
         formData.append("photo", photoInput);
+        
+        // إرفاق اسم المستخدم والآيدي
+        formData.append("data_entry_user", dataEntryUser);
+        formData.append("data_entry_chat_id", dataEntryChatId);
 
         let summaryHtml = `<div class="summary-item"><span class="s-label">الاسم:</span><span class="s-value">${name}</span></div>`;
         summaryHtml += `<div class="summary-item"><span class="s-label">التاريخ:</span><span class="s-value">${date}</span></div>`;
 
         let caption = "";
 
+        // اضافة اسم المدخل للرسالة في التليجرام
+        const footer = dataEntryUser ? `\n👨‍💻 *بواسطة:* ${dataEntryUser} (ID: ${dataEntryChatId})` : "";
+
         if (currentType === 'contract') {
             const cNum = document.getElementById('contractNum').value;
             const hNum = document.getElementById('houseNum').value;
-            const down = document.getElementById('downPayment').value; // القيمة الظاهرة (مع الفواصل)
+            const down = document.getElementById('downPayment').value; 
             const total = document.getElementById('totalPrice').value;
 
             if (!cNum || !hNum || !down || !total) { tg.showAlert("يرجى ملء كافة حقول العقد!"); return; }
@@ -342,7 +367,7 @@
                       `👤 *الاسم:* ${name}\n` +
                       `💰 *المقدمة:* ${down}\n` +
                       `💵 *السعر الكلي:* ${total}\n` +
-                      `📅 *التاريخ:* ${date}`;
+                      `📅 *التاريخ:* ${date}` + footer;
 
         } else if (currentType === 'receipt') {
             const subType = document.getElementById('transactionType').value;
@@ -368,7 +393,7 @@
                       `🏠 *رقم الدار:* ${hNum}\n` +
                       `👤 *الاسم:* ${name}\n` +
                       `💰 *المبلغ:* ${amount}\n` +
-                      `📅 *التاريخ:* ${date}`;
+                      `📅 *التاريخ:* ${date}` + footer;
 
         } else if (currentType === 'bank') {
             const subType = document.getElementById('transactionType').value;
@@ -394,7 +419,7 @@
                       `🏠 *رقم الدار:* ${hNum}\n` +
                       `👤 *الاسم:* ${name}\n` +
                       `💰 *المبلغ:* ${amount}\n` +
-                      `📅 *التاريخ:* ${date}`;
+                      `📅 *التاريخ:* ${date}` + footer;
 
         } else if (currentType === 'expense') {
             const reason = document.getElementById('reason').value;
@@ -416,7 +441,7 @@
                       `👤 *الاسم:* ${name}\n` +
                       `📝 *السبب:* ${reason}\n` +
                       `💰 *المبلغ:* ${amount}\n` +
-                      `📅 *التاريخ:* ${date}`;
+                      `📅 *التاريخ:* ${date}` + footer;
         }
 
         // تخزين البيانات مؤقتاً
@@ -434,12 +459,12 @@
         pendingCaption = "";
     }
 
-    // الإرسال الفعلي (إلى n8n وتليجرام معاً)
+    // الإرسال الفعلي
     function finalSend() {
         if (!pendingFormData) return;
 
         const btnConfirm = document.getElementById("btnConfirm");
-        const photoFile = pendingFormData.get('photo'); // استرجاع الملف لإرساله لتليجرام
+        const photoFile = pendingFormData.get('photo'); 
         
         btnConfirm.disabled = true;
         btnConfirm.innerText = "جاري الإرسال...";
@@ -462,7 +487,6 @@
             body: tgFormData
         });
 
-        // انتظار اكتمال العمليتين
         Promise.all([p1, p2])
         .then(results => {
             const n8nRes = results[0];
@@ -473,9 +497,9 @@
                 closeModal();
                 showMenu();
             } else {
-                tg.showAlert("قد يكون حدث خطأ في إحدى عمليات الإرسال، تحقق من السجل.");
+                tg.showAlert("قد يكون حدث خطأ في إحدى عمليات الإرسال.");
                 closeModal();
-                showMenu(); // نعيد المستخدم للقائمة حتى لو فشل جزء واحد لتجنب التعليق
+                showMenu();
             }
         })
         .catch(err => {

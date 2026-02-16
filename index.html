@@ -469,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         t += `\n\n📅 *التاريخ:* ${data.date}`;
-        if (data.data_entry_user) t += `\n👨‍💻 *بواسطة:* ${data.data_entry_user}`;
+        if (data.entry_by) t += `\n👨‍💻 *بواسطة:* ${data.entry_by}`;
         
         return t;
     }
@@ -641,7 +641,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const date = `${y}-${m}-${d}`;
         const name = document.getElementById("name").value.trim();
 
-        let payload = { operation_type: currentType, date: date, name: name, data_entry_user: dataEntryUser, timestamp: new Date().toISOString() };
+        // 1. استخدام الأسماء المطلوبة entry_by و chat_id في البايلود
+        let payload = { 
+            operation_type: currentType, 
+            date: date, 
+            name: name, 
+            entry_by: dataEntryUser, // الاسم الجديد
+            chat_id: dataEntryChatId, // الاسم الجديد
+            timestamp: new Date().toISOString() 
+        };
         
         // === تطبيق المحددات مع تطبيع الأرقام (تحويل العربي لإنجليزي) ===
 
@@ -718,8 +726,9 @@ document.addEventListener('DOMContentLoaded', function() {
             'sub_type': 'النوع', 'receipt_num': 'رقم الوصل', 'amount': 'المبلغ', 'reason': 'السبب' 
         };
 
+        // 2. تحديث قائمة الاستثناءات في العرض
         for (const [key, value] of Object.entries(payload)) {
-            if(['data_entry_user','timestamp','operation_type'].includes(key)) continue;
+            if(['entry_by','chat_id','timestamp','operation_type'].includes(key)) continue;
             let label = labelMap[key] || key;
             summaryHtml += `<div class="summary-item"><span class="s-label">${label}:</span><span class="s-value">${value}</span></div>`;
         }

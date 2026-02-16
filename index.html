@@ -552,10 +552,31 @@ document.addEventListener('DOMContentLoaded', function() {
     function getCleanNumber(val) { return val ? val.toString().replace(/[^\d]/g,'') : ''; }
     function formatWithCommas(val) { const n = getCleanNumber(val); return n ? parseInt(n).toLocaleString('en-US') : ''; }
     
+    // دالة التحقق من الحدود (المحددات)
+    function validateLimit(id, max, label) {
+        const el = document.getElementById(id);
+        const val = parseFloat(getCleanNumber(el.value));
+        if (isNaN(val) || el.value.trim() === '') return true; 
+        if (val > max) {
+            el.style.border = "2px solid #e74c3c"; 
+            el.focus();
+            tg.showAlert(`عذراً، القيمة المدخلة في حقل "${label}" غير صحيحة أو خارج النطاق المسموح.`);
+            return false;
+        }
+        el.style.border = "2px solid transparent"; 
+        return true;
+    }
+
     document.querySelectorAll('.amount-field').forEach(input => {
         input.addEventListener('input', (e) => {
             const v = e.target.value; e.target.value = formatWithCommas(v);
+            e.target.style.border = "2px solid transparent"; // إعادة تعيين الحدود عند الكتابة
         });
+    });
+    
+    // إضافة مستمعين لحدث الإدخال لباقي الحقول لإلغاء اللون الأحمر
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', () => { input.style.border = "2px solid transparent"; });
     });
 
     window.prepareData = function() {
@@ -569,23 +590,77 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let payload = { operation_type: currentType, date: date, name: name, data_entry_user: dataEntryUser, timestamp: new Date().toISOString() };
         
-        // التحقق البسيط (يمكنك إضافة التحقق الكامل هنا)
-        if(currentType === 'contract' && (!document.getElementById('contractNum').value || !document.getElementById('houseNum').value)) {
-            tg.showAlert("يرجى ملء الحقول!"); return;
+        // === تطبيق المحددات (Validation Constraints) ===
+
+        // 1. التحقق من رقم الدار (للعقود والوصولات)
+        if (['contract', 'receipt', 'bank'].includes(currentType)) {
+            if (!validateLimit('houseNum', 1178, 'رقم الدار')) return;
         }
-        
-        // تعبئة البيانات حسب النوع
-        if(currentType === 'contract') {
+
+        // 2. التحقق حسب نوع العملية
+        if (currentType === 'contract') {
+            // التحقق من الحدود للعقد
+            if (!validateLimit('contractNum', 999999, 'رقم العقد')) return;
+            if (!validateLimit('totalPrice', 500000000, 'السعر الكلي')) return;
+            if (!validateLimit('downPayment', 150000000, 'المقدمة')) return;
+
+            // التحقق من الاسم الثلاثي
+            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
+            if (name.split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
+
+            // التحقق من ملء الحقول الإجبارية
+            if (!document.getElementById('contractNum').value || !document.getElementById('houseNum').value || !document.getElementById('downPayment').value || !document.getElementById('totalPrice').value) {
+                tg.showAlert("يرجى ملء كافة حقول العقد!"); return;
+            }
+
             payload.contract_num = document.getElementById('contractNum').value;
             payload.house_num = document.getElementById('houseNum').value;
             payload.down_payment = getCleanNumber(document.getElementById('downPayment').value);
             payload.total_price = getCleanNumber(document.getElementById('totalPrice').value);
-        } else if(currentType === 'receipt' || currentType === 'bank') {
+
+        } else if (currentType === 'receipt') {
+            // التحقق من الحدود للوصل
+            if (!validateLimit('receiptNum', 999999, 'رقم الوصل')) return;
+            if (!validateLimit('amount', 150000000, 'المبلغ')) return;
+
+            // التحقق من ملء الحقول
+            if (!document.getElementById('receiptNum').value || !document.getElementById('houseNum').value || !document.getElementById('amount').value) {
+                tg.showAlert("يرجى ملء كافة حقول الوصل!"); return;
+            }
+
             payload.sub_type = document.getElementById('transactionType').value;
             payload.receipt_num = document.getElementById('receiptNum').value;
             payload.house_num = document.getElementById('houseNum').value;
             payload.amount = getCleanNumber(document.getElementById('amount').value);
-        } else {
+
+        } else if (currentType === 'bank') {
+            // التحقق من الحدود للمصرف
+            if (!validateLimit('receiptNum', 999999, 'رقم الوصل')) return;
+            if (!validateLimit('amount', 150000000, 'المبلغ')) return;
+
+            // التحقق من ملء الحقول
+            if (!document.getElementById('houseNum').value || !document.getElementById('amount').value) {
+                tg.showAlert("يرجى ملء رقم الدار والمبلغ!"); return;
+            }
+
+            payload.sub_type = document.getElementById('transactionType').value;
+            payload.receipt_num = document.getElementById('receiptNum').value || "-";
+            payload.house_num = document.getElementById('houseNum').value;
+            payload.amount = getCleanNumber(document.getElementById('amount').value);
+
+        } else if (currentType === 'expense') {
+            // التحقق من الحدود للمصاريف
+            if (!validateLimit('amount', 150000000, 'المبلغ')) return;
+
+            // التحقق من الاسم الثلاثي
+            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
+            if (name.split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
+
+            // التحقق من ملء الحقول
+            if (!document.getElementById('reason').value || !document.getElementById('amount').value) {
+                tg.showAlert("يرجى ذكر السبب والمبلغ!"); return;
+            }
+
             payload.house_num = document.getElementById('houseNum').value || "عام";
             payload.reason = document.getElementById('reason').value;
             payload.amount = getCleanNumber(document.getElementById('amount').value);
@@ -595,9 +670,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // عرض الملخص
         let summaryHtml = "";
+        const labelMap = { 
+            'contract_num': 'رقم العقد', 'house_num': 'رقم الدار', 'name': 'الاسم', 
+            'down_payment': 'المقدمة', 'total_price': 'السعر الكلي', 'date': 'التاريخ', 
+            'sub_type': 'النوع', 'receipt_num': 'رقم الوصل', 'amount': 'المبلغ', 'reason': 'السبب' 
+        };
+
         for (const [key, value] of Object.entries(payload)) {
             if(['data_entry_user','timestamp','operation_type'].includes(key)) continue;
-            summaryHtml += `<div class="summary-item"><span class="s-label">${key}:</span><span class="s-value">${value}</span></div>`;
+            let label = labelMap[key] || key;
+            summaryHtml += `<div class="summary-item"><span class="s-label">${label}:</span><span class="s-value">${value}</span></div>`;
         }
         document.getElementById('summaryContent').innerHTML = summaryHtml;
         document.getElementById('confirmModal').style.display = 'flex';
@@ -643,5 +725,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
-
-

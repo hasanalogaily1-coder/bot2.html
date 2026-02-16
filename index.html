@@ -98,6 +98,8 @@
         .btn-bank { background: linear-gradient(135deg, #3498db, #2980b9); }
         .btn-expense { background: linear-gradient(135deg, #e74c3c, #c0392b); }
         .btn-history { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        /* زر البحث الجديد */
+        .btn-search { background: linear-gradient(135deg, #34495e, #2c3e50); grid-column: span 2; flex-direction: row;}
 
         .form-section { 
             display: none; 
@@ -134,14 +136,10 @@
         }
 
         select {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: left 10px center;
-            background-size: 16px;
-            padding-left: 30px;
+            background-repeat: no-repeat; background-position: left 10px center;
+            background-size: 16px; padding-left: 30px;
         }
         
         input:focus, select:focus, textarea:focus { 
@@ -183,7 +181,6 @@
             background: rgba(46, 204, 113, 0.1);
         }
 
-        /* الكاميرا المدمجة */
         #cameraModal {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%; background: #000;
@@ -212,6 +209,39 @@
             border-radius: 30px; border: 1px solid rgba(255,255,255,0.3);
         }
 
+        /* تنسيقات قسم البحث المحدثة */
+        .search-results { margin-top: 20px; }
+        .result-card {
+            background: var(--tg-theme-bg-color, #f9f9f9);
+            padding: 12px; margin-bottom: 10px; border-radius: 10px;
+            border-right: 4px solid #ccc;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .res-type { font-size: 12px; font-weight: bold; color: #666; margin-bottom: 4px; display: flex; justify-content: space-between;}
+        .res-title { font-weight: bold; font-size: 15px; margin-bottom: 2px; }
+        .res-info { font-size: 13px; color: #555; }
+        .res-amount { color: var(--primary-color); font-weight: bold; margin-top: 5px; }
+        
+        .spinner {
+            border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%;
+            width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* تنسيقات فلاتر البحث */
+        .filter-container {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;
+        }
+        .filter-chip {
+            padding: 8px 12px; background: #e0e0e0; border-radius: 20px;
+            font-size: 12px; font-weight: bold; color: #555; cursor: pointer;
+            transition: all 0.2s; user-select: none; border: 2px solid transparent;
+        }
+        .filter-chip.active {
+            background: var(--primary-color); color: white; border-color: var(--primary-color);
+        }
+
         /* السجل */
         .history-card {
             background: var(--tg-theme-secondary-bg-color, #fff);
@@ -225,7 +255,7 @@
         .h-title { font-weight: bold; font-size: 16px; margin-top: 4px; }
         .h-detail { font-size: 14px; color: var(--tg-theme-hint-color, #555); }
         .status-success { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;}
-        .no-history { text-align: center; color: #888; margin-top: 40px; font-style: italic; }
+        .no-history { text-align: center; color: #888; margin-top: 40px; }
 
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
@@ -248,7 +278,6 @@
 
 <div id="loader">جار التحميل...</div>
 
-<!-- نافذة الكاميرا المدمجة -->
 <div id="cameraModal">
     <video id="cameraVideo" autoplay playsinline muted></video>
     <canvas id="cameraCanvas" style="display:none;"></canvas>
@@ -270,6 +299,35 @@
             <button class="menu-btn btn-bank" onclick="setupForm('bank')"><span>🏦</span> وصل مصرف</button>
             <button class="menu-btn btn-expense" onclick="setupForm('expense')"><span>💸</span> مصاريف</button>
             <button class="menu-btn btn-history full-width" onclick="showHistory()"><span>🕒</span> سجل العمليات</button>
+            <button class="menu-btn btn-search" onclick="showSearchSection()"><span>🔍</span> بحث شامل</button>
+        </div>
+    </div>
+
+    <!-- قسم البحث المحدث -->
+    <div id="searchSection" class="form-section">
+        <button class="back-btn" onclick="showMenu()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 5px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            رجوع للقائمة
+        </button>
+        <h3 style="text-align: center; margin-bottom: 15px;">🔍 بحث شامل في النظام</h3>
+        
+        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+            <input type="text" id="searchInput" placeholder="اكتب للبحث (دار، اسم، وصل، عقد)..." style="flex:1;">
+            <button onclick="performSearch()" style="background: var(--primary-color); color: white; border: none; border-radius: 12px; padding: 0 15px; font-weight: bold;">بحث</button>
+        </div>
+
+        <!-- فلاتر البحث -->
+        <div class="filter-container">
+            <div class="filter-chip active" data-type="all" onclick="toggleSearchFilter(this)">الكل</div>
+            <div class="filter-chip" data-type="contracts" onclick="toggleSearchFilter(this)">العقود</div>
+            <div class="filter-chip" data-type="receipts" onclick="toggleSearchFilter(this)">المقبوضات</div>
+            <div class="filter-chip" data-type="bank" onclick="toggleSearchFilter(this)">المصرف</div>
+            <div class="filter-chip" data-type="expenses" onclick="toggleSearchFilter(this)">المصاريف</div>
+        </div>
+        
+        <div id="searchSpinner" class="spinner"></div>
+        <div id="searchResults" class="search-results">
+            <div style="text-align: center; color: #888; font-size: 13px; margin-top:20px;">يمكنك تحديد أكثر من فلتر في نفس الوقت</div>
         </div>
     </div>
 
@@ -337,23 +395,10 @@
             <label>صورة الوصل/العقد:</label>
             
             <div class="photo-buttons-container">
-                <!-- زر يفتح الكاميرا المدمجة -->
-                <div class="photo-label-btn" id="btn_visual_cam" onclick="openCameraModal()">
-                    📷 التقاط صورة
-                </div>
-                
-                <!-- زر يفتح الاستوديو -->
-                <label for="gallery_input" class="photo-label-btn" id="btn_visual_gal">
-                    🖼️ من الاستوديو
-                </label>
+                <div class="photo-label-btn" id="btn_visual_cam" onclick="openCameraModal()">📷 التقاط صورة</div>
+                <label for="gallery_input" class="photo-label-btn" id="btn_visual_gal">🖼️ من الاستوديو</label>
             </div>
-
-            <!-- عرض اسم الملف المختار -->
-            <div id="fileNameDisplay" style="margin-top: 10px; text-align: center; font-size: 13px; color: #777;">
-                لم يتم اختيار صورة
-            </div>
-
-            <!-- حقل الاستوديو فقط -->
+            <div id="fileNameDisplay" style="margin-top: 10px; text-align: center; font-size: 13px; color: #777;">لم يتم اختيار صورة</div>
             <input type="file" id="gallery_input" accept="image/*" style="display:none;" onchange="handleFileSelect(this, 'gal')">
         </div>
 
@@ -387,19 +432,22 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // إخفاء اللودر وإظهار التطبيق عند جاهزية الصفحة
     document.getElementById('loader').style.display = 'none';
     document.getElementById('appContainer').style.display = 'block';
 
     const WEBHOOK_URL = "https://hrh1.app.n8n.cloud/webhook/85baeb02-5fd1-4e87-8249-04956c78a414";
+    // رابط الويب هوك الخاص بالبحث (نفس الويب هوك الأساسي لكن مع مسار مختلف في n8n إذا أردت، أو نفسه)
+    const SEARCH_WEBHOOK_URL = "https://hrh1.app.n8n.cloud/webhook/search-endpoint"; 
+    
     const BOT_TOKEN = "8587976862:AAE8X1osdW9n_fPqr6N4mY2jDwRstEe_GPc"; 
     const CHAT_ID = "5762584781"; 
 
     let currentType = '';
     let pendingPayload = null; 
-    let pendingCaption = "";
     let selectedPhotoFile = null;
     let cameraStream = null;
+    // متغير لتخزين الفلاتر المحددة (افتراضياً الكل)
+    let selectedSearchFilters = ['all'];
 
     const tg = window.Telegram.WebApp;
     tg.expand();
@@ -412,6 +460,99 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${dataEntryUser}`;
     }
 
+    // --- منطق الفلاتر ---
+    window.toggleSearchFilter = function(el) {
+        const type = el.getAttribute('data-type');
+        
+        if (type === 'all') {
+            // إذا ضغط "الكل"، ألغِ البقية وحدد الكل
+            selectedSearchFilters = ['all'];
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+        } else {
+            // إذا ضغط نوع محدد، ألغِ "الكل"
+            if (selectedSearchFilters.includes('all')) {
+                selectedSearchFilters = [];
+                document.querySelector('.filter-chip[data-type="all"]').classList.remove('active');
+            }
+
+            // تبديل الحالة (تحديد/إلغاء)
+            if (selectedSearchFilters.includes(type)) {
+                selectedSearchFilters = selectedSearchFilters.filter(t => t !== type);
+                el.classList.remove('active');
+            } else {
+                selectedSearchFilters.push(type);
+                el.classList.add('active');
+            }
+
+            // إذا لم يبق أي شيء محدد، عد إلى "الكل"
+            if (selectedSearchFilters.length === 0) {
+                selectedSearchFilters = ['all'];
+                document.querySelector('.filter-chip[data-type="all"]').classList.add('active');
+            }
+        }
+    };
+
+    window.showSearchSection = function() {
+        document.getElementById('mainMenu').style.display = 'none';
+        document.getElementById('searchSection').style.display = 'block';
+        document.getElementById('formSection').style.display = 'none';
+        document.getElementById('historySection').style.display = 'none';
+    };
+
+    window.performSearch = function() {
+        const query = document.getElementById('searchInput').value.trim();
+        if (!query) return;
+
+        const resDiv = document.getElementById('searchResults');
+        const spinner = document.getElementById('searchSpinner');
+        
+        resDiv.innerHTML = "";
+        spinner.style.display = "block";
+
+        // إرسال الفلاتر المحددة مع الطلب (مفصولة بفواصل)
+        const sheetsParam = selectedSearchFilters.join(',');
+
+        fetch(`${SEARCH_WEBHOOK_URL}?query=${encodeURIComponent(query)}&sheets=${sheetsParam}`)
+        .then(response => response.json())
+        .then(data => {
+            spinner.style.display = "none";
+            if (!data || data.length === 0) {
+                resDiv.innerHTML = '<div style="text-align:center; padding:20px;">لا توجد نتائج مطابقة ❌</div>';
+                return;
+            }
+
+            data.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                
+                let borderCol = '#ccc';
+                if(item.sheet === 'العقود') borderCol = '#f1c40f';
+                else if(item.sheet === 'المقبوضات') borderCol = '#2ecc71';
+                else if(item.sheet === 'المصرف') borderCol = '#3498db';
+                else if(item.sheet === 'المصاريف') borderCol = '#e74c3c';
+                card.style.borderRightColor = borderCol;
+
+                card.innerHTML = `
+                    <div class="res-type">
+                        <span>${item.sheet}</span>
+                        <span>${item.date || ''}</span>
+                    </div>
+                    <div class="res-title">${item.house || 'بدون رقم دار'} - ${item.name || 'بدون اسم'}</div>
+                    <div class="res-info">${item.details || ''}</div>
+                    <div class="res-amount">${formatWithCommas(item.amount)} دينار</div>
+                `;
+                resDiv.appendChild(card);
+            });
+        })
+        .catch(err => {
+            spinner.style.display = "none";
+            resDiv.innerHTML = '<div style="text-align:center; color:red;">حدث خطأ في الاتصال بالسيرفر</div>';
+            console.error(err);
+        });
+    };
+
+    // --- الدوال المساعدة ---
     function normalizeDigits(str) { 
         return str ? str.toString().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; 
     }
@@ -435,7 +576,6 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         let t = "";
-        
         if (data.operation_type === 'contract') {
             t += `📄 *عقد جديد*\n\n`;
             t += `🔢 *رقم العقد:* ${data.contract_num}\n`;
@@ -463,130 +603,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         t += `\n\n📅 *التاريخ:* ${data.date}`;
         if (data.entry_by) t += `\n👨‍💻 *بواسطة:* ${data.entry_by}`;
-        
         return t;
     }
 
-    // === دوال السجل (History Logic) ===
-    function saveToHistory(data) {
-        try {
-            let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
-            
-            let title = "";
-            let detail = "";
-            const fmt = (val) => val ? parseFloat(val).toLocaleString('en-US') : '';
-
-            if (data.operation_type === 'contract') {
-                title = `عقد: ${data.contract_num}`;
-                detail = `الدار: ${data.house_num} | ${data.name}`;
-            } else if (data.operation_type === 'receipt') {
-                title = `وصل قبض: ${data.receipt_num}`;
-                detail = `المبلغ: ${fmt(data.amount)}`;
-            } else if (data.operation_type === 'bank') {
-                title = `مصرف: ${data.receipt_num}`;
-                detail = `المبلغ: ${fmt(data.amount)}`;
-            } else {
-                title = `مصاريف`;
-                detail = `${data.reason} | ${fmt(data.amount)}`;
-            }
-
-            const item = {
-                id: Date.now(),
-                type: data.operation_type,
-                title: title,
-                detail: detail,
-                timestamp: new Date().toLocaleString('ar-EG'),
-                fullData: data
-            };
-
-            history.unshift(item);
-            if (history.length > 20) history = history.slice(0, 20);
-            localStorage.setItem('appHistory', JSON.stringify(history));
-        } catch (e) { console.error("Error saving history:", e); }
-    }
-
-    window.showHistory = function() {
-        showMenu();
-        document.getElementById('mainMenu').style.display = 'none';
-        document.getElementById('historySection').style.display = 'block';
-
-        const list = document.getElementById('historyList');
-        list.innerHTML = "";
-
-        let history = [];
-        try { history = JSON.parse(localStorage.getItem('appHistory') || '[]'); } catch(e){}
-
-        if (history.length === 0) {
-            list.innerHTML = '<div class="no-history">لا توجد عمليات سابقة</div>';
-            return;
-        }
-
-        history.forEach((item, index) => {
-            const card = document.createElement('div');
-            card.className = 'history-card';
-            let borderCol = '#2481cc';
-            if(item.type === 'contract') borderCol = '#f1c40f';
-            else if(item.type === 'receipt') borderCol = '#2ecc71';
-            else if(item.type === 'bank') borderCol = '#3498db';
-            else if(item.type === 'expense') borderCol = '#e74c3c';
-            card.style.borderRight = `5px solid ${borderCol}`;
-
-            card.innerHTML = `
-                <div class="h-header"><span>${item.timestamp}</span><span class="status-success">تم ✅</span></div>
-                <div class="h-title">${item.title}</div>
-                <div class="h-detail">${item.detail}</div>
-                <div style="text-align: left; margin-top: 5px; font-size: 12px; color: var(--primary-color);">اضغط للتعديل ✏️</div>
-            `;
-            card.onclick = () => loadFromHistory(index);
-            list.appendChild(card);
-        });
-    };
-
-    window.loadFromHistory = function(index) {
-        let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
-        let item = history[index];
-        if (!item || !item.fullData) return;
-
-        const data = item.fullData;
-        setupForm(data.operation_type);
-
-        // ملء الحقول
-        if(document.getElementById('contractNum')) document.getElementById('contractNum').value = data.contract_num || '';
-        if(document.getElementById('receiptNum')) document.getElementById('receiptNum').value = data.receipt_num || '';
-        if(document.getElementById('houseNum')) document.getElementById('houseNum').value = data.house_num || '';
-        if(document.getElementById('name')) document.getElementById('name').value = data.name || '';
-        if(document.getElementById('reason')) document.getElementById('reason').value = data.reason || '';
-
-        // ملء المبالغ مع الفواصل
-        if(data.down_payment) document.getElementById('downPayment').value = formatWithCommas(data.down_payment);
-        if(data.total_price) document.getElementById('totalPrice').value = formatWithCommas(data.total_price);
-        if(data.amount) document.getElementById('amount').value = formatWithCommas(data.amount);
-
-        if (data.sub_type && document.getElementById('transactionType')) {
-            document.getElementById('transactionType').value = data.sub_type;
-        }
-
-        if (data.date) {
-            const parts = data.date.split('-');
-            if(parts.length === 3) {
-                document.getElementById('date_year').value = parts[0];
-                document.getElementById('date_month').value = parseInt(parts[1]); 
-                document.getElementById('date_day').value = parseInt(parts[2]);
-            }
-        }
-
-        tg.showAlert('تم استرجاع البيانات.\n⚠️ يرجى إعادة التقاط الصورة.');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    window.clearHistory = function() { 
-        if(confirm('هل أنت متأكد من مسح السجل؟')) {
-            localStorage.removeItem('appHistory'); 
-            window.showHistory(); 
-        }
-    };
-    // ============================================
-
+    // --- تهيئة القوائم ---
     function initDateSelectors() {
         const daySelect = document.getElementById('date_day');
         const monthSelect = document.getElementById('date_month');
@@ -613,11 +633,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     initDateSelectors();
 
+    // --- الكاميرا ---
     window.openCameraModal = async function() {
         const videoElement = document.getElementById('cameraVideo');
         const modal = document.getElementById('cameraModal');
         modal.style.display = 'flex';
-        
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: "environment", width: {ideal: 1920}, height: {ideal: 1080} },
@@ -711,6 +731,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     window.showMenu = function() {
+        document.getElementById('searchSection').style.display = 'none';
         document.getElementById('formSection').style.display = 'none';
         document.getElementById('historySection').style.display = 'none';
         document.getElementById('mainMenu').style.display = 'block';
@@ -841,15 +862,79 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.closeModal = function() { document.getElementById('confirmModal').style.display = 'none'; };
 
+    // --- دوال السجل ---
+    function saveToHistory(data) {
+        try {
+            let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
+            let title = "", detail = "";
+            const fmt = (val) => val ? parseFloat(val).toLocaleString('en-US') : '';
+
+            if (data.operation_type === 'contract') { title = `عقد: ${data.contract_num}`; detail = `الدار: ${data.house_num}`; }
+            else if (data.operation_type === 'receipt') { title = `وصل: ${data.receipt_num}`; detail = `المبلغ: ${fmt(data.amount)}`; }
+            else if (data.operation_type === 'bank') { title = `مصرف: ${data.receipt_num}`; detail = `المبلغ: ${fmt(data.amount)}`; }
+            else { title = `مصاريف`; detail = `${data.reason} | ${fmt(data.amount)}`; }
+
+            history.unshift({ id: Date.now(), type: data.operation_type, title: title, detail: detail, timestamp: new Date().toLocaleString('ar-EG'), fullData: data });
+            if (history.length > 20) history = history.slice(0, 20);
+            localStorage.setItem('appHistory', JSON.stringify(history));
+        } catch (e) { console.error("Error saving history:", e); }
+    }
+
+    window.showHistory = function() {
+        showMenu(); 
+        document.getElementById('mainMenu').style.display='none';
+        document.getElementById('historySection').style.display='block';
+        const list = document.getElementById('historyList');
+        list.innerHTML = "";
+        let history = [];
+        try { history = JSON.parse(localStorage.getItem('appHistory') || '[]'); } catch(e){}
+        if (history.length === 0) { list.innerHTML = '<div class="no-history">لا توجد عمليات سابقة</div>'; return; }
+        history.forEach((item, index) => {
+            const card = document.createElement('div'); card.className = 'history-card';
+            let col = item.type === 'contract' ? '#f1c40f' : (item.type === 'receipt' ? '#2ecc71' : (item.type === 'bank' ? '#3498db' : '#e74c3c'));
+            card.style.borderRight = `5px solid ${col}`;
+            card.innerHTML = `<div class="h-header"><span>${item.timestamp}</span><span class="status-success">تم ✅</span></div><div class="h-title">${item.title}</div><div class="h-detail">${item.detail}</div><div style="margin-top:5px; font-size:12px; color:blue;">اضغط للتعديل ✏️</div>`;
+            card.onclick = () => loadFromHistory(index);
+            list.appendChild(card);
+        });
+    };
+
+    window.loadFromHistory = function(index) {
+        let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
+        let item = history[index];
+        if (!item || !item.fullData) return;
+        const data = item.fullData;
+        setupForm(data.operation_type);
+        
+        if(document.getElementById('contractNum')) document.getElementById('contractNum').value = data.contract_num || '';
+        if(document.getElementById('receiptNum')) document.getElementById('receiptNum').value = data.receipt_num || '';
+        if(document.getElementById('houseNum')) document.getElementById('houseNum').value = data.house_num || '';
+        if(document.getElementById('name')) document.getElementById('name').value = data.name || '';
+        if(document.getElementById('reason')) document.getElementById('reason').value = data.reason || '';
+        if(data.down_payment) document.getElementById('downPayment').value = formatWithCommas(data.down_payment);
+        if(data.total_price) document.getElementById('totalPrice').value = formatWithCommas(data.total_price);
+        if(data.amount) document.getElementById('amount').value = formatWithCommas(data.amount);
+        
+        if (data.date) {
+            const parts = data.date.split('-');
+            if(parts.length === 3) {
+                document.getElementById('date_year').value = parts[0];
+                document.getElementById('date_month').value = parseInt(parts[1]); 
+                document.getElementById('date_day').value = parseInt(parts[2]);
+            }
+        }
+        tg.showAlert('تم استرجاع البيانات. ⚠️ يرجى إعادة التقاط الصورة.');
+    };
+
+    window.clearHistory = function() { localStorage.removeItem('appHistory'); window.showHistory(); };
+
     window.finalSend = function() {
         const btn = document.getElementById("btnConfirm");
         btn.innerText = "جاري الإرسال..."; btn.disabled = true;
         
         const webhookData = new FormData();
         if(selectedPhotoFile) webhookData.append("photo", selectedPhotoFile);
-        for (const [key, value] of Object.entries(pendingPayload)) {
-            webhookData.append(key, value);
-        }
+        for (const [key, value] of Object.entries(pendingPayload)) { webhookData.append(key, value); }
         webhookData.append("json_data", JSON.stringify(pendingPayload));
 
         const telegramData = new FormData();
@@ -858,11 +943,9 @@ document.addEventListener('DOMContentLoaded', function() {
         telegramData.append("parse_mode", "Markdown");
         if(selectedPhotoFile) telegramData.append("photo", selectedPhotoFile);
         
-        // Save to History when sending
         saveToHistory(pendingPayload);
 
         fetch(WEBHOOK_URL, { method: "POST", body: webhookData });
-
         const p1 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: telegramData });
 
         let p2 = Promise.resolve({ ok: true });

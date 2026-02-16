@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>نظام مجمع الحسين</title>
     
-    <!-- كود كشف الأخطاء الفوري -->
     <script>
         window.onerror = function(msg, url, line, col, error) {
             console.error(msg, line);
@@ -38,7 +37,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* شاشة التحميل */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #fff; z-index: 999999;
@@ -135,7 +133,6 @@
             font-family: inherit;
         }
 
-        /* إصلاح القوائم المنسدلة */
         select {
             -webkit-appearance: none;
             -moz-appearance: none;
@@ -223,11 +220,12 @@
             display: flex; flex-direction: column; gap: 5px;
             cursor: pointer; transition: transform 0.1s;
         }
+        .history-card:active { transform: scale(0.98); }
         .h-header { display: flex; justify-content: space-between; font-size: 12px; color: #888; }
         .h-title { font-weight: bold; font-size: 16px; margin-top: 4px; }
         .h-detail { font-size: 14px; color: var(--tg-theme-hint-color, #555); }
         .status-success { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;}
-        .no-history { text-align: center; color: #888; margin-top: 40px; }
+        .no-history { text-align: center; color: #888; margin-top: 40px; font-style: italic; }
 
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
@@ -414,31 +412,26 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${dataEntryUser}`;
     }
 
-    // دالة تحويل الأرقام العربية إلى إنجليزية
     function normalizeDigits(str) { 
         return str ? str.toString().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; 
     }
 
-    // دالة تنظيف النص من أي شيء عدا الأرقام
     function getCleanNumber(val) { 
         if (!val) return '';
-        let normalized = normalizeDigits(val); // تحويل العربي لإنجليزي أولاً
-        return normalized.replace(/[^\d]/g,''); // إزالة غير الأرقام
+        let normalized = normalizeDigits(val);
+        return normalized.replace(/[^\d]/g,'');
     }
 
-    // دالة التنسيق مع فواصل (تستخدم للعرض فقط)
     function formatWithCommas(val) { 
         const n = getCleanNumber(val); 
         return n ? parseInt(n).toLocaleString('en-US') : ''; 
     }
 
-    // === دالة بناء الرسالة مع الفواصل (مهمة جداً لطلبك) ===
     function buildCaption(data) {
-        // دالة تنسيق داخلية خاصة بالكابشن
         const fmt = (val) => {
             if (!val) return '';
             const n = parseFloat(val); 
-            return isNaN(n) ? val : n.toLocaleString('en-US'); // يضيف الفواصل
+            return isNaN(n) ? val : n.toLocaleString('en-US');
         };
 
         let t = "";
@@ -448,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function() {
             t += `🔢 *رقم العقد:* ${data.contract_num}\n`;
             t += `🏠 *رقم الدار:* ${data.house_num}\n`;
             t += `👤 *الاسم:* ${data.name}\n`;
-            t += `💰 *المقدمة:* ${fmt(data.down_payment)}\n`; // هنا تظهر الفواصل
+            t += `💰 *المقدمة:* ${fmt(data.down_payment)}\n`;
             t += `💵 *السعر الكلي:* ${fmt(data.total_price)}`;
         } else if (data.operation_type === 'receipt') {
             t += `📥 *وصل قبض* (${data.sub_type})\n\n`;
@@ -474,7 +467,126 @@ document.addEventListener('DOMContentLoaded', function() {
         return t;
     }
 
-    // تهيئة القوائم المنسدلة
+    // === دوال السجل (History Logic) ===
+    function saveToHistory(data) {
+        try {
+            let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
+            
+            let title = "";
+            let detail = "";
+            const fmt = (val) => val ? parseFloat(val).toLocaleString('en-US') : '';
+
+            if (data.operation_type === 'contract') {
+                title = `عقد: ${data.contract_num}`;
+                detail = `الدار: ${data.house_num} | ${data.name}`;
+            } else if (data.operation_type === 'receipt') {
+                title = `وصل قبض: ${data.receipt_num}`;
+                detail = `المبلغ: ${fmt(data.amount)}`;
+            } else if (data.operation_type === 'bank') {
+                title = `مصرف: ${data.receipt_num}`;
+                detail = `المبلغ: ${fmt(data.amount)}`;
+            } else {
+                title = `مصاريف`;
+                detail = `${data.reason} | ${fmt(data.amount)}`;
+            }
+
+            const item = {
+                id: Date.now(),
+                type: data.operation_type,
+                title: title,
+                detail: detail,
+                timestamp: new Date().toLocaleString('ar-EG'),
+                fullData: data
+            };
+
+            history.unshift(item);
+            if (history.length > 20) history = history.slice(0, 20);
+            localStorage.setItem('appHistory', JSON.stringify(history));
+        } catch (e) { console.error("Error saving history:", e); }
+    }
+
+    window.showHistory = function() {
+        showMenu();
+        document.getElementById('mainMenu').style.display = 'none';
+        document.getElementById('historySection').style.display = 'block';
+
+        const list = document.getElementById('historyList');
+        list.innerHTML = "";
+
+        let history = [];
+        try { history = JSON.parse(localStorage.getItem('appHistory') || '[]'); } catch(e){}
+
+        if (history.length === 0) {
+            list.innerHTML = '<div class="no-history">لا توجد عمليات سابقة</div>';
+            return;
+        }
+
+        history.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'history-card';
+            let borderCol = '#2481cc';
+            if(item.type === 'contract') borderCol = '#f1c40f';
+            else if(item.type === 'receipt') borderCol = '#2ecc71';
+            else if(item.type === 'bank') borderCol = '#3498db';
+            else if(item.type === 'expense') borderCol = '#e74c3c';
+            card.style.borderRight = `5px solid ${borderCol}`;
+
+            card.innerHTML = `
+                <div class="h-header"><span>${item.timestamp}</span><span class="status-success">تم ✅</span></div>
+                <div class="h-title">${item.title}</div>
+                <div class="h-detail">${item.detail}</div>
+                <div style="text-align: left; margin-top: 5px; font-size: 12px; color: var(--primary-color);">اضغط للتعديل ✏️</div>
+            `;
+            card.onclick = () => loadFromHistory(index);
+            list.appendChild(card);
+        });
+    };
+
+    window.loadFromHistory = function(index) {
+        let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
+        let item = history[index];
+        if (!item || !item.fullData) return;
+
+        const data = item.fullData;
+        setupForm(data.operation_type);
+
+        // ملء الحقول
+        if(document.getElementById('contractNum')) document.getElementById('contractNum').value = data.contract_num || '';
+        if(document.getElementById('receiptNum')) document.getElementById('receiptNum').value = data.receipt_num || '';
+        if(document.getElementById('houseNum')) document.getElementById('houseNum').value = data.house_num || '';
+        if(document.getElementById('name')) document.getElementById('name').value = data.name || '';
+        if(document.getElementById('reason')) document.getElementById('reason').value = data.reason || '';
+
+        // ملء المبالغ مع الفواصل
+        if(data.down_payment) document.getElementById('downPayment').value = formatWithCommas(data.down_payment);
+        if(data.total_price) document.getElementById('totalPrice').value = formatWithCommas(data.total_price);
+        if(data.amount) document.getElementById('amount').value = formatWithCommas(data.amount);
+
+        if (data.sub_type && document.getElementById('transactionType')) {
+            document.getElementById('transactionType').value = data.sub_type;
+        }
+
+        if (data.date) {
+            const parts = data.date.split('-');
+            if(parts.length === 3) {
+                document.getElementById('date_year').value = parts[0];
+                document.getElementById('date_month').value = parseInt(parts[1]); 
+                document.getElementById('date_day').value = parseInt(parts[2]);
+            }
+        }
+
+        tg.showAlert('تم استرجاع البيانات.\n⚠️ يرجى إعادة التقاط الصورة.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.clearHistory = function() { 
+        if(confirm('هل أنت متأكد من مسح السجل؟')) {
+            localStorage.removeItem('appHistory'); 
+            window.showHistory(); 
+        }
+    };
+    // ============================================
+
     function initDateSelectors() {
         const daySelect = document.getElementById('date_day');
         const monthSelect = document.getElementById('date_month');
@@ -501,7 +613,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     initDateSelectors();
 
-    // الدوال المساعدة للكاميرا
     window.openCameraModal = async function() {
         const videoElement = document.getElementById('cameraVideo');
         const modal = document.getElementById('cameraModal');
@@ -605,7 +716,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('mainMenu').style.display = 'block';
     };
 
-    // دالة التحقق من الحدود (المحددات)
     function validateLimit(id, max, label) {
         const el = document.getElementById(id);
         const val = parseFloat(getCleanNumber(el.value));
@@ -634,31 +744,27 @@ document.addEventListener('DOMContentLoaded', function() {
     window.prepareData = function() {
         if (!selectedPhotoFile) { tg.showAlert("يرجى اختيار صورة!"); return; }
         
-        // تحويل أرقام التاريخ أيضاً إذا كانت عربية (احتياطاً)
         const d = normalizeDigits(document.getElementById('date_day').value).padStart(2,'0');
         const m = normalizeDigits(document.getElementById('date_month').value).padStart(2,'0');
         const y = normalizeDigits(document.getElementById('date_year').value);
         const date = `${y}-${m}-${d}`;
         const name = document.getElementById("name").value.trim();
 
-        // 1. استخدام الأسماء المطلوبة entry_by و chat_id في البايلود
         let payload = { 
             operation_type: currentType, 
             date: date, 
             name: name, 
-            entry_by: dataEntryUser, // الاسم الجديد
-            chat_id: dataEntryChatId, // الاسم الجديد
+            entry_by: dataEntryUser, 
+            chat_id: dataEntryChatId, 
             timestamp: new Date().toISOString() 
         };
         
-        // === تطبيق المحددات مع تطبيع الأرقام (تحويل العربي لإنجليزي) ===
-
         if (['contract', 'receipt', 'bank'].includes(currentType)) {
             if (!validateLimit('houseNum', 1178, 'رقم الدار')) return;
         }
 
         if (currentType === 'contract') {
-            if (!validateLimit('contractNum', 50000, 'رقم العقد')) return; // تم التعديل
+            if (!validateLimit('contractNum', 50000, 'رقم العقد')) return;
             if (!validateLimit('totalPrice', 500000000, 'السعر الكلي')) return;
             if (!validateLimit('downPayment', 150000000, 'المقدمة')) return;
 
@@ -669,14 +775,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 tg.showAlert("يرجى ملء كافة حقول العقد!"); return;
             }
 
-            // هنا نقوم بـ normalizeDigits لكل الحقول لضمان أنها أرقام إنجليزية
             payload.contract_num = normalizeDigits(document.getElementById('contractNum').value);
             payload.house_num = normalizeDigits(document.getElementById('houseNum').value);
             payload.down_payment = getCleanNumber(document.getElementById('downPayment').value);
             payload.total_price = getCleanNumber(document.getElementById('totalPrice').value);
 
         } else if (currentType === 'receipt') {
-            if (!validateLimit('receiptNum', 50000, 'رقم الوصل')) return; // تم التعديل
+            if (!validateLimit('receiptNum', 50000, 'رقم الوصل')) return;
             if (!validateLimit('amount', 150000000, 'المبلغ')) return;
 
             if (!document.getElementById('receiptNum').value || !document.getElementById('houseNum').value || !document.getElementById('amount').value) {
@@ -689,7 +794,7 @@ document.addEventListener('DOMContentLoaded', function() {
             payload.amount = getCleanNumber(document.getElementById('amount').value);
 
         } else if (currentType === 'bank') {
-            if (!validateLimit('receiptNum', 50000, 'رقم الوصل')) return; // تم التعديل
+            if (!validateLimit('receiptNum', 50000, 'رقم الوصل')) return;
             if (!validateLimit('amount', 150000000, 'المبلغ')) return;
 
             if (!document.getElementById('houseNum').value || !document.getElementById('amount').value) {
@@ -711,7 +816,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 tg.showAlert("يرجى ذكر السبب والمبلغ!"); return;
             }
 
-            // في المصاريف، رقم الدار قد يكون نصاً، لذا نستخدم normalizeDigits فقط لتحويل الأرقام إن وجدت
             payload.house_num = document.getElementById('houseNum').value ? normalizeDigits(document.getElementById('houseNum').value) : "عام";
             payload.reason = document.getElementById('reason').value;
             payload.amount = getCleanNumber(document.getElementById('amount').value);
@@ -726,7 +830,6 @@ document.addEventListener('DOMContentLoaded', function() {
             'sub_type': 'النوع', 'receipt_num': 'رقم الوصل', 'amount': 'المبلغ', 'reason': 'السبب' 
         };
 
-        // 2. تحديث قائمة الاستثناءات في العرض
         for (const [key, value] of Object.entries(payload)) {
             if(['entry_by','chat_id','timestamp','operation_type'].includes(key)) continue;
             let label = labelMap[key] || key;
@@ -742,7 +845,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const btn = document.getElementById("btnConfirm");
         btn.innerText = "جاري الإرسال..."; btn.disabled = true;
         
-        // 1. تحضير بيانات الويب هوك (مفصلة)
         const webhookData = new FormData();
         if(selectedPhotoFile) webhookData.append("photo", selectedPhotoFile);
         for (const [key, value] of Object.entries(pendingPayload)) {
@@ -750,20 +852,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         webhookData.append("json_data", JSON.stringify(pendingPayload));
 
-        // 2. تحضير بيانات تيليجرام (منسقة)
         const telegramData = new FormData();
         telegramData.append("chat_id", CHAT_ID);
         telegramData.append("caption", buildCaption(pendingPayload));
-        telegramData.append("parse_mode", "Markdown"); // ضروري لتنسيق النص
+        telegramData.append("parse_mode", "Markdown");
         if(selectedPhotoFile) telegramData.append("photo", selectedPhotoFile);
         
-        // إرسال للويب هوك
+        // Save to History when sending
+        saveToHistory(pendingPayload);
+
         fetch(WEBHOOK_URL, { method: "POST", body: webhookData });
 
-        // إرسال لتيليجرام (للمدير)
         const p1 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: telegramData });
 
-        // إرسال نسخة للمستخدم (اختياري)
         let p2 = Promise.resolve({ ok: true });
         if (dataEntryChatId && String(dataEntryChatId) !== String(CHAT_ID)) {
             const userPayload = new FormData();
@@ -787,13 +888,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(e => tg.showAlert("Error: " + e))
         .finally(() => { btn.innerText = "نعم، إرسال ✅"; btn.disabled = false; });
     };
-    
-    window.showHistory = function() {
-        showMenu(); 
-        document.getElementById('mainMenu').style.display='none';
-        document.getElementById('historySection').style.display='block';
-    };
-    window.clearHistory = function() { localStorage.removeItem('appHistory'); window.showHistory(); };
 });
 </script>
 

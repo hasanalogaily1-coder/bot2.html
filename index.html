@@ -140,6 +140,33 @@
             display: flex; align-items: center; padding: 0;
         }
 
+        /* تنسيقات أزرار الصور الجديدة */
+        .photo-buttons-container {
+            display: flex;
+            gap: 10px;
+        }
+        .photo-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            background: var(--tg-theme-bg-color, #eee);
+            color: var(--tg-theme-hint-color, #777);
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .photo-btn:active {
+            background: #e0e0e0;
+            transform: scale(0.98);
+        }
+        .photo-btn.active {
+            border-color: #2ecc71;
+            color: #2ecc71;
+            background: rgba(46, 204, 113, 0.1);
+        }
+
         /* السجل */
         .history-card {
             background: var(--tg-theme-secondary-bg-color, #fff);
@@ -260,16 +287,30 @@
 
         <div class="input-group" id="grp_photo" style="display:block;">
             <label>صورة الوصل/العقد:</label>
-            <div style="position: relative; overflow: hidden; border-radius: 12px; background: var(--tg-theme-bg-color, #eee);">
-                <!-- 
-                     تعديل مهم: تم إضافة capture="environment" 
-                     لإجبار الهاتف على فتح الكاميرا الخلفية مباشرة 
-                -->
-                <input type="file" id="photo" accept="image/*" capture="environment" style="opacity: 0; position: absolute; width:100%; height:100%; z-index: 2; cursor: pointer;">
-                <div style="padding: 15px; text-align: center; color: var(--tg-theme-hint-color, #777); border: 2px dashed #ccc; border-radius: 12px;">
-                    📸 اضغط لالتقاط الصورة مباشرة
+            
+            <!-- زرين منفصلين لحل مشكلة أندرويد -->
+            <div class="photo-buttons-container">
+                <!-- زر 1: الكاميرا المباشرة -->
+                <div class="photo-btn" onclick="document.getElementById('input_camera').click()">
+                    📷 التقاط صورة
+                </div>
+                
+                <!-- زر 2: الاستوديو -->
+                <div class="photo-btn" onclick="document.getElementById('input_gallery').click()">
+                    🖼️ من الاستوديو
                 </div>
             </div>
+
+            <!-- عرض اسم الملف المختار -->
+            <div id="fileNameDisplay" style="margin-top: 10px; text-align: center; font-size: 13px; color: #777;">
+                لم يتم اختيار صورة
+            </div>
+
+            <!-- Inputs مخفية -->
+            <!-- للكاميرا المباشرة -->
+            <input type="file" id="input_camera" accept="image/*" capture="environment" style="display: none;" onchange="handleFileSelect(this)">
+            <!-- للاستوديو -->
+            <input type="file" id="input_gallery" accept="image/*" style="display: none;" onchange="handleFileSelect(this)">
         </div>
 
         <button class="submit-btn" onclick="prepareData()" id="btn">مراجعة وإرسال 📤</button>
@@ -312,6 +353,9 @@
     let pendingPayload = null; 
     let pendingCaption = "";
     
+    // متغير لتخزين الملف المختار من أي من الزرين
+    let selectedPhotoFile = null;
+
     const tg = window.Telegram.WebApp;
     tg.expand();
 
@@ -371,12 +415,22 @@
 
     document.querySelectorAll('input').forEach(input => { input.addEventListener('input', () => { input.style.border = "2px solid transparent"; }); });
     
-    document.getElementById('photo').addEventListener('change', function() {
-        const fileName = this.files[0] ? `✅ تم التقاط: ${this.files[0].name}` : '📸 اضغط لالتقاط الصورة مباشرة';
-        this.nextElementSibling.innerText = fileName;
-        this.nextElementSibling.style.color = this.files[0] ? '#2ecc71' : '#777';
-        this.nextElementSibling.style.borderColor = this.files[0] ? '#2ecc71' : '#ccc';
-    });
+    // دالة جديدة للتعامل مع اختيار الملفات
+    function handleFileSelect(input) {
+        if (input.files && input.files[0]) {
+            selectedPhotoFile = input.files[0];
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+            fileNameDisplay.innerHTML = `✅ تم اختيار: <b style="color:#2ecc71">${selectedPhotoFile.name}</b>`;
+            
+            // تلوين الزر النشط
+            document.querySelectorAll('.photo-btn').forEach(btn => btn.classList.remove('active'));
+            if(input.id === 'input_camera') {
+                document.querySelector('.photo-btn:nth-child(1)').classList.add('active');
+            } else {
+                document.querySelector('.photo-btn:nth-child(2)').classList.add('active');
+            }
+        }
+    }
 
     document.querySelectorAll('.amount-field').forEach(input => {
         input.addEventListener('input', (e) => {
@@ -402,11 +456,12 @@
         document.getElementById('houseNum').inputmode = 'decimal';
         document.querySelectorAll('input').forEach(i => i.style.border = "2px solid transparent");
         
-        document.getElementById('photo').value = '';
-        const photoLabel = document.getElementById('photo').nextElementSibling;
-        photoLabel.innerText = '📸 اضغط لالتقاط الصورة مباشرة';
-        photoLabel.style.color = '#777';
-        photoLabel.style.borderColor = '#ccc';
+        // إعادة تعيين الصورة
+        selectedPhotoFile = null;
+        document.getElementById('input_camera').value = '';
+        document.getElementById('input_gallery').value = '';
+        document.getElementById('fileNameDisplay').innerHTML = 'لم يتم اختيار صورة';
+        document.querySelectorAll('.photo-btn').forEach(btn => btn.classList.remove('active'));
     }
 
     function setupForm(type) {
@@ -457,8 +512,8 @@
     }
 
     function prepareData() {
-        const photoInput = document.getElementById("photo").files[0];
-        if (!photoInput) { tg.showAlert("يرجى التقاط صورة!"); return; }
+        // التحقق من المتغير الجديد selectedPhotoFile
+        if (!selectedPhotoFile) { tg.showAlert("يرجى التقاط صورة أو اختيارها من الاستوديو!"); return; }
 
         const d = document.getElementById('date_day').value.padStart(2, '0');
         const m = document.getElementById('date_month').value.padStart(2, '0');
@@ -680,7 +735,8 @@
         btn.classList.add('btn-disabled');
         btnCancel.style.display = 'none'; 
 
-        const photoFile = document.getElementById("photo").files[0];
+        // استخدام المتغير selectedPhotoFile بدلاً من قراءة input محدد
+        const photoFile = selectedPhotoFile;
 
         // 1. إرسال إلى Webhook (للحفظ)
         const webhookData = new FormData();

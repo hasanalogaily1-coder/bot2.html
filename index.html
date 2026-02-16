@@ -105,7 +105,7 @@
             color: var(--tg-theme-hint-color, #555); 
         }
         
-        input, select, textarea {
+        input, textarea {
             width: 100%; padding: 14px;
             border: 2px solid transparent;
             background-color: var(--tg-theme-bg-color, var(--input-bg));
@@ -115,6 +115,34 @@
             font-size: 16px;
             transition: all 0.3s;
             font-family: inherit;
+        }
+
+        /* تعديل جذري للقوائم المنسدلة (Select) لحل مشكلة أندرويد 15/Honor 
+           نقوم بإلغاء ستايل النظام الافتراضي ورسم القائمة يدوياً
+        */
+        select {
+            width: 100%; 
+            padding: 14px;
+            border: 2px solid transparent;
+            background-color: var(--tg-theme-bg-color, var(--input-bg));
+            border-radius: 12px;
+            box-sizing: border-box;
+            color: var(--tg-theme-text-color, #000);
+            font-size: 16px;
+            font-family: inherit;
+            
+            /* هذا السطر هو الأهم لحل المشكلة */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            
+            /* إضافة سهم مخصص */
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: left 10px center;
+            background-size: 16px;
+            padding-left: 30px;
+            cursor: pointer;
         }
         
         input:focus, select:focus, textarea:focus { 
@@ -172,16 +200,16 @@
             background: rgba(46, 204, 113, 0.1);
         }
 
-        /* === تنسيقات الكاميرا المدمجة المحسنة === */
+        /* === تنسيقات الكاميرا المدمجة === */
         #cameraModal {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
             background: #000;
-            z-index: 99999; /* أعلى طبقة */
+            z-index: 99999; 
             flex-direction: column;
-            justify-content: flex-end; /* الأزرار في الأسفل */
+            justify-content: flex-end; 
             align-items: center;
         }
         
@@ -190,7 +218,7 @@
             top: 0; left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover; /* ملء الشاشة بالكامل بدون حواف سوداء */
+            object-fit: cover; 
             z-index: 1;
         }
         
@@ -284,7 +312,6 @@
 
 <!-- نافذة الكاميرا المدمجة -->
 <div id="cameraModal">
-    <!-- autoplay playsinline muted ضرورية جداً في أندرويد -->
     <video id="cameraVideo" autoplay playsinline muted></video>
     <canvas id="cameraCanvas" style="display:none;"></canvas>
     <div class="camera-overlay">
@@ -361,6 +388,10 @@
 
         <div class="input-group" id="grp_date" style="display:block;">
             <label>التاريخ:</label>
+            <!-- 
+                تمت إعادة القوائم المنسدلة (يوم، شهر، سنة)
+                مع إصلاح CSS خاص للأندرويد لضمان استجابتها للمس
+            -->
             <div class="date-container">
                 <select id="date_day" class="date-select"></select>
                 <select id="date_month" class="date-select"></select>
@@ -388,7 +419,7 @@
                 لم يتم اختيار صورة
             </div>
 
-            <!-- حقل الاستوديو فقط، الكاميرا ستتم برمجياً -->
+            <!-- حقل الاستوديو فقط -->
             <input type="file" id="gallery_input" accept="image/*" style="display:none;" onchange="handleFileSelect(this, 'gal')">
         </div>
 
@@ -445,17 +476,14 @@
         document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${dataEntryUser}`;
     }
 
-    // === دوال الكاميرا المدمجة (المحسنة) ===
+    // === دوال الكاميرا المدمجة ===
     async function openCameraModal() {
         const videoElement = document.getElementById('cameraVideo');
         const modal = document.getElementById('cameraModal');
         
-        // إظهار المودال أولاً لضمان وجود العنصر في الشاشة
         modal.style.display = 'flex';
         
         try {
-            // محاولة أولى: الكاميرا الخلفية بدقة عالية
-            // ملاحظة: استخدام exact قد يسبب فشلاً، لذا نستخدم environment كأفضلية
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { 
                     facingMode: "environment",
@@ -468,7 +496,6 @@
         } catch (err) {
             console.log("Environment camera failed, trying fallback...", err);
             try {
-                // محاولة ثانية: أي كاميرا متاحة (حل جذري للشاشة السوداء)
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: true,
                     audio: false
@@ -484,7 +511,6 @@
     function startVideo(video, stream) {
         cameraStream = stream;
         video.srcObject = stream;
-        // ضمان التشغيل حتى لو autoplay فشل
         video.onloadedmetadata = () => {
             video.play().catch(e => console.error("Play error:", e));
         };
@@ -502,7 +528,6 @@
         const video = document.getElementById('cameraVideo');
         const canvas = document.getElementById('cameraCanvas');
         
-        // التحقق من أن الفيديو يعمل
         if (video.videoWidth === 0) {
             tg.showAlert("انتظر تحميل الكاميرا...");
             return;
@@ -529,6 +554,7 @@
     }
     // ============================
 
+    // تهيئة القوائم المنسدلة للتاريخ
     function initDateSelectors() {
         const daySelect = document.getElementById('date_day');
         const monthSelect = document.getElementById('date_month');
@@ -537,6 +563,11 @@
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth() + 1;
         const currentDay = today.getDate();
+
+        // تنظيف القوائم
+        daySelect.innerHTML = '';
+        monthSelect.innerHTML = '';
+        yearSelect.innerHTML = '';
 
         for (let d = 1; d <= 31; d++) {
             let opt = document.createElement('option'); opt.value = d; opt.innerHTML = d;
@@ -551,6 +582,7 @@
             if (y === currentYear) opt.selected = true; yearSelect.appendChild(opt);
         }
     }
+    // استدعاء الدالة عند تحميل الصفحة
     initDateSelectors();
 
     function normalizeDigits(str) { return str ? str.toString().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; }
@@ -571,7 +603,7 @@
         return true;
     }
 
-    document.querySelectorAll('input').forEach(input => { input.addEventListener('input', () => { input.style.border = "2px solid transparent"; }); });
+    document.querySelectorAll('input, textarea').forEach(input => { input.addEventListener('input', () => { input.style.border = "2px solid transparent"; }); });
     
     function handleFileSelect(input, source) {
         if (input.files && input.files[0]) {
@@ -619,6 +651,12 @@
         document.getElementById('fileNameDisplay').innerHTML = 'لم يتم اختيار صورة';
         document.getElementById('btn_visual_cam').classList.remove('active');
         document.getElementById('btn_visual_gal').classList.remove('active');
+        
+        // إعادة تعيين التاريخ لليوم
+        initDateSelectors();
+        
+        // تصفير جميع الحقول ما عدا القوائم
+        document.querySelectorAll('input:not([type="file"]), textarea').forEach(i => i.value = '');
     }
 
     function setupForm(type) {
@@ -626,7 +664,6 @@
         hideAllFields();
         document.getElementById('mainMenu').style.display = 'none';
         document.getElementById('formSection').style.display = 'block';
-        document.querySelectorAll('input:not([type="file"]), textarea').forEach(i => i.value = '');
 
         const title = document.getElementById('formTitle');
         const typeSelect = document.getElementById('transactionType');
@@ -671,10 +708,12 @@
     function prepareData() {
         if (!selectedPhotoFile) { tg.showAlert("يرجى التقاط صورة أو اختيارها من الاستوديو!"); return; }
 
+        // تجميع التاريخ من القوائم
         const d = document.getElementById('date_day').value.padStart(2, '0');
         const m = document.getElementById('date_month').value.padStart(2, '0');
         const y = document.getElementById('date_year').value;
         const date = `${y}-${m}-${d}`;
+
         const name = document.getElementById("name").value.trim();
 
         let payload = { 

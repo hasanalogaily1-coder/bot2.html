@@ -39,9 +39,9 @@
 
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff; z-index: 999999;
+            background: var(--tg-theme-bg-color, #fff); z-index: 999999;
             display: flex; justify-content: center; align-items: center;
-            font-size: 20px; font-weight: bold; color: #333;
+            font-size: 20px; font-weight: bold; color: var(--tg-theme-text-color, #333);
         }
 
         .container { 
@@ -180,6 +180,7 @@
             background: rgba(46, 204, 113, 0.1);
         }
 
+        /* الكاميرا المدمجة */
         #cameraModal {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%; background: #000;
@@ -208,11 +209,13 @@
             border-radius: 30px; border: 1px solid rgba(255,255,255,0.3);
         }
 
-        /* تنسيقات قسم البحث */
+        /* --- تحسينات الألوان للوضع الليلي (مهم جداً) --- */
         .search-results { margin-top: 20px; }
+        
         .result-card {
-            background: var(--tg-theme-bg-color, #f9f9f9);
-            padding: 15px; /* زيادة الحشو */
+            /* استخدام لون خلفية البطاقة الخاص بتيليجرام */
+            background: var(--tg-theme-secondary-bg-color, #f9f9f9);
+            padding: 15px; 
             margin-bottom: 12px; border-radius: 12px;
             border-right: 5px solid #ccc;
             animation: fadeIn 0.3s;
@@ -221,26 +224,38 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
         .res-type { 
-            font-size: 12px; font-weight: bold; color: #666; 
+            font-size: 12px; font-weight: bold; 
+            /* لون النص الثانوي (رمادي فاتح في الوضع الليلي) */
+            color: var(--tg-theme-hint-color, #666); 
             margin-bottom: 8px; display: flex; justify-content: space-between;
-            border-bottom: 1px dashed #ddd; padding-bottom: 5px;
+            border-bottom: 1px dashed var(--tg-theme-hint-color, #ddd); padding-bottom: 5px;
         }
-        .res-title { font-weight: bold; font-size: 16px; margin-bottom: 8px; color: #333; }
         
-        /* هذا هو التعديل السحري لحل الهوسة */
+        .res-title { 
+            font-weight: bold; font-size: 16px; margin-bottom: 8px; 
+            /* لون النص الأساسي (أبيض في الوضع الليلي) */
+            color: var(--tg-theme-text-color, #333); 
+        }
+        
         .res-info { 
-            font-size: 14px; color: #444; 
-            white-space: pre-line; /* احترام الأسطر الجديدة */
-            line-height: 1.8; /* تباعد الأسطر للقراءة المريحة */
+            font-size: 14px; 
+            /* لون النص الأساسي لضمان القراءة بوضوح */
+            color: var(--tg-theme-text-color, #444); 
+            white-space: pre-line; 
+            line-height: 1.8;
+            opacity: 0.9; /* تخفيف بسيط جداً */
         }
         
         .res-amount { 
-            color: var(--primary-color); font-weight: bold; margin-top: 10px; font-size: 16px; 
-            text-align: left; /* جعل السعر في جهة مميزة */
+            /* لون السعر يبقى أزرق أو حسب الثيم */
+            color: var(--tg-theme-button-color, var(--primary-color)); 
+            font-weight: bold; margin-top: 10px; font-size: 16px; 
+            text-align: left; 
         }
         
         .spinner {
-            border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%;
+            border: 4px solid var(--tg-theme-hint-color, #f3f3f3); 
+            border-top: 4px solid var(--primary-color); border-radius: 50%;
             width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; display: none;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -249,9 +264,13 @@
             display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;
         }
         .filter-chip {
-            padding: 8px 12px; background: #e0e0e0; border-radius: 20px;
-            font-size: 12px; font-weight: bold; color: #555; cursor: pointer;
-            transition: all 0.2s; user-select: none; border: 2px solid transparent;
+            padding: 8px 12px; 
+            background: var(--tg-theme-bg-color, #e0e0e0); /* خلفية الفلتر */
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            border-radius: 20px;
+            font-size: 12px; font-weight: bold; 
+            color: var(--tg-theme-text-color, #555); cursor: pointer;
+            transition: all 0.2s; user-select: none;
         }
         .filter-chip.active {
             background: var(--primary-color); color: white; border-color: var(--primary-color);
@@ -266,11 +285,11 @@
             cursor: pointer; transition: transform 0.1s;
         }
         .history-card:active { transform: scale(0.98); }
-        .h-header { display: flex; justify-content: space-between; font-size: 12px; color: #888; }
-        .h-title { font-weight: bold; font-size: 16px; margin-top: 4px; }
+        .h-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--tg-theme-hint-color, #888); }
+        .h-title { font-weight: bold; font-size: 16px; margin-top: 4px; color: var(--tg-theme-text-color, #000); }
         .h-detail { font-size: 14px; color: var(--tg-theme-hint-color, #555); }
         .status-success { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;}
-        .no-history { text-align: center; color: #888; margin-top: 40px; }
+        .no-history { text-align: center; color: var(--tg-theme-hint-color, #888); margin-top: 40px; }
 
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
@@ -280,9 +299,10 @@
             background-color: var(--tg-theme-secondary-bg-color, #ffffff);
             padding: 25px; border-radius: 20px; width: 85%; max-width: 350px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: right;
+            color: var(--tg-theme-text-color, #000); /* لون النص داخل المودال */
         }
         .summary-list { margin: 20px 0; background: var(--tg-theme-bg-color, #f8f9fa); padding: 15px; border-radius: 12px; font-size: 14px; }
-        .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #ddd; padding-bottom: 5px; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed var(--tg-theme-hint-color, #ddd); padding-bottom: 5px; }
         .modal-buttons { display: flex; gap: 12px; margin-top: 25px; }
         .btn-confirm { flex: 2; background: #2ecc71; color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; }
         .btn-cancel { flex: 1; background: #e74c3c; color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; }
@@ -318,6 +338,7 @@
         </div>
     </div>
 
+    <!-- قسم البحث -->
     <div id="searchSection" class="form-section">
         <button class="back-btn" onclick="showMenu()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 5px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -340,7 +361,7 @@
         
         <div id="searchSpinner" class="spinner"></div>
         <div id="searchResults" class="search-results">
-            <div style="text-align: center; color: #888; font-size: 13px; margin-top:20px;">يمكنك تحديد أكثر من فلتر في نفس الوقت</div>
+            <div style="text-align: center; color: var(--tg-theme-hint-color, #888); font-size: 13px; margin-top:20px;">يمكنك تحديد أكثر من فلتر في نفس الوقت</div>
         </div>
     </div>
 
@@ -411,7 +432,7 @@
                 <div class="photo-label-btn" id="btn_visual_cam" onclick="openCameraModal()">📷 التقاط صورة</div>
                 <label for="gallery_input" class="photo-label-btn" id="btn_visual_gal">🖼️ من الاستوديو</label>
             </div>
-            <div id="fileNameDisplay" style="margin-top: 10px; text-align: center; font-size: 13px; color: #777;">لم يتم اختيار صورة</div>
+            <div id="fileNameDisplay" style="margin-top: 10px; text-align: center; font-size: 13px; color: var(--tg-theme-hint-color, #777);">لم يتم اختيار صورة</div>
             <input type="file" id="gallery_input" accept="image/*" style="display:none;" onchange="handleFileSelect(this, 'gal')">
         </div>
 
@@ -425,7 +446,7 @@
             رجوع للقائمة
         </button>
         <h3 style="text-align: center; margin-bottom: 20px;">سجل العمليات 🕒</h3>
-        <p style="text-align: center; font-size: 12px; color: #888; margin-bottom: 15px;">💡 اضغط على أي عملية للتعديل عليها وإعادة إرسالها</p>
+        <p style="text-align: center; font-size: 12px; color: var(--tg-theme-hint-color, #888); margin-bottom: 15px;">💡 اضغط على أي عملية للتعديل عليها وإعادة إرسالها</p>
         <div id="historyList"></div>
         <button onclick="clearHistory()" style="background:none; border:none; color: #e74c3c; width:100%; margin-top:25px; cursor:pointer; font-weight: bold; padding: 10px;">مسح السجل</button>
     </div>
@@ -449,7 +470,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('appContainer').style.display = 'block';
 
     const WEBHOOK_URL = "https://hrh1.app.n8n.cloud/webhook/85baeb02-5fd1-4e87-8249-04956c78a414";
-    // رابط الويب هوك الخاص بالبحث
     const SEARCH_WEBHOOK_URL = "https://hrh1.app.n8n.cloud/webhook/021077f4-a1b7-4cbd-87bb-6267d8dd5436"; 
     
     const BOT_TOKEN = "8587976862:AAE8X1osdW9n_fPqr6N4mY2jDwRstEe_GPc"; 
@@ -523,7 +543,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             spinner.style.display = "none";
             if (!data || data.length === 0) {
-                resDiv.innerHTML = '<div style="text-align:center; padding:20px;">لا توجد نتائج مطابقة ❌</div>';
+                resDiv.innerHTML = '<div style="text-align:center; padding:20px; color:var(--tg-theme-text-color);">لا توجد نتائج مطابقة ❌</div>';
                 return;
             }
 
@@ -866,6 +886,72 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     window.closeModal = function() { document.getElementById('confirmModal').style.display = 'none'; };
+
+    // --- دوال السجل ---
+    function saveToHistory(data) {
+        try {
+            let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
+            let title = "", detail = "";
+            const fmt = (val) => val ? parseFloat(val).toLocaleString('en-US') : '';
+
+            if (data.operation_type === 'contract') { title = `عقد: ${data.contract_num}`; detail = `الدار: ${data.house_num}`; }
+            else if (data.operation_type === 'receipt') { title = `وصل: ${data.receipt_num}`; detail = `المبلغ: ${fmt(data.amount)}`; }
+            else if (data.operation_type === 'bank') { title = `مصرف: ${data.receipt_num}`; detail = `المبلغ: ${fmt(data.amount)}`; }
+            else { title = `مصاريف`; detail = `${data.reason} | ${fmt(data.amount)}`; }
+
+            history.unshift({ id: Date.now(), type: data.operation_type, title: title, detail: detail, timestamp: new Date().toLocaleString('ar-EG'), fullData: data });
+            if (history.length > 20) history = history.slice(0, 20);
+            localStorage.setItem('appHistory', JSON.stringify(history));
+        } catch (e) { console.error("Error saving history:", e); }
+    }
+
+    window.showHistory = function() {
+        showMenu(); 
+        document.getElementById('mainMenu').style.display='none';
+        document.getElementById('historySection').style.display='block';
+        const list = document.getElementById('historyList');
+        list.innerHTML = "";
+        let history = [];
+        try { history = JSON.parse(localStorage.getItem('appHistory') || '[]'); } catch(e){}
+        if (history.length === 0) { list.innerHTML = '<div class="no-history">لا توجد عمليات سابقة</div>'; return; }
+        history.forEach((item, index) => {
+            const card = document.createElement('div'); card.className = 'history-card';
+            let col = item.type === 'contract' ? '#f1c40f' : (item.type === 'receipt' ? '#2ecc71' : (item.type === 'bank' ? '#3498db' : '#e74c3c'));
+            card.style.borderRight = `5px solid ${col}`;
+            card.innerHTML = `<div class="h-header"><span>${item.timestamp}</span><span class="status-success">تم ✅</span></div><div class="h-title">${item.title}</div><div class="h-detail">${item.detail}</div><div style="margin-top:5px; font-size:12px; color:blue;">اضغط للتعديل ✏️</div>`;
+            card.onclick = () => loadFromHistory(index);
+            list.appendChild(card);
+        });
+    };
+
+    window.loadFromHistory = function(index) {
+        let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
+        let item = history[index];
+        if (!item || !item.fullData) return;
+        const data = item.fullData;
+        setupForm(data.operation_type);
+        
+        if(document.getElementById('contractNum')) document.getElementById('contractNum').value = data.contract_num || '';
+        if(document.getElementById('receiptNum')) document.getElementById('receiptNum').value = data.receipt_num || '';
+        if(document.getElementById('houseNum')) document.getElementById('houseNum').value = data.house_num || '';
+        if(document.getElementById('name')) document.getElementById('name').value = data.name || '';
+        if(document.getElementById('reason')) document.getElementById('reason').value = data.reason || '';
+        if(data.down_payment) document.getElementById('downPayment').value = formatWithCommas(data.down_payment);
+        if(data.total_price) document.getElementById('totalPrice').value = formatWithCommas(data.total_price);
+        if(data.amount) document.getElementById('amount').value = formatWithCommas(data.amount);
+        
+        if (data.date) {
+            const parts = data.date.split('-');
+            if(parts.length === 3) {
+                document.getElementById('date_year').value = parts[0];
+                document.getElementById('date_month').value = parseInt(parts[1]); 
+                document.getElementById('date_day').value = parseInt(parts[2]);
+            }
+        }
+        tg.showAlert('تم استرجاع البيانات. ⚠️ يرجى إعادة التقاط الصورة.');
+    };
+
+    window.clearHistory = function() { localStorage.removeItem('appHistory'); window.showHistory(); };
 
     window.finalSend = function() {
         const btn = document.getElementById("btnConfirm");

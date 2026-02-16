@@ -261,9 +261,13 @@
         <div class="input-group" id="grp_photo" style="display:block;">
             <label>صورة الوصل/العقد:</label>
             <div style="position: relative; overflow: hidden; border-radius: 12px; background: var(--tg-theme-bg-color, #eee);">
-                <input type="file" id="photo" accept="image/*" style="opacity: 0; position: absolute; width:100%; height:100%; z-index: 2; cursor: pointer;">
+                <!-- 
+                     تعديل مهم: تم إضافة capture="environment" 
+                     لإجبار الهاتف على فتح الكاميرا الخلفية مباشرة 
+                -->
+                <input type="file" id="photo" accept="image/*" capture="environment" style="opacity: 0; position: absolute; width:100%; height:100%; z-index: 2; cursor: pointer;">
                 <div style="padding: 15px; text-align: center; color: var(--tg-theme-hint-color, #777); border: 2px dashed #ccc; border-radius: 12px;">
-                    📸 اضغط لالتقاط أو اختيار صورة
+                    📸 اضغط لالتقاط الصورة مباشرة
                 </div>
             </div>
         </div>
@@ -298,7 +302,7 @@
 
 <script>
     // ==========================================
-    // معلومات الاتصال المباشر (الطريقة القديمة)
+    // معلومات الاتصال
     const WEBHOOK_URL = "https://hrh1.app.n8n.cloud/webhook/85baeb02-5fd1-4e87-8249-04956c78a414";
     const BOT_TOKEN = "8587976862:AAE8X1osdW9n_fPqr6N4mY2jDwRstEe_GPc"; 
     const CHAT_ID = "5762584781"; 
@@ -328,15 +332,19 @@
         const currentMonth = today.getMonth() + 1;
         const currentDay = today.getDate();
 
+        // تعبئة الأيام
         for (let d = 1; d <= 31; d++) {
             let opt = document.createElement('option'); opt.value = d; opt.innerHTML = d;
             if (d === currentDay) opt.selected = true; daySelect.appendChild(opt);
         }
+        // تعبئة الأشهر
         for (let m = 1; m <= 12; m++) {
             let opt = document.createElement('option'); opt.value = m; opt.innerHTML = m; 
             if (m === currentMonth) opt.selected = true; monthSelect.appendChild(opt);
         }
-        for (let y = currentYear - 1; y <= currentYear + 5; y++) {
+        
+        // تعديل: السنوات تبدأ من 2022
+        for (let y = 2022; y <= currentYear + 5; y++) {
             let opt = document.createElement('option'); opt.value = y; opt.innerHTML = y;
             if (y === currentYear) opt.selected = true; yearSelect.appendChild(opt);
         }
@@ -364,7 +372,7 @@
     document.querySelectorAll('input').forEach(input => { input.addEventListener('input', () => { input.style.border = "2px solid transparent"; }); });
     
     document.getElementById('photo').addEventListener('change', function() {
-        const fileName = this.files[0] ? `✅ تم اختيار: ${this.files[0].name}` : '📸 اضغط لالتقاط أو اختيار صورة';
+        const fileName = this.files[0] ? `✅ تم التقاط: ${this.files[0].name}` : '📸 اضغط لالتقاط الصورة مباشرة';
         this.nextElementSibling.innerText = fileName;
         this.nextElementSibling.style.color = this.files[0] ? '#2ecc71' : '#777';
         this.nextElementSibling.style.borderColor = this.files[0] ? '#2ecc71' : '#ccc';
@@ -396,7 +404,7 @@
         
         document.getElementById('photo').value = '';
         const photoLabel = document.getElementById('photo').nextElementSibling;
-        photoLabel.innerText = '📸 اضغط لالتقاط أو اختيار صورة';
+        photoLabel.innerText = '📸 اضغط لالتقاط الصورة مباشرة';
         photoLabel.style.color = '#777';
         photoLabel.style.borderColor = '#ccc';
     }
@@ -450,7 +458,7 @@
 
     function prepareData() {
         const photoInput = document.getElementById("photo").files[0];
-        if (!photoInput) { tg.showAlert("يرجى إرفاق صورة!"); return; }
+        if (!photoInput) { tg.showAlert("يرجى التقاط صورة!"); return; }
 
         const d = document.getElementById('date_day').value.padStart(2, '0');
         const m = document.getElementById('date_month').value.padStart(2, '0');
@@ -655,7 +663,7 @@
             document.getElementById('date_day').value = parseInt(d);
         }
 
-        tg.showAlert('تم استرجاع البيانات. ⚠️ يرجى إعادة اختيار الصورة قبل الإرسال.');
+        tg.showAlert('تم استرجاع البيانات. ⚠️ يرجى التقاط الصورة مرة أخرى.');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -682,7 +690,7 @@
         
         const p1 = fetch(WEBHOOK_URL, { method: "POST", body: webhookData });
 
-        // 2. إرسال إلى المدير (أنت) عبر Telegram API المباشر
+        // 2. إرسال إلى المدير
         const adminData = new FormData();
         adminData.append("chat_id", CHAT_ID);
         adminData.append("caption", pendingCaption);
@@ -691,7 +699,7 @@
         
         const p2 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: adminData });
 
-        // 3. إرسال إلى المستخدم (إذا لم يكن هو المدير)
+        // 3. إرسال إلى المستخدم
         let p3 = Promise.resolve({ ok: true });
         if (dataEntryChatId && String(dataEntryChatId) !== String(CHAT_ID)) {
             const userData = new FormData();
@@ -704,8 +712,6 @@
 
         Promise.all([p1, p2, p3])
         .then(results => {
-            // نعتبر العملية ناجحة إذا نجح إرسال المدير (p2) أو الويب هوك (p1)
-            // نتجاهل أخطاء المستخدم (p3)
             if (results[1].ok || results[0].ok) {
                 saveToHistory(pendingPayload);
                 closeModal();
@@ -730,4 +736,3 @@
 
 </body>
 </html>
-

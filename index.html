@@ -156,6 +156,7 @@
             cursor: pointer;
             text-align: center;
             transition: all 0.2s;
+            position: relative; /* ضروري عشان الإنبوت يجي فوقه */
         }
         .photo-btn:active {
             background: #e0e0e0;
@@ -288,16 +289,19 @@
         <div class="input-group" id="grp_photo" style="display:block;">
             <label>صورة الوصل/العقد:</label>
             
-            <!-- زرين منفصلين لحل مشكلة أندرويد -->
+            <!-- تم التعديل: طريقة الـ Overlay Input الأكثر توافقية مع أندرويد -->
             <div class="photo-buttons-container">
                 <!-- زر 1: الكاميرا المباشرة -->
-                <div class="photo-btn" onclick="document.getElementById('input_camera').click()">
+                <div class="photo-btn">
                     📷 التقاط صورة
+                    <!-- الحقل هنا يغطي الزر بالكامل وهو شفاف -->
+                    <input type="file" accept="image/*" capture="environment" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="handleFileSelect(this)">
                 </div>
                 
                 <!-- زر 2: الاستوديو -->
-                <div class="photo-btn" onclick="document.getElementById('input_gallery').click()">
+                <div class="photo-btn">
                     🖼️ من الاستوديو
+                    <input type="file" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="handleFileSelect(this)">
                 </div>
             </div>
 
@@ -305,12 +309,6 @@
             <div id="fileNameDisplay" style="margin-top: 10px; text-align: center; font-size: 13px; color: #777;">
                 لم يتم اختيار صورة
             </div>
-
-            <!-- Inputs مخفية -->
-            <!-- للكاميرا المباشرة -->
-            <input type="file" id="input_camera" accept="image/*" capture="environment" style="display: none;" onchange="handleFileSelect(this)">
-            <!-- للاستوديو -->
-            <input type="file" id="input_gallery" accept="image/*" style="display: none;" onchange="handleFileSelect(this)">
         </div>
 
         <button class="submit-btn" onclick="prepareData()" id="btn">مراجعة وإرسال 📤</button>
@@ -422,13 +420,10 @@
             const fileNameDisplay = document.getElementById('fileNameDisplay');
             fileNameDisplay.innerHTML = `✅ تم اختيار: <b style="color:#2ecc71">${selectedPhotoFile.name}</b>`;
             
-            // تلوين الزر النشط
+            // تلوين الزر النشط وإلغاء تلوين الباقي
             document.querySelectorAll('.photo-btn').forEach(btn => btn.classList.remove('active'));
-            if(input.id === 'input_camera') {
-                document.querySelector('.photo-btn:nth-child(1)').classList.add('active');
-            } else {
-                document.querySelector('.photo-btn:nth-child(2)').classList.add('active');
-            }
+            // نضيف كلاس active للزر الأب الذي يحتوي الإنبوت المضغوط
+            input.parentElement.classList.add('active');
         }
     }
 
@@ -458,8 +453,8 @@
         
         // إعادة تعيين الصورة
         selectedPhotoFile = null;
-        document.getElementById('input_camera').value = '';
-        document.getElementById('input_gallery').value = '';
+        // تصفير جميع حقول الملفات في الصفحة
+        document.querySelectorAll('input[type="file"]').forEach(f => f.value = '');
         document.getElementById('fileNameDisplay').innerHTML = 'لم يتم اختيار صورة';
         document.querySelectorAll('.photo-btn').forEach(btn => btn.classList.remove('active'));
     }

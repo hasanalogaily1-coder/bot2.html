@@ -209,11 +209,10 @@
             border-radius: 30px; border: 1px solid rgba(255,255,255,0.3);
         }
 
-        /* --- تحسينات الألوان للوضع الليلي (مهم جداً) --- */
+        /* --- تحسينات الألوان للوضع الليلي --- */
         .search-results { margin-top: 20px; }
         
         .result-card {
-            /* استخدام لون خلفية البطاقة الخاص بتيليجرام */
             background: var(--tg-theme-secondary-bg-color, #f9f9f9);
             padding: 15px; 
             margin-bottom: 12px; border-radius: 12px;
@@ -225,7 +224,6 @@
         
         .res-type { 
             font-size: 12px; font-weight: bold; 
-            /* لون النص الثانوي (رمادي فاتح في الوضع الليلي) */
             color: var(--tg-theme-hint-color, #666); 
             margin-bottom: 8px; display: flex; justify-content: space-between;
             border-bottom: 1px dashed var(--tg-theme-hint-color, #ddd); padding-bottom: 5px;
@@ -233,21 +231,18 @@
         
         .res-title { 
             font-weight: bold; font-size: 16px; margin-bottom: 8px; 
-            /* لون النص الأساسي (أبيض في الوضع الليلي) */
             color: var(--tg-theme-text-color, #333); 
         }
         
         .res-info { 
             font-size: 14px; 
-            /* لون النص الأساسي لضمان القراءة بوضوح */
             color: var(--tg-theme-text-color, #444); 
             white-space: pre-line; 
             line-height: 1.8;
-            opacity: 0.9; /* تخفيف بسيط جداً */
+            opacity: 0.9;
         }
         
         .res-amount { 
-            /* لون السعر يبقى أزرق أو حسب الثيم */
             color: var(--tg-theme-button-color, var(--primary-color)); 
             font-weight: bold; margin-top: 10px; font-size: 16px; 
             text-align: left; 
@@ -265,7 +260,7 @@
         }
         .filter-chip {
             padding: 8px 12px; 
-            background: var(--tg-theme-bg-color, #e0e0e0); /* خلفية الفلتر */
+            background: var(--tg-theme-bg-color, #e0e0e0);
             border: 1px solid var(--tg-theme-hint-color, #ccc);
             border-radius: 20px;
             font-size: 12px; font-weight: bold; 
@@ -274,6 +269,17 @@
         }
         .filter-chip.active {
             background: var(--primary-color); color: white; border-color: var(--primary-color);
+        }
+        
+        /* تنسيق حقول البحث */
+        .search-field-row {
+            display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;
+        }
+        .search-field-row input {
+            flex: 1 1 45%; /* حقلين في السطر */
+        }
+        .search-field-row input.full {
+            flex: 1 1 100%; /* حقل كامل العرض */
         }
 
         /* السجل */
@@ -299,7 +305,7 @@
             background-color: var(--tg-theme-secondary-bg-color, #ffffff);
             padding: 25px; border-radius: 20px; width: 85%; max-width: 350px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: right;
-            color: var(--tg-theme-text-color, #000); /* لون النص داخل المودال */
+            color: var(--tg-theme-text-color, #000);
         }
         .summary-list { margin: 20px 0; background: var(--tg-theme-bg-color, #f8f9fa); padding: 15px; border-radius: 12px; font-size: 14px; }
         .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed var(--tg-theme-hint-color, #ddd); padding-bottom: 5px; }
@@ -338,19 +344,15 @@
         </div>
     </div>
 
-    <!-- قسم البحث -->
+    <!-- قسم البحث المعدل -->
     <div id="searchSection" class="form-section">
         <button class="back-btn" onclick="showMenu()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 5px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             رجوع للقائمة
         </button>
         <h3 style="text-align: center; margin-bottom: 15px;">🔍 بحث شامل في النظام</h3>
-        
-        <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-            <input type="text" id="searchInput" placeholder="اكتب للبحث (دار، اسم، وصل، عقد)..." style="flex:1;">
-            <button onclick="performSearch()" style="background: var(--primary-color); color: white; border: none; border-radius: 12px; padding: 0 15px; font-weight: bold;">بحث</button>
-        </div>
 
+        <!-- فلاتر البحث -->
         <div class="filter-container">
             <div class="filter-chip active" data-type="all" onclick="toggleSearchFilter(this)">الكل</div>
             <div class="filter-chip" data-type="contracts" onclick="toggleSearchFilter(this)">العقود</div>
@@ -359,9 +361,28 @@
             <div class="filter-chip" data-type="expenses" onclick="toggleSearchFilter(this)">المصاريف</div>
         </div>
         
+        <!-- حقول البحث الديناميكية -->
+        <div id="searchInputsContainer">
+            <div class="search-field-row">
+                <input type="text" id="s_name" placeholder="الاسم" class="dyn-search-field">
+                <input type="number" id="s_house" placeholder="رقم الدار" class="dyn-search-field">
+            </div>
+            <div class="search-field-row">
+                <input type="number" id="s_contract" placeholder="رقم العقد" class="dyn-search-field">
+                <input type="number" id="s_receipt" placeholder="رقم الوصل" class="dyn-search-field">
+            </div>
+            <div class="search-field-row">
+                <input type="text" id="s_reason" placeholder="سبب الصرف" class="dyn-search-field full">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 10px; margin-top: 10px;">
+            <button onclick="performSearch()" style="background: var(--primary-color); color: white; border: none; border-radius: 12px; padding: 12px 15px; font-weight: bold; width: 100%;">بحث 🔎</button>
+        </div>
+        
         <div id="searchSpinner" class="spinner"></div>
         <div id="searchResults" class="search-results">
-            <div style="text-align: center; color: var(--tg-theme-hint-color, #888); font-size: 13px; margin-top:20px;">يمكنك تحديد أكثر من فلتر في نفس الوقت</div>
+            <div style="text-align: center; color: var(--tg-theme-hint-color, #888); font-size: 13px; margin-top:20px;">حدد الفلتر واملأ الحقول المطلوبة للبحث</div>
         </div>
     </div>
 
@@ -492,7 +513,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${dataEntryUser}`;
     }
 
-    // --- منطق الفلاتر ---
+    // --- منطق الفلاتر وتحديث الحقول ---
     window.toggleSearchFilter = function(el) {
         const type = el.getAttribute('data-type');
         
@@ -517,18 +538,51 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelector('.filter-chip[data-type="all"]').classList.add('active');
             }
         }
+        updateSearchFields();
     };
+
+    function updateSearchFields() {
+        // إخفاء الكل أولاً
+        const fields = ['s_name', 's_house', 's_contract', 's_receipt', 's_reason'];
+        fields.forEach(id => document.getElementById(id).style.display = 'none');
+
+        let showName = false, showHouse = false, showContract = false, showReceipt = false, showReason = false;
+
+        if (selectedSearchFilters.includes('all')) {
+            showName = true; showHouse = true; showContract = true; showReceipt = true; showReason = true;
+        } else {
+            if (selectedSearchFilters.includes('contracts')) { showName=true; showHouse=true; showContract=true; }
+            if (selectedSearchFilters.includes('receipts') || selectedSearchFilters.includes('bank')) { showName=true; showHouse=true; showReceipt=true; }
+            if (selectedSearchFilters.includes('expenses')) { showName=true; showHouse=true; showReason=true; }
+        }
+
+        if(showName) document.getElementById('s_name').style.display = 'block';
+        if(showHouse) document.getElementById('s_house').style.display = 'block';
+        if(showContract) document.getElementById('s_contract').style.display = 'block';
+        if(showReceipt) document.getElementById('s_receipt').style.display = 'block';
+        if(showReason) document.getElementById('s_reason').style.display = 'block';
+    }
 
     window.showSearchSection = function() {
         document.getElementById('mainMenu').style.display = 'none';
         document.getElementById('searchSection').style.display = 'block';
         document.getElementById('formSection').style.display = 'none';
         document.getElementById('historySection').style.display = 'none';
+        updateSearchFields(); // تحديث الحقول عند الفتح
     };
 
     window.performSearch = function() {
-        const query = document.getElementById('searchInput').value.trim();
-        if (!query) return;
+        const sName = document.getElementById('s_name').value.trim();
+        const sHouse = document.getElementById('s_house').value.trim();
+        const sContract = document.getElementById('s_contract').value.trim();
+        const sReceipt = document.getElementById('s_receipt').value.trim();
+        const sReason = document.getElementById('s_reason').value.trim();
+
+        // التأكد من ملء حقل واحد على الأقل
+        if (!sName && !sHouse && !sContract && !sReceipt && !sReason) {
+             tg.showAlert("يرجى ملء حقل واحد على الأقل للبحث");
+             return;
+        }
 
         const resDiv = document.getElementById('searchResults');
         const spinner = document.getElementById('searchSpinner');
@@ -537,8 +591,16 @@ document.addEventListener('DOMContentLoaded', function() {
         spinner.style.display = "block";
 
         const sheetsParam = selectedSearchFilters.join(',');
+        
+        // بناء رابط البحث مع الباراميترات المحددة
+        let url = `${SEARCH_WEBHOOK_URL}?sheets=${sheetsParam}`;
+        if(sName) url += `&name=${encodeURIComponent(sName)}`;
+        if(sHouse) url += `&house=${encodeURIComponent(sHouse)}`;
+        if(sContract) url += `&contract=${encodeURIComponent(sContract)}`;
+        if(sReceipt) url += `&receipt=${encodeURIComponent(sReceipt)}`;
+        if(sReason) url += `&reason=${encodeURIComponent(sReason)}`;
 
-        fetch(`${SEARCH_WEBHOOK_URL}?query=${encodeURIComponent(query)}&sheets=${sheetsParam}`)
+        fetch(url)
         .then(response => response.json())
         .then(data => {
             spinner.style.display = "none";

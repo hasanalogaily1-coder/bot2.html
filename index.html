@@ -140,12 +140,13 @@
             display: flex; align-items: center; padding: 0;
         }
 
-        /* تنسيقات أزرار الصور الجديدة */
+        /* تنسيقات أزرار الصور الجديدة باستخدام Label */
         .photo-buttons-container {
             display: flex;
             gap: 10px;
         }
-        .photo-btn {
+        /* تصميم الـ Label ليكون مثل الزر تماماً */
+        .photo-label-btn {
             flex: 1;
             padding: 15px;
             border: 2px dashed #ccc;
@@ -156,16 +157,28 @@
             cursor: pointer;
             text-align: center;
             transition: all 0.2s;
-            position: relative; /* ضروري عشان الإنبوت يجي فوقه */
+            display: flex; /* لضمان توسط النص */
+            align-items: center;
+            justify-content: center;
         }
-        .photo-btn:active {
+        .photo-label-btn:active {
             background: #e0e0e0;
             transform: scale(0.98);
         }
-        .photo-btn.active {
+        .photo-label-btn.active {
             border-color: #2ecc71;
             color: #2ecc71;
             background: rgba(46, 204, 113, 0.1);
+        }
+        
+        /* إخفاء الإنبوت الحقيقي بطريقة آمنة للأندرويد */
+        .safe-hidden-input {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
         }
 
         /* السجل */
@@ -289,26 +302,33 @@
         <div class="input-group" id="grp_photo" style="display:block;">
             <label>صورة الوصل/العقد:</label>
             
-            <!-- تم التعديل: طريقة الـ Overlay Input الأكثر توافقية مع أندرويد -->
+            <!-- الحل الجذري: استخدام Labels مرتبطة ب Inputs مخفية -->
             <div class="photo-buttons-container">
                 <!-- زر 1: الكاميرا المباشرة -->
-                <div class="photo-btn">
+                <!-- تم استخدام for="camera_input" لربط الزر بالحقل -->
+                <label for="camera_input" class="photo-label-btn" id="btn_cam">
                     📷 التقاط صورة
-                    <!-- الحقل هنا يغطي الزر بالكامل وهو شفاف -->
-                    <input type="file" accept="image/*" capture="environment" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="handleFileSelect(this)">
-                </div>
+                </label>
                 
                 <!-- زر 2: الاستوديو -->
-                <div class="photo-btn">
+                <label for="gallery_input" class="photo-label-btn" id="btn_gal">
                     🖼️ من الاستوديو
-                    <input type="file" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" onchange="handleFileSelect(this)">
-                </div>
+                </label>
             </div>
 
             <!-- عرض اسم الملف المختار -->
             <div id="fileNameDisplay" style="margin-top: 10px; text-align: center; font-size: 13px; color: #777;">
                 لم يتم اختيار صورة
             </div>
+
+            <!-- 
+                الحقول المخفية:
+                1. الكاميرا: تحتوي على capture="environment"
+                2. الاستوديو: لا تحتوي على capture
+                ملاحظة: تم وضعها خارج الحاوية لضمان عدم التداخل، ومخفية ب opacity
+            -->
+            <input type="file" id="camera_input" accept="image/*" capture="environment" class="safe-hidden-input" onchange="handleFileSelect(this, 'cam')">
+            <input type="file" id="gallery_input" accept="image/*" class="safe-hidden-input" onchange="handleFileSelect(this, 'gal')">
         </div>
 
         <button class="submit-btn" onclick="prepareData()" id="btn">مراجعة وإرسال 📤</button>
@@ -414,16 +434,21 @@
     document.querySelectorAll('input').forEach(input => { input.addEventListener('input', () => { input.style.border = "2px solid transparent"; }); });
     
     // دالة جديدة للتعامل مع اختيار الملفات
-    function handleFileSelect(input) {
+    function handleFileSelect(input, source) {
         if (input.files && input.files[0]) {
             selectedPhotoFile = input.files[0];
             const fileNameDisplay = document.getElementById('fileNameDisplay');
             fileNameDisplay.innerHTML = `✅ تم اختيار: <b style="color:#2ecc71">${selectedPhotoFile.name}</b>`;
             
-            // تلوين الزر النشط وإلغاء تلوين الباقي
-            document.querySelectorAll('.photo-btn').forEach(btn => btn.classList.remove('active'));
-            // نضيف كلاس active للزر الأب الذي يحتوي الإنبوت المضغوط
-            input.parentElement.classList.add('active');
+            // تلوين الزر النشط وإلغاء تلوين الآخر
+            document.getElementById('btn_cam').classList.remove('active');
+            document.getElementById('btn_gal').classList.remove('active');
+            
+            if(source === 'cam') {
+                document.getElementById('btn_cam').classList.add('active');
+            } else {
+                document.getElementById('btn_gal').classList.add('active');
+            }
         }
     }
 
@@ -453,10 +478,11 @@
         
         // إعادة تعيين الصورة
         selectedPhotoFile = null;
-        // تصفير جميع حقول الملفات في الصفحة
-        document.querySelectorAll('input[type="file"]').forEach(f => f.value = '');
+        document.getElementById('camera_input').value = '';
+        document.getElementById('gallery_input').value = '';
         document.getElementById('fileNameDisplay').innerHTML = 'لم يتم اختيار صورة';
-        document.querySelectorAll('.photo-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('btn_cam').classList.remove('active');
+        document.getElementById('btn_gal').classList.remove('active');
     }
 
     function setupForm(type) {

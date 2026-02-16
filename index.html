@@ -733,21 +733,46 @@ document.addEventListener('DOMContentLoaded', function() {
         const btn = document.getElementById("btnConfirm");
         btn.innerText = "جاري الإرسال..."; btn.disabled = true;
         
-        const formData = new FormData();
-        formData.append("chat_id", CHAT_ID);
-        // تم التعديل هنا: استخدام buildCaption لتنسيق الرسالة مع الفواصل
-        formData.append("caption", buildCaption(pendingPayload));
-        if(selectedPhotoFile) formData.append("photo", selectedPhotoFile);
+        // 1. تحضير بيانات الويب هوك (مفصلة)
+        const webhookData = new FormData();
+        if(selectedPhotoFile) webhookData.append("photo", selectedPhotoFile);
+        for (const [key, value] of Object.entries(pendingPayload)) {
+            webhookData.append(key, value);
+        }
+        webhookData.append("json_data", JSON.stringify(pendingPayload));
+
+        // 2. تحضير بيانات تيليجرام (منسقة)
+        const telegramData = new FormData();
+        telegramData.append("chat_id", CHAT_ID);
+        telegramData.append("caption", buildCaption(pendingPayload));
+        telegramData.append("parse_mode", "Markdown"); // ضروري لتنسيق النص
+        if(selectedPhotoFile) telegramData.append("photo", selectedPhotoFile);
         
-        fetch(WEBHOOK_URL, { method: "POST", body: formData }); // نسخة
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: formData })
-        .then(r => {
-            if(r.ok) {
-                tg.showAlert("✅ تم الإرسال!");
+        // إرسال للويب هوك
+        fetch(WEBHOOK_URL, { method: "POST", body: webhookData });
+
+        // إرسال لتيليجرام (للمدير)
+        const p1 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: telegramData });
+
+        // إرسال نسخة للمستخدم (اختياري)
+        let p2 = Promise.resolve({ ok: true });
+        if (dataEntryChatId && String(dataEntryChatId) !== String(CHAT_ID)) {
+            const userPayload = new FormData();
+            userPayload.append("chat_id", dataEntryChatId);
+            userPayload.append("caption", "✅ *تم رفع البيانات بنجاح!*\n\n" + buildCaption(pendingPayload));
+            userPayload.append("parse_mode", "Markdown");
+            if(selectedPhotoFile) userPayload.append("photo", selectedPhotoFile);
+            p2 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: userPayload }).catch(() => ({ ok: true }));
+        }
+
+        Promise.all([p1, p2])
+        .then(results => {
+            if(results[0].ok) {
+                tg.showAlert("✅ تم الإرسال بنجاح!");
                 showMenu();
                 closeModal();
             } else {
-                tg.showAlert("❌ فشل الإرسال");
+                tg.showAlert("❌ فشل الإرسال لتيليجرام");
             }
         })
         .catch(e => tg.showAlert("Error: " + e))

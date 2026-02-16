@@ -140,55 +140,77 @@
             display: flex; align-items: center; padding: 0;
         }
 
-        /* حاوية الأزرار */
+        /* تنسيقات أزرار الصور */
         .photo-buttons-container {
             display: flex;
             gap: 10px;
         }
-
-        /* الحل الجذري لنظام Honor/Android 15:
-           إنشاء "حاوية" للزر، ووضع حقل الإدخال (Input) فوقها بالكامل.
-           الحقل سيكون شفافاً ولكنه هو الذي سيتلقى النقرة فعلياً.
-        */
-        .photo-btn-wrapper {
+        .photo-label-btn {
             flex: 1;
-            position: relative; /* ضروري عشان الإنبوت يجي فوقه */
-            height: 50px; /* ارتفاع ثابت للزر */
-        }
-
-        /* شكل الزر الظاهري */
-        .photo-btn-visual {
-            width: 100%;
-            height: 100%;
+            padding: 15px;
             border: 2px dashed #ccc;
             border-radius: 12px;
             background: var(--tg-theme-bg-color, #eee);
             color: var(--tg-theme-hint-color, #777);
             font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-sizing: border-box;
-            transition: all 0.2s;
         }
-
-        /* عندما يتم اختيار ملف، نلون الزر الظاهري */
-        .photo-btn-visual.active {
+        .photo-label-btn:active {
+            background: #e0e0e0;
+            transform: scale(0.98);
+        }
+        .photo-label-btn.active {
             border-color: #2ecc71;
             color: #2ecc71;
             background: rgba(46, 204, 113, 0.1);
         }
 
-        /* حقل الإدخال الحقيقي - يغطي الزر بالكامل وشفاف */
-        .overlay-input {
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* تنسيقات الكاميرا المدمجة (Live Camera Modal) */
+        #cameraModal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #cameraVideo {
             width: 100%;
-            height: 100%;
-            opacity: 0;
+            max-height: 80vh;
+            object-fit: contain;
+        }
+        .camera-controls {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .snap-btn {
+            width: 70px; height: 70px;
+            border-radius: 50%;
+            background: #fff;
+            border: 5px solid #ccc;
             cursor: pointer;
-            z-index: 10; /* لضمان أنه في الطبقة العليا */
+        }
+        .close-cam-btn {
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: none;
         }
 
         /* السجل */
@@ -234,6 +256,16 @@
     </style>
 </head>
 <body>
+
+<!-- نافذة الكاميرا المدمجة -->
+<div id="cameraModal">
+    <video id="cameraVideo" autoplay playsinline></video>
+    <canvas id="cameraCanvas" style="display:none;"></canvas>
+    <div class="camera-controls">
+        <button class="close-cam-btn" onclick="stopCamera()">إلغاء</button>
+        <button class="snap-btn" onclick="takeSnapshot()"></button>
+    </div>
+</div>
 
 <div class="container">
     <div class="user-badge" id="userBadge"></div>
@@ -313,26 +345,24 @@
             <label>صورة الوصل/العقد:</label>
             
             <div class="photo-buttons-container">
-                <!-- 
-                     زر 1: الكاميرا المباشرة 
-                     تم وضع الإنبوت فوق الزر بالكامل (overlay) لضمان التقاط النقرة
-                -->
-                <div class="photo-btn-wrapper">
-                    <div id="btn_visual_cam" class="photo-btn-visual">📷 التقاط صورة</div>
-                    <input type="file" id="camera_input" accept="image/*" capture="environment" class="overlay-input" onchange="handleFileSelect(this, 'cam')">
+                <!-- زر يفتح الكاميرا المدمجة -->
+                <div class="photo-label-btn" id="btn_visual_cam" onclick="openCameraModal()">
+                    📷 التقاط صورة
                 </div>
                 
-                <!-- زر 2: الاستوديو -->
-                <div class="photo-btn-wrapper">
-                    <div id="btn_visual_gal" class="photo-btn-visual">🖼️ من الاستوديو</div>
-                    <input type="file" id="gallery_input" accept="image/*" class="overlay-input" onchange="handleFileSelect(this, 'gal')">
-                </div>
+                <!-- زر يفتح الاستوديو -->
+                <label for="gallery_input" class="photo-label-btn" id="btn_visual_gal">
+                    🖼️ من الاستوديو
+                </label>
             </div>
 
             <!-- عرض اسم الملف المختار -->
             <div id="fileNameDisplay" style="margin-top: 10px; text-align: center; font-size: 13px; color: #777;">
                 لم يتم اختيار صورة
             </div>
+
+            <!-- حقل الاستوديو فقط، الكاميرا ستتم برمجياً -->
+            <input type="file" id="gallery_input" accept="image/*" style="display:none;" onchange="handleFileSelect(this, 'gal')">
         </div>
 
         <button class="submit-btn" onclick="prepareData()" id="btn">مراجعة وإرسال 📤</button>
@@ -377,6 +407,7 @@
     
     // متغير لتخزين الملف المختار من أي من الزرين
     let selectedPhotoFile = null;
+    let cameraStream = null;
 
     const tg = window.Telegram.WebApp;
     tg.expand();
@@ -389,6 +420,60 @@
         document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${dataEntryUser}`;
     }
 
+    // === دوال الكاميرا المدمجة ===
+    async function openCameraModal() {
+        try {
+            const videoElement = document.getElementById('cameraVideo');
+            // طلب الكاميرا الخلفية (environment)
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment" } 
+            });
+            cameraStream = stream;
+            videoElement.srcObject = stream;
+            document.getElementById('cameraModal').style.display = 'flex';
+        } catch (err) {
+            tg.showAlert("تعذر الوصول للكاميرا: " + err.message);
+            console.error(err);
+        }
+    }
+
+    function stopCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+        }
+        document.getElementById('cameraModal').style.display = 'none';
+    }
+
+    function takeSnapshot() {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.getElementById('cameraCanvas');
+        
+        // ضبط أبعاد الكانفاس لتناسب الفيديو
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // تحويل الصورة إلى ملف
+        canvas.toBlob((blob) => {
+            const fileName = `camera_capture_${new Date().getTime()}.jpg`;
+            selectedPhotoFile = new File([blob], fileName, { type: "image/jpeg" });
+            
+            // تحديث الواجهة
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+            fileNameDisplay.innerHTML = `✅ تم التقاط صورة: <b style="color:#2ecc71">Cam_${new Date().getHours()}${new Date().getMinutes()}.jpg</b>`;
+            
+            document.getElementById('btn_visual_cam').classList.add('active');
+            document.getElementById('btn_visual_gal').classList.remove('active');
+            
+            // إغلاق الكاميرا
+            stopCamera();
+        }, 'image/jpeg', 0.8);
+    }
+    // ============================
+
     function initDateSelectors() {
         const daySelect = document.getElementById('date_day');
         const monthSelect = document.getElementById('date_month');
@@ -398,18 +483,14 @@
         const currentMonth = today.getMonth() + 1;
         const currentDay = today.getDate();
 
-        // تعبئة الأيام
         for (let d = 1; d <= 31; d++) {
             let opt = document.createElement('option'); opt.value = d; opt.innerHTML = d;
             if (d === currentDay) opt.selected = true; daySelect.appendChild(opt);
         }
-        // تعبئة الأشهر
         for (let m = 1; m <= 12; m++) {
             let opt = document.createElement('option'); opt.value = m; opt.innerHTML = m; 
             if (m === currentMonth) opt.selected = true; monthSelect.appendChild(opt);
         }
-        
-        // تعديل: السنوات تبدأ من 2022
         for (let y = 2022; y <= currentYear + 5; y++) {
             let opt = document.createElement('option'); opt.value = y; opt.innerHTML = y;
             if (y === currentYear) opt.selected = true; yearSelect.appendChild(opt);
@@ -437,25 +518,20 @@
 
     document.querySelectorAll('input').forEach(input => { input.addEventListener('input', () => { input.style.border = "2px solid transparent"; }); });
     
-    // دالة جديدة للتعامل مع اختيار الملفات
+    // التعامل مع ملف الاستوديو
     function handleFileSelect(input, source) {
         if (input.files && input.files[0]) {
             selectedPhotoFile = input.files[0];
             const fileNameDisplay = document.getElementById('fileNameDisplay');
             fileNameDisplay.innerHTML = `✅ تم اختيار: <b style="color:#2ecc71">${selectedPhotoFile.name}</b>`;
             
-            // تلوين الزر النشط وإلغاء تلوين الآخر
             document.getElementById('btn_visual_cam').classList.remove('active');
             document.getElementById('btn_visual_gal').classList.remove('active');
             
             if(source === 'cam') {
                 document.getElementById('btn_visual_cam').classList.add('active');
-                // تصفير الإنبوت الآخر لتجنب التضارب
-                document.getElementById('gallery_input').value = '';
             } else {
                 document.getElementById('btn_visual_gal').classList.add('active');
-                // تصفير الإنبوت الآخر
-                document.getElementById('camera_input').value = '';
             }
         }
     }
@@ -484,9 +560,7 @@
         document.getElementById('houseNum').inputmode = 'decimal';
         document.querySelectorAll('input').forEach(i => i.style.border = "2px solid transparent");
         
-        // إعادة تعيين الصورة
         selectedPhotoFile = null;
-        document.getElementById('camera_input').value = '';
         document.getElementById('gallery_input').value = '';
         document.getElementById('fileNameDisplay').innerHTML = 'لم يتم اختيار صورة';
         document.getElementById('btn_visual_cam').classList.remove('active');
@@ -541,7 +615,6 @@
     }
 
     function prepareData() {
-        // التحقق من المتغير الجديد selectedPhotoFile
         if (!selectedPhotoFile) { tg.showAlert("يرجى التقاط صورة أو اختيارها من الاستوديو!"); return; }
 
         const d = document.getElementById('date_day').value.padStart(2, '0');
@@ -607,7 +680,6 @@
             payload.house_num = hNum; payload.reason = reason; payload.amount = getCleanNumber(amount);
         }
 
-        // بناء النص (Caption)
         pendingCaption = buildCaption(payload);
         pendingPayload = payload;
 
@@ -764,10 +836,8 @@
         btn.classList.add('btn-disabled');
         btnCancel.style.display = 'none'; 
 
-        // استخدام المتغير selectedPhotoFile بدلاً من قراءة input محدد
         const photoFile = selectedPhotoFile;
 
-        // 1. إرسال إلى Webhook (للحفظ)
         const webhookData = new FormData();
         if(photoFile) webhookData.append("photo", photoFile);
         for (const [key, value] of Object.entries(pendingPayload)) { webhookData.append(key, value); }
@@ -775,7 +845,6 @@
         
         const p1 = fetch(WEBHOOK_URL, { method: "POST", body: webhookData });
 
-        // 2. إرسال إلى المدير
         const adminData = new FormData();
         adminData.append("chat_id", CHAT_ID);
         adminData.append("caption", pendingCaption);
@@ -784,7 +853,6 @@
         
         const p2 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: adminData });
 
-        // 3. إرسال إلى المستخدم
         let p3 = Promise.resolve({ ok: true });
         if (dataEntryChatId && String(dataEntryChatId) !== String(CHAT_ID)) {
             const userData = new FormData();

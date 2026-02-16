@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>نظام مجمع الحسين</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -26,12 +26,14 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .container { 
             width: 100%; 
             max-width: 450px; 
             margin: 0 auto;
+            padding-bottom: 50px;
         }
         
         .user-badge {
@@ -170,47 +172,70 @@
             background: rgba(46, 204, 113, 0.1);
         }
 
-        /* تنسيقات الكاميرا المدمجة (Live Camera Modal) */
+        /* === تنسيقات الكاميرا المدمجة المحسنة === */
         #cameraModal {
             display: none;
             position: fixed;
             top: 0; left: 0;
-            width: 100%; height: 100%;
+            width: 100vw; height: 100vh;
             background: #000;
-            z-index: 9999;
+            z-index: 99999; /* أعلى طبقة */
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-end; /* الأزرار في الأسفل */
             align-items: center;
         }
+        
         #cameraVideo {
-            width: 100%;
-            max-height: 80vh;
-            object-fit: contain;
-        }
-        .camera-controls {
             position: absolute;
-            bottom: 30px;
+            top: 0; left: 0;
             width: 100%;
+            height: 100%;
+            object-fit: cover; /* ملء الشاشة بالكامل بدون حواف سوداء */
+            z-index: 1;
+        }
+        
+        .camera-overlay {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%;
+            padding-bottom: 40px;
+            padding-top: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            z-index: 2;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
+            gap: 40px;
         }
+
         .snap-btn {
-            width: 70px; height: 70px;
+            width: 75px; height: 75px;
             border-radius: 50%;
-            background: #fff;
-            border: 5px solid #ccc;
+            background: rgba(255, 255, 255, 0.3);
+            border: 4px solid #fff;
             cursor: pointer;
+            position: relative;
+            transition: transform 0.1s;
         }
+        .snap-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px; height: 60px;
+            background: #fff;
+            border-radius: 50%;
+        }
+        .snap-btn:active { transform: scale(0.9); }
+
         .close-cam-btn {
             color: #fff;
-            font-size: 18px;
+            font-size: 16px;
             cursor: pointer;
-            background: rgba(255,255,255,0.2);
-            padding: 10px 20px;
-            border-radius: 20px;
-            border: none;
+            background: rgba(0,0,0,0.5);
+            padding: 12px 20px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.3);
+            font-weight: bold;
         }
 
         /* السجل */
@@ -259,11 +284,13 @@
 
 <!-- نافذة الكاميرا المدمجة -->
 <div id="cameraModal">
-    <video id="cameraVideo" autoplay playsinline></video>
+    <!-- autoplay playsinline muted ضرورية جداً في أندرويد -->
+    <video id="cameraVideo" autoplay playsinline muted></video>
     <canvas id="cameraCanvas" style="display:none;"></canvas>
-    <div class="camera-controls">
+    <div class="camera-overlay">
         <button class="close-cam-btn" onclick="stopCamera()">إلغاء</button>
         <button class="snap-btn" onclick="takeSnapshot()"></button>
+        <div style="width: 50px;"></div> <!-- Spacer للتوازن -->
     </div>
 </div>
 
@@ -404,8 +431,6 @@
     let currentType = '';
     let pendingPayload = null; 
     let pendingCaption = "";
-    
-    // متغير لتخزين الملف المختار من أي من الزرين
     let selectedPhotoFile = null;
     let cameraStream = null;
 
@@ -420,21 +445,49 @@
         document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${dataEntryUser}`;
     }
 
-    // === دوال الكاميرا المدمجة ===
+    // === دوال الكاميرا المدمجة (المحسنة) ===
     async function openCameraModal() {
+        const videoElement = document.getElementById('cameraVideo');
+        const modal = document.getElementById('cameraModal');
+        
+        // إظهار المودال أولاً لضمان وجود العنصر في الشاشة
+        modal.style.display = 'flex';
+        
         try {
-            const videoElement = document.getElementById('cameraVideo');
-            // طلب الكاميرا الخلفية (environment)
+            // محاولة أولى: الكاميرا الخلفية بدقة عالية
+            // ملاحظة: استخدام exact قد يسبب فشلاً، لذا نستخدم environment كأفضلية
             const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment" } 
+                video: { 
+                    facingMode: "environment",
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                },
+                audio: false
             });
-            cameraStream = stream;
-            videoElement.srcObject = stream;
-            document.getElementById('cameraModal').style.display = 'flex';
+            startVideo(videoElement, stream);
         } catch (err) {
-            tg.showAlert("تعذر الوصول للكاميرا: " + err.message);
-            console.error(err);
+            console.log("Environment camera failed, trying fallback...", err);
+            try {
+                // محاولة ثانية: أي كاميرا متاحة (حل جذري للشاشة السوداء)
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true,
+                    audio: false
+                });
+                startVideo(videoElement, stream);
+            } catch (err2) {
+                modal.style.display = 'none';
+                tg.showAlert("تعذر تشغيل الكاميرا: " + err2.message);
+            }
         }
+    }
+
+    function startVideo(video, stream) {
+        cameraStream = stream;
+        video.srcObject = stream;
+        // ضمان التشغيل حتى لو autoplay فشل
+        video.onloadedmetadata = () => {
+            video.play().catch(e => console.error("Play error:", e));
+        };
     }
 
     function stopCamera() {
@@ -449,28 +502,30 @@
         const video = document.getElementById('cameraVideo');
         const canvas = document.getElementById('cameraCanvas');
         
-        // ضبط أبعاد الكانفاس لتناسب الفيديو
+        // التحقق من أن الفيديو يعمل
+        if (video.videoWidth === 0) {
+            tg.showAlert("انتظر تحميل الكاميرا...");
+            return;
+        }
+
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         
         const ctx = canvas.getContext('2d');
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // تحويل الصورة إلى ملف
         canvas.toBlob((blob) => {
             const fileName = `camera_capture_${new Date().getTime()}.jpg`;
             selectedPhotoFile = new File([blob], fileName, { type: "image/jpeg" });
             
-            // تحديث الواجهة
             const fileNameDisplay = document.getElementById('fileNameDisplay');
             fileNameDisplay.innerHTML = `✅ تم التقاط صورة: <b style="color:#2ecc71">Cam_${new Date().getHours()}${new Date().getMinutes()}.jpg</b>`;
             
             document.getElementById('btn_visual_cam').classList.add('active');
             document.getElementById('btn_visual_gal').classList.remove('active');
             
-            // إغلاق الكاميرا
             stopCamera();
-        }, 'image/jpeg', 0.8);
+        }, 'image/jpeg', 0.85);
     }
     // ============================
 
@@ -518,7 +573,6 @@
 
     document.querySelectorAll('input').forEach(input => { input.addEventListener('input', () => { input.style.border = "2px solid transparent"; }); });
     
-    // التعامل مع ملف الاستوديو
     function handleFileSelect(input, source) {
         if (input.files && input.files[0]) {
             selectedPhotoFile = input.files[0];

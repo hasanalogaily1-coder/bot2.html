@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>نظام مجمع الحسين</title>
     
-    <!-- كود كشف الأخطاء الفوري - سيظهر رسالة اذا توقف التطبيق -->
+    <!-- كود كشف الأخطاء الفوري -->
     <script>
         window.onerror = function(msg, url, line, col, error) {
-            // alert("⚠️ خطأ في النظام:\n" + msg + "\nالسطر: " + line);
             console.error(msg, line);
             return false;
         };
@@ -39,7 +38,7 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* شاشة التحميل للتأكد من عمل التطبيق */
+        /* شاشة التحميل */
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #fff; z-index: 999999;
@@ -52,7 +51,7 @@
             max-width: 450px; 
             margin: 0 auto;
             padding-bottom: 50px;
-            display: none; /* مخفي حتى التحميل */
+            display: none; 
         }
         
         .user-badge {
@@ -136,7 +135,7 @@
             font-family: inherit;
         }
 
-        /* إصلاح القوائم المنسدلة لهواتف Honor/Android 15 */
+        /* إصلاح القوائم المنسدلة */
         select {
             -webkit-appearance: none;
             -moz-appearance: none;
@@ -415,6 +414,66 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${dataEntryUser}`;
     }
 
+    // دالة تحويل الأرقام العربية إلى إنجليزية
+    function normalizeDigits(str) { 
+        return str ? str.toString().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; 
+    }
+
+    // دالة تنظيف النص من أي شيء عدا الأرقام
+    function getCleanNumber(val) { 
+        if (!val) return '';
+        let normalized = normalizeDigits(val); // تحويل العربي لإنجليزي أولاً
+        return normalized.replace(/[^\d]/g,''); // إزالة غير الأرقام
+    }
+
+    // دالة التنسيق مع فواصل (تستخدم للعرض فقط)
+    function formatWithCommas(val) { 
+        const n = getCleanNumber(val); 
+        return n ? parseInt(n).toLocaleString('en-US') : ''; 
+    }
+
+    // === دالة بناء الرسالة مع الفواصل (مهمة جداً لطلبك) ===
+    function buildCaption(data) {
+        // دالة تنسيق داخلية خاصة بالكابشن
+        const fmt = (val) => {
+            if (!val) return '';
+            const n = parseFloat(val); 
+            return isNaN(n) ? val : n.toLocaleString('en-US'); // يضيف الفواصل
+        };
+
+        let t = "";
+        
+        if (data.operation_type === 'contract') {
+            t += `📄 *عقد جديد*\n\n`;
+            t += `🔢 *رقم العقد:* ${data.contract_num}\n`;
+            t += `🏠 *رقم الدار:* ${data.house_num}\n`;
+            t += `👤 *الاسم:* ${data.name}\n`;
+            t += `💰 *المقدمة:* ${fmt(data.down_payment)}\n`; // هنا تظهر الفواصل
+            t += `💵 *السعر الكلي:* ${fmt(data.total_price)}`;
+        } else if (data.operation_type === 'receipt') {
+            t += `📥 *وصل قبض* (${data.sub_type})\n\n`;
+            t += `🔢 *رقم الوصل:* ${data.receipt_num}\n`;
+            t += `🏠 *رقم الدار:* ${data.house_num}\n`;
+            t += `💰 *المبلغ:* ${fmt(data.amount)}`;
+        } else if (data.operation_type === 'bank') {
+            t += `🏦 *وصل مصرف* (${data.sub_type})\n\n`;
+            t += `🔢 *رقم الوصل:* ${data.receipt_num}\n`;
+            t += `🏠 *رقم الدار:* ${data.house_num}\n`;
+            t += `💰 *المبلغ:* ${fmt(data.amount)}`;
+        } else if (data.operation_type === 'expense') {
+            t += `💸 *مصاريف*\n\n`;
+            t += `🏠 *رقم الدار:* ${data.house_num}\n`;
+            t += `👤 *الاسم:* ${data.name}\n`;
+            t += `📝 *السبب:* ${data.reason}\n`;
+            t += `💰 *المبلغ:* ${fmt(data.amount)}`;
+        }
+        
+        t += `\n\n📅 *التاريخ:* ${data.date}`;
+        if (data.data_entry_user) t += `\n👨‍💻 *بواسطة:* ${data.data_entry_user}`;
+        
+        return t;
+    }
+
     // تهيئة القوائم المنسدلة
     function initDateSelectors() {
         const daySelect = document.getElementById('date_day');
@@ -442,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     initDateSelectors();
 
-    // الدوال المساعدة
+    // الدوال المساعدة للكاميرا
     window.openCameraModal = async function() {
         const videoElement = document.getElementById('cameraVideo');
         const modal = document.getElementById('cameraModal');
@@ -513,7 +572,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('mainMenu').style.display='none';
         document.getElementById('formSection').style.display='block';
         
-        // إعداد الحقول حسب النوع
         const title = document.getElementById('formTitle');
         const typeSelect = document.getElementById('transactionType');
         
@@ -547,11 +605,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('mainMenu').style.display = 'block';
     };
 
-    // ... (باقي دوال الحسابات والتحقق تعمل كما هي) ...
-    // دالة التنسيق والتحقق
-    function getCleanNumber(val) { return val ? val.toString().replace(/[^\d]/g,'') : ''; }
-    function formatWithCommas(val) { const n = getCleanNumber(val); return n ? parseInt(n).toLocaleString('en-US') : ''; }
-    
     // دالة التحقق من الحدود (المحددات)
     function validateLimit(id, max, label) {
         const el = document.getElementById(id);
@@ -570,11 +623,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.amount-field').forEach(input => {
         input.addEventListener('input', (e) => {
             const v = e.target.value; e.target.value = formatWithCommas(v);
-            e.target.style.border = "2px solid transparent"; // إعادة تعيين الحدود عند الكتابة
+            e.target.style.border = "2px solid transparent";
         });
     });
     
-    // إضافة مستمعين لحدث الإدخال لباقي الحقول لإلغاء اللون الأحمر
     document.querySelectorAll('input').forEach(input => {
         input.addEventListener('input', () => { input.style.border = "2px solid transparent"; });
     });
@@ -582,93 +634,83 @@ document.addEventListener('DOMContentLoaded', function() {
     window.prepareData = function() {
         if (!selectedPhotoFile) { tg.showAlert("يرجى اختيار صورة!"); return; }
         
-        const d = document.getElementById('date_day').value.padStart(2,'0');
-        const m = document.getElementById('date_month').value.padStart(2,'0');
-        const y = document.getElementById('date_year').value;
+        // تحويل أرقام التاريخ أيضاً إذا كانت عربية (احتياطاً)
+        const d = normalizeDigits(document.getElementById('date_day').value).padStart(2,'0');
+        const m = normalizeDigits(document.getElementById('date_month').value).padStart(2,'0');
+        const y = normalizeDigits(document.getElementById('date_year').value);
         const date = `${y}-${m}-${d}`;
         const name = document.getElementById("name").value.trim();
 
         let payload = { operation_type: currentType, date: date, name: name, data_entry_user: dataEntryUser, timestamp: new Date().toISOString() };
         
-        // === تطبيق المحددات (Validation Constraints) ===
+        // === تطبيق المحددات مع تطبيع الأرقام (تحويل العربي لإنجليزي) ===
 
-        // 1. التحقق من رقم الدار (للعقود والوصولات)
         if (['contract', 'receipt', 'bank'].includes(currentType)) {
             if (!validateLimit('houseNum', 1178, 'رقم الدار')) return;
         }
 
-        // 2. التحقق حسب نوع العملية
         if (currentType === 'contract') {
-            // التحقق من الحدود للعقد
-            if (!validateLimit('contractNum', 999999, 'رقم العقد')) return;
+            if (!validateLimit('contractNum', 50000, 'رقم العقد')) return; // تم التعديل
             if (!validateLimit('totalPrice', 500000000, 'السعر الكلي')) return;
             if (!validateLimit('downPayment', 150000000, 'المقدمة')) return;
 
-            // التحقق من الاسم الثلاثي
             if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
             if (name.split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
 
-            // التحقق من ملء الحقول الإجبارية
             if (!document.getElementById('contractNum').value || !document.getElementById('houseNum').value || !document.getElementById('downPayment').value || !document.getElementById('totalPrice').value) {
                 tg.showAlert("يرجى ملء كافة حقول العقد!"); return;
             }
 
-            payload.contract_num = document.getElementById('contractNum').value;
-            payload.house_num = document.getElementById('houseNum').value;
+            // هنا نقوم بـ normalizeDigits لكل الحقول لضمان أنها أرقام إنجليزية
+            payload.contract_num = normalizeDigits(document.getElementById('contractNum').value);
+            payload.house_num = normalizeDigits(document.getElementById('houseNum').value);
             payload.down_payment = getCleanNumber(document.getElementById('downPayment').value);
             payload.total_price = getCleanNumber(document.getElementById('totalPrice').value);
 
         } else if (currentType === 'receipt') {
-            // التحقق من الحدود للوصل
-            if (!validateLimit('receiptNum', 999999, 'رقم الوصل')) return;
+            if (!validateLimit('receiptNum', 50000, 'رقم الوصل')) return; // تم التعديل
             if (!validateLimit('amount', 150000000, 'المبلغ')) return;
 
-            // التحقق من ملء الحقول
             if (!document.getElementById('receiptNum').value || !document.getElementById('houseNum').value || !document.getElementById('amount').value) {
                 tg.showAlert("يرجى ملء كافة حقول الوصل!"); return;
             }
 
             payload.sub_type = document.getElementById('transactionType').value;
-            payload.receipt_num = document.getElementById('receiptNum').value;
-            payload.house_num = document.getElementById('houseNum').value;
+            payload.receipt_num = normalizeDigits(document.getElementById('receiptNum').value);
+            payload.house_num = normalizeDigits(document.getElementById('houseNum').value);
             payload.amount = getCleanNumber(document.getElementById('amount').value);
 
         } else if (currentType === 'bank') {
-            // التحقق من الحدود للمصرف
-            if (!validateLimit('receiptNum', 999999, 'رقم الوصل')) return;
+            if (!validateLimit('receiptNum', 50000, 'رقم الوصل')) return; // تم التعديل
             if (!validateLimit('amount', 150000000, 'المبلغ')) return;
 
-            // التحقق من ملء الحقول
             if (!document.getElementById('houseNum').value || !document.getElementById('amount').value) {
                 tg.showAlert("يرجى ملء رقم الدار والمبلغ!"); return;
             }
 
             payload.sub_type = document.getElementById('transactionType').value;
-            payload.receipt_num = document.getElementById('receiptNum').value || "-";
-            payload.house_num = document.getElementById('houseNum').value;
+            payload.receipt_num = document.getElementById('receiptNum').value ? normalizeDigits(document.getElementById('receiptNum').value) : "-";
+            payload.house_num = normalizeDigits(document.getElementById('houseNum').value);
             payload.amount = getCleanNumber(document.getElementById('amount').value);
 
         } else if (currentType === 'expense') {
-            // التحقق من الحدود للمصاريف
             if (!validateLimit('amount', 150000000, 'المبلغ')) return;
 
-            // التحقق من الاسم الثلاثي
             if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
             if (name.split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
 
-            // التحقق من ملء الحقول
             if (!document.getElementById('reason').value || !document.getElementById('amount').value) {
                 tg.showAlert("يرجى ذكر السبب والمبلغ!"); return;
             }
 
-            payload.house_num = document.getElementById('houseNum').value || "عام";
+            // في المصاريف، رقم الدار قد يكون نصاً، لذا نستخدم normalizeDigits فقط لتحويل الأرقام إن وجدت
+            payload.house_num = document.getElementById('houseNum').value ? normalizeDigits(document.getElementById('houseNum').value) : "عام";
             payload.reason = document.getElementById('reason').value;
             payload.amount = getCleanNumber(document.getElementById('amount').value);
         }
 
         pendingPayload = payload;
         
-        // عرض الملخص
         let summaryHtml = "";
         const labelMap = { 
             'contract_num': 'رقم العقد', 'house_num': 'رقم الدار', 'name': 'الاسم', 
@@ -693,10 +735,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const formData = new FormData();
         formData.append("chat_id", CHAT_ID);
-        formData.append("caption", JSON.stringify(pendingPayload, null, 2)); // تبسيط للكابشن
+        // تم التعديل هنا: استخدام buildCaption لتنسيق الرسالة مع الفواصل
+        formData.append("caption", buildCaption(pendingPayload));
         if(selectedPhotoFile) formData.append("photo", selectedPhotoFile);
         
-        // إرسال للويب هوك (اختياري) وللمدير
         fetch(WEBHOOK_URL, { method: "POST", body: formData }); // نسخة
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: formData })
         .then(r => {
@@ -712,12 +754,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .finally(() => { btn.innerText = "نعم، إرسال ✅"; btn.disabled = false; });
     };
     
-    // دوال السجل (مختصرة)
     window.showHistory = function() {
         showMenu(); 
         document.getElementById('mainMenu').style.display='none';
         document.getElementById('historySection').style.display='block';
-        // (يمكنك إضافة كود عرض السجل هنا كما في النسخ السابقة)
     };
     window.clearHistory = function() { localStorage.removeItem('appHistory'); window.showHistory(); };
 });

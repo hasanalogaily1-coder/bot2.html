@@ -279,6 +279,7 @@
 <div id="loader">جار التحميل...</div>
 <div id="printableArea"></div>
 
+<!-- نافذة الكاميرا المدمجة -->
 <div id="cameraModal">
     <video id="cameraVideo" autoplay playsinline muted></video>
     <canvas id="cameraCanvas" style="display:none;"></canvas>
@@ -304,6 +305,7 @@
         </div>
     </div>
 
+    <!-- قسم الفورم -->
     <div id="formSection" class="form-section">
         <button class="back-btn" onclick="showMenu()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 5px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -318,7 +320,7 @@
 
         <div class="input-group" id="grp_contractNum">
             <label>رقم العقد:</label>
-            <input type="text" inputmode="numeric" id="contractNum" placeholder="مثلاً: 105">
+            <input type="text" inputmode="numeric" id="contractNum">
         </div>
 
         <div class="input-group" id="grp_receiptNum">
@@ -333,7 +335,7 @@
         </div>
 
         <div class="input-group" id="grp_name">
-            <label>الاسم (صاحب المعاملة):</label>
+            <label>الاسم:</label>
             <input type="text" id="name">
         </div>
 
@@ -384,6 +386,7 @@
         <button class="submit-btn" onclick="prepareData()" id="btn">مراجعة وإرسال 📤</button>
     </div>
 
+    <!-- قسم البحث الشامل (الجديد) -->
     <div id="searchSection" class="form-section">
         <button class="back-btn" onclick="showMenu()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 5px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -403,7 +406,7 @@
             <input type="text" id="s_name" placeholder="الاسم" style="flex:1">
             <input type="tel" id="s_house" placeholder="الدار" style="width:80px">
         </div>
-        <div style="display:flex; gap:5px; margin-bottom:10px;">
+        <div id="search_ids_row" style="display:flex; gap:5px; margin-bottom:10px;">
             <input type="tel" id="s_contract" placeholder="رقم العقد" style="flex:1">
             <input type="tel" id="s_receipt" placeholder="رقم الوصل" style="flex:1">
         </div>
@@ -430,6 +433,7 @@
         <div id="searchResults" style="margin-top:20px;"></div>
     </div>
 
+    <!-- قسم السجل (التصميم الأصلي الملون) -->
     <div id="historySection" class="form-section">
         <button class="back-btn" onclick="showMenu()">
              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 5px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -567,23 +571,23 @@ document.addEventListener('DOMContentLoaded', function() {
         if (type === 'contract') {
             title.innerText = '📄 عقد جديد';
             ['grp_contractNum','grp_houseNum','grp_name','grp_contractDetails'].forEach(id=>document.getElementById(id).style.display='block');
-            document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب):";
+            document.getElementById('lbl_houseNum').innerText = "رقم الدار:";
         } else if (type === 'receipt') {
             title.innerText = '📥 وصل قبض';
             ['grp_type','grp_receiptNum','grp_houseNum','grp_amount'].forEach(id=>document.getElementById(id).style.display='block');
             typeSelect.innerHTML = '<option value="قسط">قسط</option><option value="دفعة">دفعة</option>';
-            document.getElementById('lbl_receiptNum').innerText = "رقم الوصل (مطلوب):";
-            document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب):";
+            document.getElementById('lbl_receiptNum').innerText = "رقم الوصل:";
+            document.getElementById('lbl_houseNum').innerText = "رقم الدار:";
         } else if (type === 'bank') {
             title.innerText = '🏦 وصل مصرف';
             ['grp_type','grp_receiptNum','grp_houseNum','grp_amount'].forEach(id=>document.getElementById(id).style.display='block');
             typeSelect.innerHTML = '<option value="محامي">محامي</option><option value="عمولة">عمولة</option><option value="قرض">قرض</option>';
-            document.getElementById('lbl_receiptNum').innerText = "رقم الوصل (اختياري):";
-            document.getElementById('lbl_houseNum').innerText = "رقم الدار (مطلوب):";
+            document.getElementById('lbl_receiptNum').innerText = "رقم الوصل:";
+            document.getElementById('lbl_houseNum').innerText = "رقم الدار:";
         } else if (type === 'expense') {
             title.innerText = '💸 مصاريف';
             ['grp_houseNum','grp_name','grp_reason','grp_amount'].forEach(id=>document.getElementById(id).style.display='block');
-            document.getElementById('lbl_houseNum').innerText = "رقم الدار (اختياري):";
+            document.getElementById('lbl_houseNum').innerText = "رقم الدار:";
             document.getElementById('houseNum').inputmode = 'text';
         }
     };
@@ -655,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function() {
         else if(t === 'expenses') selectedSearchFilters = ['expenses'];
         else {
             selectedSearchFilters = selectedSearchFilters.filter(x => x !== 'expenses');
-            if(selectedSearchFilters.includes(t)) selectedSearchFilters = selectedSearchFilters.filter(x => x !== t);
+            if(selectedSearchFilters.includes(t)) selectedSearchFilters = selectedSearchFilters.filter(x => x !== t); 
             else selectedSearchFilters.push(t);
         }
         
@@ -668,7 +672,28 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if(isActive) c.classList.add('active'); else c.classList.remove('active');
         });
-        document.getElementById('s_contract').style.display = selectedSearchFilters.includes('expenses') ? 'none' : 'block';
+        
+        // Visibility Logic Update
+        const hasContracts = selectedSearchFilters.includes('contracts');
+        const hasReceiptsOrBank = selectedSearchFilters.includes('receipts') || selectedSearchFilters.includes('bank');
+        const hasExpenses = selectedSearchFilters.includes('expenses');
+
+        const contractInput = document.getElementById('s_contract');
+        const receiptInput = document.getElementById('s_receipt');
+        const reasonInput = document.getElementById('s_reason');
+        const idsRow = document.getElementById('search_ids_row'); // Container ID for Contract/Receipt
+
+        contractInput.style.display = hasContracts ? 'block' : 'none';
+        receiptInput.style.display = hasReceiptsOrBank ? 'block' : 'none';
+        
+        // Hide container if both specific fields are hidden
+        if (!hasContracts && !hasReceiptsOrBank) {
+            if(idsRow) idsRow.style.display = 'none';
+        } else {
+            if(idsRow) idsRow.style.display = 'flex';
+        }
+
+        reasonInput.style.display = hasExpenses ? 'block' : 'none';
     };
 
     window.performSearch = function() {
@@ -680,7 +705,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if(v('s_house')) p.append('house', v('s_house'));
         if(v('s_contract')) p.append('contract', v('s_contract'));
         if(v('s_receipt')) p.append('receipt', v('s_receipt'));
-        if(v('s_reason')) p.append('reason', v('s_reason')); // إضافة سبب الصرف
+        if(v('s_reason')) p.append('reason', v('s_reason'));
 
         const d1 = v('sd_d1'), m1 = v('sd_m1'), y1 = v('sd_y1');
         if(d1 && m1 && y1) p.append('dateFrom', `${y1}-${m1.padStart(2,'0')}-${d1.padStart(2,'0')}`);
@@ -694,20 +719,73 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`${SEARCH_WEBHOOK_URL}?${p.toString()}`)
         .then(r => r.json())
         .then(d => {
+            const getPriority = (sheetName) => {
+                const s = String(sheetName).toLowerCase();
+                if (s.includes('contract') || s.includes('عقد') || s.includes('العقود')) return 1;
+                if (s.includes('receipt') || s.includes('قبض') || s.includes('المقبوضات')) return 2;
+                if (s.includes('bank') || s.includes('مصرف')) return 3;
+                if (s.includes('expense') || s.includes('صرف') || s.includes('المصاريف')) return 4;
+                return 5;
+            };
+
+            const getColor = (sheetName) => {
+                const p = getPriority(sheetName);
+                if (p === 1) return '#f1c40f'; // أصفر - عقود
+                if (p === 2) return '#2ecc71'; // أخضر - مقبوضات
+                if (p === 3) return '#3498db'; // أزرق - مصرف
+                if (p === 4) return '#e74c3c'; // أحمر - مصاريف
+                return '#ccc';
+            };
+
+            // ترتيب النتائج: النوع (أولوية) ثم التاريخ (الأحدث)
+            d.sort((a, b) => {
+                const pA = getPriority(a.sheet);
+                const pB = getPriority(b.sheet);
+                if (pA !== pB) return pA - pB;
+                return new Date(b.date) - new Date(a.date);
+            });
+
             currentSearchResults = d;
+            
             if(!d.length) return document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin-top:20px;">لا توجد نتائج 📭</div>';
             
             let h = '';
             d.forEach((r, i) => {
-                let amountDisplay = parseInt(r.amount || 0).toLocaleString();
-                let title = r.name || r.house || r.reason || "بدون عنوان";
-                
-                h += `<div class="result-card">
-                    <input type="checkbox" class="result-checkbox" value="${i}">
-                    <div style="flex:1">
-                        <div class="res-type">${r.sheet} - ${r.date}</div>
-                        <div class="res-title">${title}</div>
-                        <div class="res-amount">${amountDisplay}</div>
+                const borderColor = getColor(r.sheet);
+                const p = getPriority(r.sheet);
+                let details = "";
+                let amountDisplay = r.amount ? parseInt(String(r.amount).replace(/[^0-9]/g,'')).toLocaleString() : "0";
+
+                if (p === 1) { // عقد
+                    details = `
+                        <div style="font-size:13px; margin-top:5px;"><b>رقم العقد:</b> ${r.contract_num || '-'}</div>
+                        <div style="font-size:13px;"><b>الدار:</b> ${r.house_num || '-'} | <b>الاسم:</b> ${r.name || '-'}</div>
+                        <div style="font-size:13px;"><b>المقدمة:</b> ${r.down_payment ? parseInt(r.down_payment).toLocaleString() : '0'}</div>
+                        <div style="font-size:13px;"><b>السعر الكلي:</b> ${r.total_price ? parseInt(r.total_price).toLocaleString() : '0'}</div>
+                    `;
+                } else if (p === 2 || p === 3) { // مقبوضات أو مصرف
+                    details = `
+                        <div style="font-size:13px; margin-top:5px;"><b>رقم الوصل:</b> ${r.receipt_num || '-'}</div>
+                        <div style="font-size:13px;"><b>الدار:</b> ${r.house_num || '-'}</div>
+                        <div style="font-size:13px;"><b>النوع:</b> ${r.sub_type || '-'}</div>
+                        <div style="font-size:13px; color:var(--primary-color); font-weight:bold;">المبلغ: ${amountDisplay}</div>
+                    `;
+                } else { // مصاريف
+                    details = `
+                        <div style="font-size:13px; margin-top:5px;"><b>الاسم:</b> ${r.name || '-'}</div>
+                        <div style="font-size:13px;"><b>السبب:</b> ${r.reason || '-'}</div>
+                        <div style="font-size:13px; color:var(--primary-color); font-weight:bold;">المبلغ: ${amountDisplay}</div>
+                    `;
+                }
+
+                h += `<div class="result-card" style="border-right: 5px solid ${borderColor};">
+                    <input type="checkbox" class="result-checkbox" value="${i}" style="margin-left:10px;">
+                    <div style="flex:1;">
+                        <div style="display:flex; justify-content:space-between; color:#777; font-size:11px; font-weight:bold;">
+                            <span>${r.sheet}</span>
+                            <span>${r.date}</span>
+                        </div>
+                        ${details}
                     </div>
                 </div>`;
             });

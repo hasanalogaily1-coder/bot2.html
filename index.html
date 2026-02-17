@@ -5,13 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>نظام مجمع الحسين</title>
     
-    <script>
-        window.onerror = function(msg, url, line, col, error) {
-            console.error(msg, line);
-            return false;
-        };
-    </script>
-
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -35,6 +28,23 @@
             align-items: center;
             min-height: 100vh;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        /* تنسيقات الطباعة المخفية */
+        #printableArea { display: none; }
+        
+        @media print {
+            body * { visibility: hidden; }
+            #printableArea, #printableArea * { visibility: visible; }
+            #printableArea { 
+                position: absolute; left: 0; top: 0; width: 100%; 
+                direction: rtl; display: block !important; 
+                background: white; padding: 20px;
+            }
+            .no-print { display: none !important; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; border: 1px solid #000; }
+            th, td { border: 1px solid #000; padding: 5px; text-align: center; }
+            th { background-color: #f0f0f0; -webkit-print-color-adjust: exact; }
         }
 
         #loader {
@@ -134,7 +144,6 @@
             font-family: inherit;
         }
 
-        /* إصلاح القوائم المنسدلة */
         select {
             -webkit-appearance: none; -moz-appearance: none; appearance: none;
             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
@@ -181,36 +190,7 @@
             background: rgba(46, 204, 113, 0.1);
         }
 
-        /* الكاميرا المدمجة */
-        #cameraModal {
-            display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; background: #000;
-            z-index: 99999; flex-direction: column;
-            justify-content: flex-end; align-items: center;
-        }
-        #cameraVideo {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; object-fit: cover; z-index: 1;
-        }
-        .camera-overlay {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            padding-bottom: 40px; padding-top: 20px;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            z-index: 2; display: flex;
-            justify-content: center; align-items: center; gap: 40px;
-        }
-        .snap-btn {
-            width: 75px; height: 75px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            border: 4px solid #fff; cursor: pointer;
-        }
-        .close-cam-btn {
-            color: #fff; font-size: 16px; cursor: pointer;
-            background: rgba(0,0,0,0.5); padding: 12px 20px;
-            border-radius: 30px; border: 1px solid rgba(255,255,255,0.3);
-        }
-
-        /* تنسيقات قسم البحث */
+        /* تنسيقات البحث والطباعة */
         .search-results { margin-top: 20px; }
         .result-card {
             background: var(--tg-theme-secondary-bg-color, #f9f9f9);
@@ -218,7 +198,25 @@
             border-right: 5px solid #ccc;
             animation: fadeIn 0.3s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
         }
+        .result-checkbox {
+            margin-top: 5px; width: 20px; height: 20px; cursor: pointer;
+        }
+        .result-content { flex: 1; }
+
+        .print-actions {
+            display: none; gap: 10px; margin-top: 15px; margin-bottom: 15px;
+        }
+        .btn-print {
+            flex: 1; padding: 10px; border: none; border-radius: 8px;
+            cursor: pointer; font-weight: bold; color: white; font-size: 14px;
+        }
+        .btn-print-sel { background-color: #34495e; }
+        .btn-print-all { background-color: #2980b9; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
         .res-type { 
@@ -250,7 +248,6 @@
         .search-field-row input, .search-field-row select { flex: 1 1 45%; }
         .search-field-row input.full { flex: 1 1 100%; }
 
-        /* السجل */
         .history-card {
             background: var(--tg-theme-secondary-bg-color, #fff);
             padding: 15px; margin-bottom: 12px; border-radius: 12px;
@@ -280,12 +277,14 @@
         .modal-buttons { display: flex; gap: 12px; margin-top: 25px; }
         .btn-confirm { flex: 2; background: #2ecc71; color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; }
         .btn-cancel { flex: 1; background: #e74c3c; color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        .btn-disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(0.5); }
     </style>
 </head>
 <body>
 
 <div id="loader">جار التحميل...</div>
+
+<!-- Printable Area (Hidden normally) -->
+<div id="printableArea"></div>
 
 <div id="cameraModal">
     <video id="cameraVideo" autoplay playsinline muted></video>
@@ -321,7 +320,7 @@
         <h3 style="text-align: center; margin-bottom: 15px;">🔍 بحث شامل في النظام</h3>
 
         <div class="filter-container">
-            <div class="filter-chip active" data-type="all" onclick="toggleSearchFilter(this)">الكل</div>
+            <div class="filter-chip active" data-type="all" onclick="toggleSearchFilter(this)">الكل (بدون مصاريف)</div>
             <div class="filter-chip" data-type="contracts" onclick="toggleSearchFilter(this)">العقود</div>
             <div class="filter-chip" data-type="receipts" onclick="toggleSearchFilter(this)">المقبوضات</div>
             <div class="filter-chip" data-type="bank" onclick="toggleSearchFilter(this)">المصرف</div>
@@ -331,7 +330,7 @@
         <div id="searchInputsContainer">
             <div class="search-field-row">
                 <input type="text" id="s_name" placeholder="الاسم" class="dyn-search-field">
-                <input type="tel" inputmode="numeric" id="s_house" placeholder="رقم الدار (مثلاً: 100-105)" class="dyn-search-field">
+                <input type="tel" inputmode="numeric" id="s_house" placeholder="رقم الدار" class="dyn-search-field">
             </div>
             <div class="search-field-row">
                 <input type="tel" inputmode="numeric" id="s_contract" placeholder="رقم العقد" class="dyn-search-field">
@@ -340,10 +339,20 @@
             <div class="search-field-row">
                 <input type="text" id="s_reason" placeholder="سبب الصرف" class="dyn-search-field full">
             </div>
-            <div class="search-field-row" id="dateSearchRow" style="display:none;">
-                <label style="width:100%; font-size:12px; margin-bottom:2px;">بحث بالتاريخ:</label>
-                <input type="date" id="s_date_from" placeholder="من تاريخ" class="dyn-search-field">
-                <input type="date" id="s_date_to" placeholder="إلى تاريخ" class="dyn-search-field">
+            <!-- حقل التاريخ المخصص للبحث -->
+            <div class="search-field-row" id="dateSearchRow" style="display:none; flex-wrap: wrap;">
+                <div style="flex: 1 1 100%; margin-bottom: 5px; font-size: 13px; font-weight: bold;">تاريخ من:</div>
+                <div class="date-container" style="flex: 1 1 100%; margin-bottom: 10px;">
+                    <select id="s_d_from" class="date-select"></select>
+                    <select id="s_m_from" class="date-select"></select>
+                    <select id="s_y_from" class="date-select"></select>
+                </div>
+                <div style="flex: 1 1 100%; margin-bottom: 5px; font-size: 13px; font-weight: bold;">تاريخ إلى:</div>
+                <div class="date-container" style="flex: 1 1 100%;">
+                    <select id="s_d_to" class="date-select"></select>
+                    <select id="s_m_to" class="date-select"></select>
+                    <select id="s_y_to" class="date-select"></select>
+                </div>
             </div>
         </div>
 
@@ -351,6 +360,11 @@
             <button onclick="performSearch()" style="background: var(--primary-color); color: white; border: none; border-radius: 12px; padding: 12px 15px; font-weight: bold; width: 100%;">بحث 🔎</button>
         </div>
         
+        <div class="print-actions" id="printActions">
+            <button class="btn-print btn-print-sel" onclick="printResults('selected')">طباعة المحدد 🖨️</button>
+            <button class="btn-print btn-print-all" onclick="printResults('all')">طباعة الكل 📄</button>
+        </div>
+
         <div id="searchSpinner" class="spinner"></div>
         <div id="searchResults" class="search-results">
             <div style="text-align: center; color: var(--tg-theme-hint-color, #888); font-size: 13px; margin-top:20px;">حدد الفلتر واملأ الحقول المطلوبة للبحث</div>
@@ -383,7 +397,6 @@
         <div class="input-group" id="grp_houseNum">
             <label id="lbl_houseNum">رقم الدار:</label>
             <input type="text" id="houseNum" inputmode="decimal">
-            <div id="houseHint" class="hint" style="display:none;">يمكنك كتابة عدة أرقام مفصولة بفارزة</div>
         </div>
 
         <div class="input-group" id="grp_name">
@@ -438,7 +451,6 @@
             رجوع للقائمة
         </button>
         <h3 style="text-align: center; margin-bottom: 20px;">سجل العمليات 🕒</h3>
-        <p style="text-align: center; font-size: 12px; color: var(--tg-theme-hint-color, #888); margin-bottom: 15px;">💡 اضغط على أي عملية للتعديل عليها وإعادة إرسالها</p>
         <div id="historyList"></div>
         <button onclick="clearHistory()" style="background:none; border:none; color: #e74c3c; width:100%; margin-top:25px; cursor:pointer; font-weight: bold; padding: 10px;">مسح السجل</button>
     </div>
@@ -448,7 +460,6 @@
     <div class="modal-content">
         <h3 style="text-align: center;">🔍 مراجعة البيانات</h3>
         <div class="summary-list" id="summaryContent"></div>
-        <p style="font-size:13px; color:green; text-align:center; font-weight: bold;">هل أنت متأكد من صحة المعلومات؟</p>
         <div class="modal-buttons">
             <button class="btn-confirm" onclick="finalSend()" id="btnConfirm">نعم، إرسال ✅</button>
             <button class="btn-cancel" onclick="closeModal()" id="btnCancel">تعديل</button>
@@ -457,428 +468,183 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('loader').style.display = 'none';
-    document.getElementById('appContainer').style.display = 'block';
-
+    // الإعدادات العامة
     const WEBHOOK_URL = "https://hrh1.app.n8n.cloud/webhook/85baeb02-5fd1-4e87-8249-04956c78a414";
     const SEARCH_WEBHOOK_URL = "https://hrh1.app.n8n.cloud/webhook/021077f4-a1b7-4cbd-87bb-6267d8dd5436"; 
-    
     const BOT_TOKEN = "8587976862:AAE8X1osdW9n_fPqr6N4mY2jDwRstEe_GPc"; 
     const CHAT_ID = "5762584781"; 
 
+    // متغيرات الحالة
     let currentType = '';
     let pendingPayload = null; 
     let selectedPhotoFile = null;
     let cameraStream = null;
-    let selectedSearchFilters = ['all'];
+    let selectedSearchFilters = ['contracts', 'receipts', 'bank'];
+    let currentSearchResults = [];
+    let tg;
 
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+    // دالة التهيئة
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'block';
+            
+            tg = window.Telegram.WebApp;
+            tg.expand();
 
-    const user = tg.initDataUnsafe?.user;
-    const dataEntryUser = user ? `${user.first_name} ${user.last_name || ''}`.trim() : "";
-    const dataEntryChatId = user ? user.id : ""; 
-    
-    if (dataEntryUser) {
-        document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${dataEntryUser}`;
-    }
-
-    // --- منطق الفلاتر وتحديث الحقول ---
-    window.toggleSearchFilter = function(el) {
-        const type = el.getAttribute('data-type');
-        
-        if (type === 'expenses') {
-            if (selectedSearchFilters.includes('expenses')) {
-                selectedSearchFilters = ['all'];
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                const name = `${user.first_name} ${user.last_name || ''}`.trim();
+                document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${name}`;
+                // تخزين البيانات عالمياً للاستخدام لاحقاً
+                window.dataEntryUser = name;
+                window.dataEntryChatId = user.id;
             } else {
-                selectedSearchFilters = ['expenses'];
+                window.dataEntryUser = "مجهول";
+                window.dataEntryChatId = "";
             }
-        } else {
-            selectedSearchFilters = selectedSearchFilters.filter(t => t !== 'expenses');
-            if (type === 'all') {
-                selectedSearchFilters = ['all'];
-            } else {
-                if (selectedSearchFilters.includes('all')) {
-                    selectedSearchFilters = [];
-                }
-                if (selectedSearchFilters.includes(type)) {
-                    selectedSearchFilters = selectedSearchFilters.filter(t => t !== type);
-                } else {
-                    selectedSearchFilters.push(type);
-                }
-                if (selectedSearchFilters.length === 0) {
-                    selectedSearchFilters = ['all'];
-                }
-            }
+
+            // تفعيل زر "الكل" افتراضياً
+            updateSearchFields();
+            
+            // تهيئة حقول التاريخ (فورم + بحث)
+            populateAllDateSelects();
+            
+            // تهيئة المدخلات الرقمية
+            document.querySelectorAll('.dyn-search-field[inputmode="numeric"], .amount-field').forEach(input => {
+                input.addEventListener('input', function() {
+                    let val = this.value.toString().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+                    if (this.classList.contains('amount-field')) {
+                        const clean = val.replace(/[^\d]/g,'');
+                        this.value = clean ? parseInt(clean).toLocaleString('en-US') : '';
+                    } else {
+                        this.value = val;
+                    }
+                });
+            });
+
+        } catch (e) {
+            console.error("Initialization Error:", e);
+            alert("حدث خطأ في تشغيل التطبيق. يرجى التحديث.");
         }
-        
-        document.querySelectorAll('.filter-chip').forEach(c => {
-            const t = c.getAttribute('data-type');
-            if (selectedSearchFilters.includes(t)) c.classList.add('active');
-            else c.classList.remove('active');
-        });
+    });
 
-        updateSearchFields();
+    // --- الدوال الأساسية للنظام ---
+
+    window.showMenu = function() {
+        document.getElementById('mainMenu').style.display = 'grid';
+        document.querySelectorAll('.form-section').forEach(el => el.style.display = 'none');
+        document.getElementById('confirmModal').style.display = 'none';
+        
+        // تصفير الحقول
+        document.querySelectorAll('input:not([type="date"]), textarea').forEach(i => i.value = '');
+        document.getElementById('fileNameDisplay').innerText = 'لم يتم اختيار صورة';
+        document.querySelectorAll('.photo-label-btn').forEach(b => b.classList.remove('active'));
+        selectedPhotoFile = null;
+        
+        // إعادة تعيين التواريخ
+        populateAllDateSelects();
     };
 
-    function updateSearchFields() {
-        const fields = ['s_name', 's_house', 's_contract', 's_receipt', 's_reason', 'dateSearchRow'];
-        fields.forEach(id => document.getElementById(id).style.display = 'none');
-
-        let showName = false, showHouse = false, showContract = false, showReceipt = false, showReason = false, showDate = true;
-
-        if (selectedSearchFilters.includes('expenses')) {
-            showName = true; showHouse = true; showReason = true;
-        } else {
-            if (selectedSearchFilters.includes('all')) {
-                showName = true; showHouse = true; showContract = true; showReceipt = true; showReason = true;
-            } else {
-                if (selectedSearchFilters.includes('contracts')) { showName=true; showHouse=true; showContract=true; }
-                if (selectedSearchFilters.includes('receipts') || selectedSearchFilters.includes('bank')) { showName=true; showHouse=true; showReceipt=true; }
-            }
-        }
-
-        if(showName) document.getElementById('s_name').style.display = 'block';
-        if(showHouse) document.getElementById('s_house').style.display = 'block';
-        if(showContract) document.getElementById('s_contract').style.display = 'block';
-        if(showReceipt) document.getElementById('s_receipt').style.display = 'block';
-        if(showReason) document.getElementById('s_reason').style.display = 'block';
-        if(showDate) document.getElementById('dateSearchRow').style.display = 'flex';
-    }
-
-    window.showSearchSection = function() {
+    window.setupForm = function(type) {
+        currentType = type;
         document.getElementById('mainMenu').style.display = 'none';
-        document.getElementById('searchSection').style.display = 'block';
-        document.getElementById('formSection').style.display = 'none';
-        document.getElementById('historySection').style.display = 'none';
-        updateSearchFields();
-    };
+        document.getElementById('formSection').style.display = 'block';
+        
+        document.querySelectorAll('.input-group').forEach(grp => grp.style.display = 'none');
+        document.getElementById('grp_date').style.display = 'block';
+        document.getElementById('grp_photo').style.display = 'block';
 
-    document.querySelectorAll('.dyn-search-field[inputmode="numeric"]').forEach(input => {
-        input.addEventListener('input', function() {
-            this.value = normalizeDigits(this.value);
-        });
-    });
+        const title = document.getElementById('formTitle');
+        const typeSelect = document.getElementById('transactionType');
 
-    window.performSearch = function() {
-        const sName = document.getElementById('s_name').value.trim();
-        const sHouse = document.getElementById('s_house').value.trim();
-        const sContract = document.getElementById('s_contract').value.trim();
-        const sReceipt = document.getElementById('s_receipt').value.trim();
-        const sReason = document.getElementById('s_reason').value.trim();
-        const sDateFrom = document.getElementById('s_date_from').value;
-        const sDateTo = document.getElementById('s_date_to').value;
-
-        if (!sName && !sHouse && !sContract && !sReceipt && !sReason && !sDateFrom && !sDateTo) {
-             tg.showAlert("يرجى ملء حقل واحد على الأقل للبحث");
-             return;
+        if (type === 'contract') {
+            title.innerText = '📄 عقد جديد';
+            ['grp_contractNum', 'grp_houseNum', 'grp_name', 'grp_contractDetails'].forEach(id => document.getElementById(id).style.display = 'block');
+        } 
+        else if (type === 'receipt') {
+            title.innerText = '📥 وصل قبض';
+            ['grp_type', 'grp_receiptNum', 'grp_houseNum', 'grp_amount'].forEach(id => document.getElementById(id).style.display = 'block');
+            typeSelect.innerHTML = `<option value="دفعة">دفعة</option><option value="حجز">حجز</option><option value="تأمين">تأمين</option><option value="أخرى">أخرى</option>`;
         }
-
-        const resDiv = document.getElementById('searchResults');
-        const spinner = document.getElementById('searchSpinner');
-        
-        resDiv.innerHTML = "";
-        spinner.style.display = "block";
-
-        const sheetsParam = selectedSearchFilters.join(',');
-        
-        let url = `${SEARCH_WEBHOOK_URL}?sheets=${sheetsParam}`;
-        if(sName) url += `&name=${encodeURIComponent(sName)}`;
-        if(sHouse) url += `&house=${encodeURIComponent(sHouse)}`;
-        if(sContract) url += `&contract=${encodeURIComponent(sContract)}`;
-        if(sReceipt) url += `&receipt=${encodeURIComponent(sReceipt)}`;
-        if(sReason) url += `&reason=${encodeURIComponent(sReason)}`;
-        if(sDateFrom) url += `&dateFrom=${encodeURIComponent(sDateFrom)}`;
-        if(sDateTo) url += `&dateTo=${encodeURIComponent(sDateTo)}`;
-
-        fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            spinner.style.display = "none";
-            if (!data || data.length === 0) {
-                resDiv.innerHTML = '<div style="text-align:center; padding:20px; color:var(--tg-theme-text-color);">لا توجد نتائج مطابقة ❌</div>';
-                return;
-            }
-
-            data.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'result-card';
-                
-                let borderCol = '#ccc';
-                if(item.sheet === 'العقود') borderCol = '#f1c40f';
-                else if(item.sheet === 'المقبوضات') borderCol = '#2ecc71';
-                else if(item.sheet === 'المصرف') borderCol = '#3498db';
-                else if(item.sheet === 'المصاريف') borderCol = '#e74c3c';
-                else if(item.sheet && item.sheet.includes('المجموع')) borderCol = '#9b59b6';
-
-                card.style.borderRightColor = borderCol;
-
-                let titleDisplay = "";
-                if (item.house && item.name) {
-                    titleDisplay = `${item.house} - ${item.name}`;
-                } else if (item.name) {
-                    titleDisplay = item.name;
-                } else if (item.house) {
-                    titleDisplay = `دار ${item.house}`;
-                } else {
-                    titleDisplay = " ";
-                }
-                
-                if (item.sheet && item.sheet.includes('المجموع')) {
-                     titleDisplay = item.name;
-                }
-
-                card.innerHTML = `
-                    <div class="res-type">
-                        <span>${item.sheet}</span>
-                        <span>${item.date || ''}</span>
-                    </div>
-                    <div class="res-title">${titleDisplay}</div>
-                    <div class="res-info">${item.details || ''}</div>
-                    <div class="res-amount">${formatWithCommas(item.amount)} دينار</div>
-                `;
-                resDiv.appendChild(card);
-            });
-        })
-        .catch(err => {
-            spinner.style.display = "none";
-            resDiv.innerHTML = '<div style="text-align:center; color:red;">حدث خطأ في الاتصال بالسيرفر</div>';
-            console.error(err);
-        });
+        else if (type === 'bank') {
+            title.innerText = '🏦 وصل مصرف';
+            ['grp_type', 'grp_receiptNum', 'grp_houseNum', 'grp_amount'].forEach(id => document.getElementById(id).style.display = 'block');
+            typeSelect.innerHTML = `<option value="إيداع">إيداع</option><option value="سحب">سحب</option>`;
+        }
+        else if (type === 'expense') {
+            title.innerText = '💸 مصاريف';
+            ['grp_houseNum', 'grp_name', 'grp_reason', 'grp_amount'].forEach(id => document.getElementById(id).style.display = 'block');
+        }
     };
 
-    function normalizeDigits(str) { 
-        return str ? str.toString().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; 
-    }
-
-    function getCleanNumber(val) { 
-        if (!val) return '';
-        let normalized = normalizeDigits(val);
-        return normalized.replace(/[^\d]/g,'');
-    }
-
-    function formatWithCommas(val) { 
-        const n = getCleanNumber(val); 
-        return n ? parseInt(n).toLocaleString('en-US') : ''; 
-    }
-
-    function buildCaption(data) {
-        const fmt = (val) => {
-            if (!val) return '';
-            const n = parseFloat(val); 
-            return isNaN(n) ? val : n.toLocaleString('en-US');
+    window.prepareData = function() {
+        const d = document.getElementById('date_day').value;
+        const m = document.getElementById('date_month').value;
+        const y = document.getElementById('date_year').value;
+        const fullDate = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+        
+        let payload = {
+            operation_type: currentType,
+            date: fullDate,
+            entry_by: window.dataEntryUser
         };
-
-        let t = "";
-        if (data.operation_type === 'contract') {
-            t += `📄 *عقد جديد*\n\n`;
-            t += `🔢 *رقم العقد:* ${data.contract_num}\n`;
-            t += `🏠 *رقم الدار:* ${data.house_num}\n`;
-            t += `👤 *الاسم:* ${data.name}\n`;
-            t += `💰 *المقدمة:* ${fmt(data.down_payment)}\n`;
-            t += `💵 *السعر الكلي:* ${fmt(data.total_price)}`;
-        } else if (data.operation_type === 'receipt') {
-            t += `📥 *وصل قبض* (${data.sub_type})\n\n`;
-            t += `🔢 *رقم الوصل:* ${data.receipt_num}\n`;
-            t += `🏠 *رقم الدار:* ${data.house_num}\n`;
-            t += `💰 *المبلغ:* ${fmt(data.amount)}`;
-        } else if (data.operation_type === 'bank') {
-            t += `🏦 *وصل مصرف* (${data.sub_type})\n\n`;
-            t += `🔢 *رقم الوصل:* ${data.receipt_num}\n`;
-            t += `🏠 *رقم الدار:* ${data.house_num}\n`;
-            t += `💰 *المبلغ:* ${fmt(data.amount)}`;
-        } else if (data.operation_type === 'expense') {
-            t += `💸 *مصاريف*\n\n`;
-            t += `🏠 *رقم الدار:* ${data.house_num}\n`;
-            t += `👤 *الاسم:* ${data.name}\n`;
-            t += `📝 *السبب:* ${data.reason}\n`;
-            t += `💰 *المبلغ:* ${fmt(data.amount)}`;
-        }
         
-        t += `\n\n📅 *التاريخ:* ${data.date}`;
-        if (data.entry_by) t += `\n👨‍💻 *بواسطة:* ${data.entry_by}`;
-        return t;
-    }
+        let summaryHtml = "";
+        let isValid = true;
+        const getVal = (id) => document.getElementById(id).value.trim();
+        const addSum = (label, val) => { summaryHtml += `<div class="summary-item"><span>${label}</span><span>${val}</span></div>`; };
 
-    function initDateSelectors() {
-        const daySelect = document.getElementById('date_day');
-        const monthSelect = document.getElementById('date_month');
-        const yearSelect = document.getElementById('date_year');
-        const today = new Date();
-        const currentYear = today.getFullYear();
-        const currentMonth = today.getMonth() + 1;
-        const currentDay = today.getDate();
+        if (currentType === 'contract') {
+            payload.contract_num = getVal('contractNum');
+            payload.house_num = getVal('houseNum');
+            payload.name = getVal('name');
+            payload.down_payment = getVal('downPayment');
+            payload.total_price = getVal('totalPrice');
+            if(!payload.contract_num || !payload.house_num || !payload.name) isValid = false;
+            addSum("رقم العقد", payload.contract_num);
+            addSum("رقم الدار", payload.house_num);
+            addSum("الاسم", payload.name);
+            addSum("المقدمة", payload.down_payment);
+            addSum("السعر الكلي", payload.total_price);
+        } else if (currentType === 'receipt' || currentType === 'bank') {
+            payload.sub_type = document.getElementById('transactionType').value;
+            payload.receipt_num = getVal('receiptNum');
+            payload.house_num = getVal('houseNum');
+            payload.amount = getVal('amount');
+            if(!payload.receipt_num || !payload.amount) isValid = false;
+            addSum("النوع", payload.sub_type);
+            addSum("رقم الوصل", payload.receipt_num);
+            if(payload.house_num) addSum("رقم الدار", payload.house_num);
+            addSum("المبلغ", payload.amount);
+        } else if (currentType === 'expense') {
+            payload.house_num = getVal('houseNum');
+            payload.name = getVal('name');
+            payload.reason = getVal('reason');
+            payload.amount = getVal('amount');
+            if(!payload.reason || !payload.amount) isValid = false;
+            if(payload.house_num) addSum("رقم الدار", payload.house_num);
+            if(payload.name) addSum("الاسم", payload.name);
+            addSum("السبب", payload.reason);
+            addSum("المبلغ", payload.amount);
+        }
 
-        daySelect.innerHTML = ''; monthSelect.innerHTML = ''; yearSelect.innerHTML = '';
+        addSum("التاريخ", fullDate);
 
-        for (let d = 1; d <= 31; d++) {
-            let opt = document.createElement('option'); opt.value = d; opt.innerHTML = d;
-            if (d === currentDay) opt.selected = true; daySelect.appendChild(opt);
+        if (!isValid) {
+            if(tg) tg.showAlert("يرجى ملء الحقول المطلوبة");
+            else alert("يرجى ملء الحقول المطلوبة");
+            return;
         }
-        for (let m = 1; m <= 12; m++) {
-            let opt = document.createElement('option'); opt.value = m; opt.innerHTML = m; 
-            if (m === currentMonth) opt.selected = true; monthSelect.appendChild(opt);
-        }
-        for (let y = 2022; y <= currentYear + 5; y++) {
-            let opt = document.createElement('option'); opt.value = y; opt.innerHTML = y;
-            if (y === currentYear) opt.selected = true; yearSelect.appendChild(opt);
-        }
-    }
-    initDateSelectors();
 
-    window.openCameraModal = async function() {
-        const videoElement = document.getElementById('cameraVideo');
-        const modal = document.getElementById('cameraModal');
-        modal.style.display = 'flex';
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment", width: {ideal: 1920}, height: {ideal: 1080} },
-                audio: false
-            });
-            startVideo(videoElement, stream);
-        } catch (err) {
-            console.log("Fallback camera...", err);
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-                startVideo(videoElement, stream);
-            } catch (err2) {
-                modal.style.display = 'none';
-                tg.showAlert("تعذر تشغيل الكاميرا: " + err2.message);
-            }
-        }
+        pendingPayload = payload;
+        document.getElementById('summaryContent').innerHTML = summaryHtml;
+        document.getElementById('confirmModal').style.display = 'flex';
     };
 
-    function startVideo(video, stream) {
-        cameraStream = stream;
-        video.srcObject = stream;
-        video.onloadedmetadata = () => { video.play().catch(e => console.error("Play error:", e)); };
-    }
-
-    window.stopCamera = function() {
-        if (cameraStream) { cameraStream.getTracks().forEach(track => track.stop()); cameraStream = null; }
-        document.getElementById('cameraModal').style.display = 'none';
+    window.closeModal = function() {
+        document.getElementById('confirmModal').style.display = 'none';
     };
-
-    window.takeSnapshot = function() {
-        const video = document.getElementById('cameraVideo');
-        const canvas = document.getElementById('cameraCanvas');
-        if (video.videoWidth === 0) return;
-
-        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        canvas.toBlob((blob) => {
-            const fileName = `camera_${new Date().getTime()}.jpg`;
-            selectedPhotoFile = new File([blob], fileName, { type: "image/jpeg" });
-            document.getElementById('fileNameDisplay').innerHTML = `✅ تم التقاط صورة`;
-            document.getElementById('btn_visual_cam').classList.add('active');
-            document.getElementById('btn_visual_gal').classList.remove('active');
-            stopCamera();
-        }, 'image/jpeg', 0.85);
-    };
-
-    window.handleFileSelect = function(input, source) {
-        if (input.files && input.files[0]) {
-            selectedPhotoFile = input.files[0];
-            document.getElementById('fileNameDisplay').innerHTML = `✅ تم اختيار: ${selectedPhotoFile.name}`;
-            document.getElementById('btn_visual_cam').classList.remove('active');
-            document.getElementById('btn_visual_gal').classList.remove('active');
-            if(source === 'cam') document.getElementById('btn_visual_cam').classList.add('active');
-            else document.getElementById('btn_visual_gal').classList.add('active');
-        }
-    };
-
-    window.validateLimit = function(id, max, label) {
-        const el = document.getElementById(id);
-        const val = parseFloat(getCleanNumber(el.value));
-        if (isNaN(val) || el.value.trim() === '') return true; 
-        if (val > max) {
-            el.style.border = "2px solid #e74c3c"; 
-            el.focus();
-            tg.showAlert(`عذراً، القيمة المدخلة في حقل "${label}" غير صحيحة أو خارج النطاق المسموح.`);
-            return false;
-        }
-        el.style.border = "2px solid transparent"; 
-        return true;
-    }
-
-    document.querySelectorAll('.amount-field').forEach(input => {
-        input.addEventListener('input', (e) => {
-            const v = e.target.value; e.target.value = formatWithCommas(v);
-            e.target.style.border = "2px solid transparent";
-        });
-    });
-    
-    document.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', () => { input.style.border = "2px solid transparent"; });
-    });
-
-    window.saveToHistory = function(data) {
-        try {
-            let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
-            let title = "", detail = "";
-            const fmt = (val) => val ? parseFloat(val).toLocaleString('en-US') : '';
-
-            if (data.operation_type === 'contract') { title = `عقد: ${data.contract_num}`; detail = `الدار: ${data.house_num}`; }
-            else if (data.operation_type === 'receipt') { title = `وصل: ${data.receipt_num}`; detail = `المبلغ: ${fmt(data.amount)}`; }
-            else if (data.operation_type === 'bank') { title = `مصرف: ${data.receipt_num}`; detail = `المبلغ: ${fmt(data.amount)}`; }
-            else { title = `مصاريف`; detail = `${data.reason} | ${fmt(data.amount)}`; }
-
-            history.unshift({ id: Date.now(), type: data.operation_type, title: title, detail: detail, timestamp: new Date().toLocaleString('ar-EG'), fullData: data });
-            if (history.length > 20) history = history.slice(0, 20);
-            localStorage.setItem('appHistory', JSON.stringify(history));
-        } catch (e) { console.error("Error saving history:", e); }
-    }
-
-    window.showHistory = function() {
-        showMenu(); 
-        document.getElementById('mainMenu').style.display='none';
-        document.getElementById('historySection').style.display='block';
-        const list = document.getElementById('historyList');
-        list.innerHTML = "";
-        let history = [];
-        try { history = JSON.parse(localStorage.getItem('appHistory') || '[]'); } catch(e){}
-        if (history.length === 0) { list.innerHTML = '<div class="no-history">لا توجد عمليات سابقة</div>'; return; }
-        history.forEach((item, index) => {
-            const card = document.createElement('div'); card.className = 'history-card';
-            let col = item.type === 'contract' ? '#f1c40f' : (item.type === 'receipt' ? '#2ecc71' : (item.type === 'bank' ? '#3498db' : '#e74c3c'));
-            card.style.borderRight = `5px solid ${col}`;
-            card.innerHTML = `<div class="h-header"><span>${item.timestamp}</span><span class="status-success">تم ✅</span></div><div class="h-title">${item.title}</div><div class="h-detail">${item.detail}</div><div style="margin-top:5px; font-size:12px; color:blue;">اضغط للتعديل ✏️</div>`;
-            card.onclick = () => loadFromHistory(index);
-            list.appendChild(card);
-        });
-    };
-
-    window.loadFromHistory = function(index) {
-        let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
-        let item = history[index];
-        if (!item || !item.fullData) return;
-        const data = item.fullData;
-        setupForm(data.operation_type);
-        
-        if(document.getElementById('contractNum')) document.getElementById('contractNum').value = data.contract_num || '';
-        if(document.getElementById('receiptNum')) document.getElementById('receiptNum').value = data.receipt_num || '';
-        if(document.getElementById('houseNum')) document.getElementById('houseNum').value = data.house_num || '';
-        if(document.getElementById('name')) document.getElementById('name').value = data.name || '';
-        if(document.getElementById('reason')) document.getElementById('reason').value = data.reason || '';
-        if(data.down_payment) document.getElementById('downPayment').value = formatWithCommas(data.down_payment);
-        if(data.total_price) document.getElementById('totalPrice').value = formatWithCommas(data.total_price);
-        if(data.amount) document.getElementById('amount').value = formatWithCommas(data.amount);
-        
-        if (data.date) {
-            const parts = data.date.split('-');
-            if(parts.length === 3) {
-                document.getElementById('date_year').value = parts[0];
-                document.getElementById('date_month').value = parseInt(parts[1]); 
-                document.getElementById('date_day').value = parseInt(parts[2]);
-            }
-        }
-        tg.showAlert('تم استرجاع البيانات. ⚠️ يرجى إعادة التقاط الصورة.');
-    };
-
-    window.clearHistory = function() { localStorage.removeItem('appHistory'); window.showHistory(); };
 
     window.finalSend = function() {
         const btn = document.getElementById("btnConfirm");
@@ -886,9 +652,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const webhookData = new FormData();
         if(selectedPhotoFile) webhookData.append("photo", selectedPhotoFile);
-        for (const [key, value] of Object.entries(pendingPayload)) {
-            webhookData.append(key, value);
-        }
+        for (const [key, value] of Object.entries(pendingPayload)) webhookData.append(key, value);
         webhookData.append("json_data", JSON.stringify(pendingPayload));
 
         const telegramData = new FormData();
@@ -900,13 +664,16 @@ document.addEventListener('DOMContentLoaded', function() {
         saveToHistory(pendingPayload);
 
         fetch(WEBHOOK_URL, { method: "POST", body: webhookData });
+        
+        // إرسال لتيليجرام (بوت)
         const p1 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: telegramData });
-
+        
+        // إرسال للمستخدم إذا كان مختلفاً
         let p2 = Promise.resolve({ ok: true });
-        if (dataEntryChatId && String(dataEntryChatId) !== String(CHAT_ID)) {
+        if (window.dataEntryChatId && String(window.dataEntryChatId) !== String(CHAT_ID)) {
             const userPayload = new FormData();
-            userPayload.append("chat_id", dataEntryChatId);
-            userPayload.append("caption", "✅ *تم رفع البيانات بنجاح!*\n\n" + buildCaption(pendingPayload));
+            userPayload.append("chat_id", window.dataEntryChatId);
+            userPayload.append("caption", "✅ *تم الرفع بنجاح!*\n\n" + buildCaption(pendingPayload));
             userPayload.append("parse_mode", "Markdown");
             if(selectedPhotoFile) userPayload.append("photo", selectedPhotoFile);
             p2 = fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: userPayload }).catch(() => ({ ok: true }));
@@ -915,18 +682,311 @@ document.addEventListener('DOMContentLoaded', function() {
         Promise.all([p1, p2])
         .then(results => {
             if(results[0].ok) {
-                tg.showAlert("✅ تم الإرسال بنجاح!");
+                if(tg) tg.showAlert("✅ تم الإرسال بنجاح!"); else alert("✅ تم الإرسال بنجاح!");
                 showMenu();
-                closeModal();
             } else {
-                tg.showAlert("❌ فشل الإرسال لتيليجرام");
+                if(tg) tg.showAlert("❌ فشل الإرسال لتيليجرام"); else alert("❌ فشل الإرسال لتيليجرام");
             }
         })
-        .catch(e => tg.showAlert("Error: " + e))
-        .finally(() => { btn.innerText = "نعم، إرسال ✅"; btn.disabled = false; });
+        .catch(e => { alert("Error: " + e); })
+        .finally(() => { btn.innerText = "نعم، إرسال ✅"; btn.disabled = false; closeModal(); });
     };
-});
-</script>
 
+    // --- دوال البحث والفلترة ---
+
+    window.showSearchSection = function() {
+        document.getElementById('mainMenu').style.display = 'none';
+        document.getElementById('searchSection').style.display = 'block';
+        // تفعيل "الكل" افتراضياً
+        document.querySelector('.filter-chip[data-type="all"]').click();
+    };
+
+    window.toggleSearchFilter = function(el) {
+        const type = el.getAttribute('data-type');
+        
+        if (type === 'all') {
+            selectedSearchFilters = ['contracts', 'receipts', 'bank'];
+        } else if (type === 'expenses') {
+            if (selectedSearchFilters.includes('expenses')) {
+                // العودة للوضع الافتراضي
+                selectedSearchFilters = ['contracts', 'receipts', 'bank'];
+            } else {
+                selectedSearchFilters = ['expenses'];
+            }
+        } else {
+            selectedSearchFilters = selectedSearchFilters.filter(t => t !== 'expenses');
+            if (selectedSearchFilters.includes(type)) {
+                if(selectedSearchFilters.length > 1) selectedSearchFilters = selectedSearchFilters.filter(t => t !== type);
+            } else {
+                selectedSearchFilters.push(type);
+            }
+        }
+        
+        // تحديث الواجهة
+        document.querySelectorAll('.filter-chip').forEach(c => {
+            const t = c.getAttribute('data-type');
+            c.classList.remove('active');
+            if (t === 'all' && selectedSearchFilters.length === 3 && !selectedSearchFilters.includes('expenses')) c.classList.add('active');
+            else if (t === 'expenses' && selectedSearchFilters.includes('expenses')) c.classList.add('active');
+            else if (selectedSearchFilters.includes(t)) c.classList.add('active');
+        });
+
+        updateSearchFields();
+    };
+
+    function updateSearchFields() {
+        const fields = ['s_name', 's_house', 's_contract', 's_receipt', 's_reason', 'dateSearchRow'];
+        fields.forEach(id => document.getElementById(id).style.display = 'none');
+
+        let showName=false, showHouse=false, showContract=false, showReceipt=false, showReason=false;
+
+        if (selectedSearchFilters.includes('expenses')) {
+            showName=true; showHouse=true; showReason=true;
+        } else {
+            if (selectedSearchFilters.includes('contracts')) { showName=true; showHouse=true; showContract=true; }
+            if (selectedSearchFilters.includes('receipts') || selectedSearchFilters.includes('bank')) { showName=true; showHouse=true; showReceipt=true; }
+        }
+
+        if(showName) document.getElementById('s_name').style.display = 'block';
+        if(showHouse) document.getElementById('s_house').style.display = 'block';
+        if(showContract) document.getElementById('s_contract').style.display = 'block';
+        if(showReceipt) document.getElementById('s_receipt').style.display = 'block';
+        if(showReason) document.getElementById('s_reason').style.display = 'block';
+        document.getElementById('dateSearchRow').style.display = 'flex';
+    }
+
+    window.performSearch = function() {
+        const params = new URLSearchParams();
+        params.append('sheets', selectedSearchFilters.join(','));
+        
+        // جمع البيانات النصية
+        const ids = ['s_name', 's_house', 's_contract', 's_receipt', 's_reason'];
+        const keys = ['name', 'house', 'contract', 'receipt', 'reason'];
+        let hasValue = false;
+
+        ids.forEach((id, idx) => {
+            const val = document.getElementById(id).value.trim();
+            if(val) { params.append(keys[idx], val); hasValue = true; }
+        });
+
+        // جمع التواريخ من القوائم
+        // 1. تاريخ من
+        const fd = document.getElementById('s_d_from').value;
+        const fm = document.getElementById('s_m_from').value;
+        const fy = document.getElementById('s_y_from').value;
+        if(fd && fm && fy) {
+            const dateFrom = `${fy}-${fm.padStart(2,'0')}-${fd.padStart(2,'0')}`;
+            params.append('dateFrom', dateFrom);
+            hasValue = true;
+        }
+
+        // 2. تاريخ إلى
+        const td = document.getElementById('s_d_to').value;
+        const tm = document.getElementById('s_m_to').value;
+        const ty = document.getElementById('s_y_to').value;
+        if(td && tm && ty) {
+            const dateTo = `${ty}-${tm.padStart(2,'0')}-${td.padStart(2,'0')}`;
+            params.append('dateTo', dateTo);
+            hasValue = true;
+        }
+
+        if (!hasValue) {
+            if(tg) tg.showAlert("يرجى ملء حقل واحد على الأقل"); else alert("يرجى ملء حقل واحد على الأقل");
+            return;
+        }
+
+        document.getElementById('searchResults').innerHTML = "";
+        document.getElementById('printActions').style.display = "none";
+        document.getElementById('searchSpinner').style.display = "block";
+        currentSearchResults = [];
+
+        fetch(`${SEARCH_WEBHOOK_URL}?${params.toString()}`)
+        .then(res => { if(!res.ok) throw new Error("Server Error"); return res.json(); })
+        .then(data => {
+            document.getElementById('searchSpinner').style.display = "none";
+            const resDiv = document.getElementById('searchResults');
+            if (!data || data.length === 0) {
+                resDiv.innerHTML = '<div style="text-align:center; padding:20px;">لا توجد نتائج مطابقة ❌</div>';
+                return;
+            }
+
+            currentSearchResults = data;
+            document.getElementById('printActions').style.display = "flex";
+
+            data.forEach((item, index) => {
+                let borderCol = item.sheet === 'العقود' ? '#f1c40f' : (item.sheet === 'المقبوضات' ? '#2ecc71' : (item.sheet === 'المصرف' ? '#3498db' : '#e74c3c'));
+                let title = item.name || `دار ${item.house}` || "بدون عنوان";
+                
+                const div = document.createElement('div');
+                div.className = 'result-card';
+                div.style.borderRightColor = borderCol;
+                div.innerHTML = `
+                    <input type="checkbox" class="result-checkbox" data-index="${index}">
+                    <div class="result-content">
+                        <div class="res-type"><span>${item.sheet}</span><span>${item.date || ''}</span></div>
+                        <div class="res-title">${title}</div>
+                        <div class="res-info">${item.details || ''}</div>
+                        <div class="res-amount">${parseInt(item.amount || 0).toLocaleString('en-US')} دينار</div>
+                    </div>
+                `;
+                resDiv.appendChild(div);
+            });
+        })
+        .catch(err => {
+            document.getElementById('searchSpinner').style.display = "none";
+            // عرض رسالة الخطأ الحقيقية
+            const errorMessage = err.message || JSON.stringify(err);
+            document.getElementById('searchResults').innerHTML = `<div style="text-align:center; color:red; margin-top:20px;">خطأ: ${errorMessage}</div>`;
+            console.error(err);
+        });
+    };
+
+    window.printResults = function(mode) {
+        let items = [];
+        if (mode === 'all') items = currentSearchResults;
+        else {
+            document.querySelectorAll('.result-checkbox:checked').forEach(cb => {
+                items.push(currentSearchResults[cb.getAttribute('data-index')]);
+            });
+        }
+
+        if (items.length === 0) { alert("يرجى تحديد عنصر للطباعة"); return; }
+
+        let html = `
+            <div style="text-align:left; font-size:12px; margin-bottom:10px;">${new Date().toLocaleDateString('ar-IQ')}</div>
+            <h2 style="text-align:center;">نتائج بحث نظام مجمع الحسين</h2>
+            <table>
+                <thead><tr><th>التاريخ</th><th>النوع</th><th>الاسم / الدار</th><th>التفاصيل</th><th>المبلغ</th></tr></thead>
+                <tbody>
+        `;
+        
+        items.forEach(item => {
+            html += `<tr>
+                <td>${item.date || '-'}</td>
+                <td>${item.sheet}</td>
+                <td>${item.name || ''} ${item.house ? '/ ' + item.house : ''}</td>
+                <td>${item.details || ''}</td>
+                <td>${parseInt(item.amount || 0).toLocaleString('en-US')}</td>
+            </tr>`;
+        });
+        html += `</tbody></table>`;
+
+        const printArea = document.getElementById('printableArea');
+        printArea.innerHTML = html;
+        window.print();
+    };
+
+    // --- دوال مساعدة ---
+    function buildCaption(data) {
+        const fmt = (v) => v ? parseInt(v.replace(/[^\d]/g,'')).toLocaleString('en-US') : '';
+        let t = "";
+        if (data.operation_type === 'contract') t = `📄 *عقد*\n🔢 ${data.contract_num}\n🏠 ${data.house_num}\n👤 ${data.name}\n💰 ${fmt(data.down_payment)}\n💵 ${fmt(data.total_price)}`;
+        else if (data.operation_type === 'receipt') t = `📥 *قبض (${data.sub_type})*\n🔢 ${data.receipt_num}\n🏠 ${data.house_num}\n💰 ${fmt(data.amount)}`;
+        else if (data.operation_type === 'bank') t = `🏦 *مصرف (${data.sub_type})*\n🔢 ${data.receipt_num}\n🏠 ${data.house_num}\n💰 ${fmt(data.amount)}`;
+        else t = `💸 *مصاريف*\n🏠 ${data.house_num}\n👤 ${data.name}\n📝 ${data.reason}\n💰 ${fmt(data.amount)}`;
+        return `${t}\n📅 ${data.date}\n👨‍💻 ${data.entry_by}`;
+    }
+
+    // دالة لملء جميع قوائم التاريخ (الفورم + البحث)
+    function populateAllDateSelects() {
+        const populate = (dId, mId, yId, isSearch = false) => {
+            const d = document.getElementById(dId), m = document.getElementById(mId), y = document.getElementById(yId);
+            if(!d || !m || !y) return;
+            d.innerHTML = ''; m.innerHTML = ''; y.innerHTML = '';
+            
+            // إضافة خيار فارغ في البحث فقط
+            if(isSearch) {
+                d.add(new Option('يوم', ''));
+                m.add(new Option('شهر', ''));
+                y.add(new Option('سنة', ''));
+            }
+
+            const today = new Date();
+            for(let i=1; i<=31; i++) { 
+                let o = new Option(i, i); 
+                if(!isSearch && i===today.getDate()) o.selected=true; 
+                d.add(o); 
+            }
+            for(let i=1; i<=12; i++) { 
+                let o = new Option(i, i); 
+                if(!isSearch && i===today.getMonth()+1) o.selected=true; 
+                m.add(o); 
+            }
+            for(let i=2022; i<=today.getFullYear()+5; i++) { 
+                let o = new Option(i, i); 
+                if(!isSearch && i===today.getFullYear()) o.selected=true; 
+                y.add(o); 
+            }
+        };
+
+        // تعبئة فورم الإدخال الرئيسي
+        populate('date_day', 'date_month', 'date_year', false);
+        // تعبئة حقول البحث
+        populate('s_d_from', 's_m_from', 's_y_from', true);
+        populate('s_d_to', 's_m_to', 's_y_to', true);
+    }
+
+    // --- الكاميرا ---
+    window.openCameraModal = async function() {
+        document.getElementById('cameraModal').style.display = 'flex';
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            const vid = document.getElementById('cameraVideo');
+            vid.srcObject = stream;
+            cameraStream = stream;
+        } catch(e) {
+            document.getElementById('cameraModal').style.display = 'none';
+            alert("الكاميرا غير متاحة");
+        }
+    };
+    window.stopCamera = function() {
+        if(cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+        document.getElementById('cameraModal').style.display = 'none';
+    };
+    window.takeSnapshot = function() {
+        const vid = document.getElementById('cameraVideo');
+        const cvs = document.getElementById('cameraCanvas');
+        cvs.width = vid.videoWidth; cvs.height = vid.videoHeight;
+        cvs.getContext('2d').drawImage(vid, 0, 0);
+        cvs.toBlob(b => {
+            selectedPhotoFile = new File([b], `cam_${Date.now()}.jpg`, {type: "image/jpeg"});
+            document.getElementById('fileNameDisplay').innerText = "✅ تم التقاط الصورة";
+            document.getElementById('btn_visual_cam').classList.add('active');
+            stopCamera();
+        }, 'image/jpeg');
+    };
+    window.handleFileSelect = function(input) {
+        if(input.files[0]) {
+            selectedPhotoFile = input.files[0];
+            document.getElementById('fileNameDisplay').innerText = "✅ تم اختيار ملف";
+            document.getElementById('btn_visual_gal').classList.add('active');
+        }
+    };
+
+    // --- السجل ---
+    window.showHistory = function() {
+        showMenu();
+        document.getElementById('mainMenu').style.display = 'none';
+        document.getElementById('historySection').style.display = 'block';
+        const list = document.getElementById('historyList');
+        list.innerHTML = '';
+        const hist = JSON.parse(localStorage.getItem('appHistory') || '[]');
+        if(hist.length === 0) list.innerHTML = '<div class="no-history">لا يوجد سجل</div>';
+        hist.forEach((h, i) => {
+            const d = document.createElement('div');
+            d.className = 'history-card';
+            d.innerHTML = `<div class="h-header"><span>${h.timestamp}</span><span class="status-success">✅</span></div><div class="h-title">${h.title}</div><div class="h-detail">${h.detail}</div>`;
+            d.onclick = () => { setupForm(h.fullData.operation_type); alert("تم النسخ، يرجى ملء الصورة"); };
+            list.appendChild(d);
+        });
+    };
+    window.saveToHistory = function(data) {
+        const hist = JSON.parse(localStorage.getItem('appHistory') || '[]');
+        hist.unshift({id: Date.now(), timestamp: new Date().toLocaleString(), title: data.operation_type, detail: data.amount || data.contract_num, fullData: data});
+        localStorage.setItem('appHistory', JSON.stringify(hist.slice(0, 20)));
+    };
+    window.clearHistory = function() { localStorage.removeItem('appHistory'); showHistory(); };
+</script>
 </body>
 </html>
+

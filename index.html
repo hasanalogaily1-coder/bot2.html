@@ -725,7 +725,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return !name.includes("مجموع") && !name.includes("Total");
             });
 
-            // 2. منطق الترتيب (متسلسل للدار عند البحث المتعدد)
+            // 2. منطق الترتيب
             const houseInput = document.getElementById('s_house').value;
             const isMultiHouse = houseInput.includes(',') || houseInput.includes('،') || houseInput.includes(' ');
 
@@ -748,26 +748,21 @@ document.addEventListener('DOMContentLoaded', function() {
             };
 
             d.sort((a, b) => {
-                // دالة مساعدة لاستخراج رقم الدار بشكل صحيح (رقمي)
                 const getHouse = (obj) => {
-                    // نجرب جميع الاحتمالات لاسم حقل الدار
                     const h = obj.house_num || obj.house || obj.houseNum || '0';
                     return parseInt(String(h).replace(/[^0-9]/g, '')) || 0;
                 };
 
                 if (isMultiHouse) {
-                    // إذا كان البحث عن أكثر من دار، الترتيب الأساسي هو رقم الدار تصاعدياً
                     const hA = getHouse(a);
                     const hB = getHouse(b);
                     if (hA !== hB) return hA - hB;
                 }
 
-                // الترتيب الثانوي (أو الأساسي في حالة البحث العادي): حسب الأولوية (النوع)
                 const pA = getPriority(a.sheet);
                 const pB = getPriority(b.sheet);
                 if (pA !== pB) return pA - pB;
 
-                // الترتيب الثالث: التاريخ (الأحدث أولاً)
                 return new Date(b.date) - new Date(a.date);
             });
 
@@ -775,20 +770,28 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if(!d.length) return document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin-top:20px;">لا توجد نتائج 📭</div>';
             
-            // --- حساب المجموع الكلي ---
+            // --- حساب المجموع الكلي (تعديل جذري للمنطق) ---
             let totalSearchSum = d.reduce((acc, curr) => {
                 const valNum = (obj, keys) => {
                     for (let k of keys) if(obj[k]) return parseInt(String(obj[k]).replace(/[^0-9]/g,''));
                     return 0;
                 };
-                let amt = valNum(curr, ['amount', 'Amount', 'المبلغ']);
-                if (amt === 0) amt = valNum(curr, ['down_payment', 'downPayment', 'down', 'advance', 'المقدمة']);
+                
+                const p = getPriority(curr.sheet);
+                let amt = 0;
+                
+                if (p === 1) { // للعقود فقط: اجمع المقدمة حصراً
+                    amt = valNum(curr, ['down_payment', 'downPayment', 'down', 'advance', 'المقدمة']);
+                } else { // للبقية: اجمع المبلغ
+                    amt = valNum(curr, ['amount', 'Amount', 'المبلغ']);
+                }
+                
                 return acc + amt;
             }, 0);
 
             let h = '';
 
-            // --- بطاقة الملخص (في البداية) ---
+            // --- بطاقة الملخص ---
             h += `
             <div class="result-card" style="background: linear-gradient(135deg, #e0f7fa, #b2ebf2); border-right: 5px solid #00bcd4; margin-bottom: 20px; align-items: center;">
                 <div style="flex:1; text-align: center;">
@@ -807,14 +810,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 const p = getPriority(r.sheet);
                 let details = "";
                 
-                // Helper to try multiple key variations (Robustness Fix)
                 const getVal = (keys) => {
                     for (let k of keys) if(r[k] !== undefined && r[k] !== null && r[k] !== "") return r[k];
                     return '-';
                 };
                 
+                // دالة مساعدة لتنسيق الأرقام مع فحص الصفر
                 const valNum = (keys) => {
-                    for (let k of keys) if(r[k]) return parseInt(String(r[k]).replace(/[^0-9]/g,'')).toLocaleString();
+                    for (let k of keys) if(r[k]) {
+                        const v = parseInt(String(r[k]).replace(/[^0-9]/g,''));
+                        return v > 0 ? v.toLocaleString() : '0';
+                    }
                     return '0';
                 };
 
@@ -825,16 +831,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 const subType = getVal(['sub_type', 'subType', 'type', 'النوع']);
                 const receiptNum = getVal(['receipt_num', 'receipt', 'receiptNum', 'رقم الوصل']);
                 
+                // مبالغ العقد
                 const downPayment = valNum(['down_payment', 'downPayment', 'down', 'advance', 'المقدمة']);
                 const totalPrice = valNum(['total_price', 'totalPrice', 'total', 'السعر الكلي']);
+                const instDown = valNum(['installment_down', 'installmentDown', 'إجمالي قسط\\مقدمة', 'اجمالي قسط\\مقدمة']);
+                const loan = valNum(['loan', 'القرض', 'قرض']);
+                const commission = valNum(['commission', 'العمولة', 'عمولة']);
+                const lawyer = valNum(['lawyer', 'lawyer_fees', 'اجور محامي', 'أجور محامي']);
+                const remaining = valNum(['remaining', 'المتبقي', 'متبقي']);
+
                 const amount = valNum(['amount', 'Amount', 'المبلغ']);
 
                 if (p === 1) { // عقد
                     details = `
                         <div style="font-size:13px; margin-top:5px;"><b>رقم العقد:</b> ${contractNum}</div>
                         <div style="font-size:13px;"><b>الدار:</b> ${houseNum} | <b>الاسم:</b> ${name}</div>
-                        <div style="font-size:13px;"><b>المقدمة:</b> ${downPayment}</div>
+                        
+                        <!-- المقدمة ملونة بالأزرق -->
+                        <div style="font-size:13px; color:var(--primary-color); font-weight:bold; margin-top:3px;">المقدمة: ${downPayment}</div>
+                        
                         <div style="font-size:13px;"><b>السعر الكلي:</b> ${totalPrice}</div>
+                        
+                        ${ instDown !== '0' ? `<div style="font-size:13px;"><b>إجمالي قسط/مقدمة:</b> ${instDown}</div>` : '' }
+                        ${ remaining !== '0' ? `<div style="font-size:13px;"><b>المتبقي:</b> ${remaining}</div>` : '' }
+                        ${ lawyer !== '0' ? `<div style="font-size:13px;"><b>أجور محامي:</b> ${lawyer}</div>` : '' }
+                        ${ commission !== '0' ? `<div style="font-size:13px;"><b>العمولة:</b> ${commission}</div>` : '' }
+                        ${ loan !== '0' ? `<div style="font-size:13px;"><b>القرض:</b> ${loan}</div>` : '' }
                     `;
                 } else if (p === 2 || p === 3) { // مقبوضات أو مصرف
                     details = `
@@ -884,13 +906,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let total = 0;
         items.forEach((r, i) => {
-            // Helper for print values
             const getVal = (keys) => { for(let k of keys) if(r[k]) return r[k]; return ''; };
             const amountVal = (keys) => { for(let k of keys) if(r[k]) return parseInt(String(r[k]).replace(/[^0-9]/g,'')); return 0; };
 
-            let amount = amountVal(['amount', 'Amount', 'المبلغ']);
-            if(amount === 0) { // Fallback to down payment if amount is missing (for contracts)
-                 amount = amountVal(['down_payment', 'downPayment', 'down', 'المقدمة']);
+            // منطق طباعة المبلغ (المقدمة للعقود، والمبلغ للبقية)
+            let amount = 0;
+            const sheetName = String(r.sheet || "").toLowerCase();
+            if (sheetName.includes('contract') || sheetName.includes('عقد')) {
+                 amount = amountVal(['down_payment', 'downPayment', 'down', 'advance', 'المقدمة']);
+            } else {
+                 amount = amountVal(['amount', 'Amount', 'المبلغ']);
             }
             
             total += amount;

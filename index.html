@@ -38,17 +38,16 @@
         }
 
         /* =========================================
-           تنسيقات الطباعة (تم تعديل العرض والهوامش)
+           تنسيقات الطباعة 
            ========================================= */
         #printableArea { display: none; }
         @media print {
             body * { visibility: hidden; }
             #appContainer, #loader, #cameraModal, .form-section, .modal { display: none !important; }
 
-            /* إعدادات الصفحة */
             @page {
                 size: A4 portrait;
-                margin: 10mm; /* هوامش صغيرة لاستغلال المساحة */
+                margin: 10mm;
             }
 
             body {
@@ -72,14 +71,13 @@
 
             #printableArea * { visibility: visible; }
 
-            /* تنسيق الجدول */
             table {
-                width: 100% !important; /* فرض العرض الكامل */
+                width: 100% !important;
                 border-collapse: collapse !important;
                 border: 2px solid #000;
                 font-size: 11pt;
                 margin-top: 10px;
-                table-layout: fixed; /* توزيع متساوٍ أو متحكم به */
+                table-layout: fixed;
             }
 
             th, td {
@@ -88,7 +86,7 @@
                 text-align: center;
                 vertical-align: middle;
                 color: #000 !important;
-                word-wrap: break-word; /* منع النص من الخروج */
+                word-wrap: break-word;
             }
 
             th {
@@ -98,11 +96,11 @@
                 font-size: 12pt;
             }
 
-            /* تحديد عرض الأعمدة لتحسين الشكل */
+            /* تحديد عرض الأعمدة */
             th:nth-child(1) { width: 5%; }  /* ت */
             th:nth-child(2) { width: 15%; } /* التاريخ */
-            th:nth-child(3) { width: 15%; } /* النوع */
-            th:nth-child(4) { width: 45%; } /* التفاصيل */
+            th:nth-child(3) { width: 18%; } /* النوع */
+            th:nth-child(4) { width: 42%; } /* التفاصيل */
             th:nth-child(5) { width: 20%; } /* المبلغ */
 
             tr { page-break-inside: avoid; }
@@ -467,13 +465,28 @@
             <input type="text" id="s_name" placeholder="الاسم" style="flex:1">
             <input type="tel" id="s_house" placeholder="الدار" style="width:80px">
         </div>
-        <div id="search_ids_row" style="display:flex; gap:5px; margin-bottom:10px;">
+
+        <!-- زر إظهار/إخفاء البحث بأرقام العقود والوصولات -->
+        <div style="text-align: right; margin-bottom: 10px;">
+            <span onclick="toggleIdsSearch()" style="color: var(--primary-color); cursor: pointer; font-size: 14px; font-weight: bold; display: inline-flex; align-items: center; user-select: none;">
+                <span id="idsToggleIcon">➕</span>&nbsp;بحث برقم العقد/الوصل
+            </span>
+        </div>
+
+        <div id="search_ids_row" style="display:none; gap:5px; margin-bottom:10px;">
             <input type="tel" id="s_contract" placeholder="رقم العقد" style="flex:1">
             <input type="tel" id="s_receipt" placeholder="رقم الوصل" style="flex:1">
         </div>
         <input type="text" id="s_reason" placeholder="سبب الصرف" style="width:100%; margin-bottom:10px;">
 
-        <div id="dateSearchRow" style="margin-bottom:10px;">
+        <!-- زر إظهار/إخفاء التاريخ -->
+        <div style="text-align: right; margin-bottom: 10px;">
+            <span onclick="toggleDateSearch()" style="color: var(--primary-color); cursor: pointer; font-size: 14px; font-weight: bold; display: inline-flex; align-items: center; user-select: none;">
+                <span id="dateToggleIcon">➕</span>&nbsp;بحث حسب التاريخ
+            </span>
+        </div>
+
+        <div id="dateSearchRow" style="margin-bottom:10px; display:none;">
             <div style="font-size:12px; margin-bottom:2px; font-weight:bold;">من تاريخ:</div>
             <div class="date-container" style="margin-bottom:5px;">
                 <select id="sd_d1" class="date-select"></select><select id="sd_m1" class="date-select"></select><select id="sd_y1" class="date-select"></select>
@@ -724,6 +737,31 @@ document.addEventListener('DOMContentLoaded', function() {
         toggleSearchFilter(document.querySelector('.filter-chip[data-type="all"]'));
     };
 
+    window.toggleDateSearch = function() {
+        const row = document.getElementById('dateSearchRow');
+        const icon = document.getElementById('dateToggleIcon');
+        if (row.style.display === 'none') {
+            row.style.display = 'block';
+            icon.innerText = '➖';
+        } else {
+            row.style.display = 'none';
+            icon.innerText = '➕';
+        }
+    };
+
+    window.toggleIdsSearch = function() {
+        const row = document.getElementById('search_ids_row');
+        const icon = document.getElementById('idsToggleIcon');
+        // Toggle flex instead of block for the inputs row
+        if (row.style.display === 'none') {
+            row.style.display = 'flex';
+            icon.innerText = '➖';
+        } else {
+            row.style.display = 'none';
+            icon.innerText = '➕';
+        }
+    };
+
     window.toggleSearchFilter = function(el) {
         const t = el.getAttribute('data-type');
         if(t === 'all') selectedSearchFilters = ['contracts','receipts','bank'];
@@ -744,7 +782,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if(isActive) c.classList.add('active'); else c.classList.remove('active');
         });
         
-        // Visibility Logic Update
+        // Visibility Logic Update for Inputs inside the collapsible row
         const hasContracts = selectedSearchFilters.includes('contracts');
         const hasReceiptsOrBank = selectedSearchFilters.includes('receipts') || selectedSearchFilters.includes('bank');
         const hasExpenses = selectedSearchFilters.includes('expenses');
@@ -752,17 +790,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const contractInput = document.getElementById('s_contract');
         const receiptInput = document.getElementById('s_receipt');
         const reasonInput = document.getElementById('s_reason');
-        const idsRow = document.getElementById('search_ids_row'); // Container ID for Contract/Receipt
-
+        
+        // Note: The visibility of 'search_ids_row' is now controlled by the user via toggleIdsSearch.
+        // We only control the visibility of individual inputs INSIDE it.
         contractInput.style.display = hasContracts ? 'block' : 'none';
         receiptInput.style.display = hasReceiptsOrBank ? 'block' : 'none';
-        
-        // Hide container if both specific fields are hidden
-        if (!hasContracts && !hasReceiptsOrBank) {
-            if(idsRow) idsRow.style.display = 'none';
-        } else {
-            if(idsRow) idsRow.style.display = 'flex';
-        }
 
         reasonInput.style.display = hasExpenses ? 'block' : 'none';
     };
@@ -833,12 +865,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     const hB = getHouse(b);
                     if (hA !== hB) return hA - hB;
                 }
+                
+                // دالة مساعدة لتوحيد التاريخ (لأن التواريخ قد تأتي بصيغ مختلفة)
+                const parseDate = (dateStr) => {
+                    if (!dateStr) return 0;
+                    // إذا كان التاريخ بصيغة DD/MM/YYYY
+                    if (dateStr.includes('/')) {
+                       const parts = dateStr.split('/');
+                       // new Date(Year, Month-1, Day)
+                       return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
+                    }
+                    // إذا كان بصيغة أخرى
+                    return new Date(dateStr).getTime();
+                };
 
                 const pA = getPriority(a.sheet);
                 const pB = getPriority(b.sheet);
                 if (pA !== pB) return pA - pB;
 
-                return new Date(b.date) - new Date(a.date);
+                return parseDate(b.date) - parseDate(a.date);
             });
 
             currentSearchResults = d;
@@ -1006,8 +1051,17 @@ document.addEventListener('DOMContentLoaded', function() {
             let house = getVal(['house_num', 'house', 'houseNum', 'رقم الدار']);
             let reason = getVal(['reason', 'Reason', 'السبب']);
             let contract = getVal(['contract_num', 'contract', 'contractNum', 'رقم العقد']);
+            let receipt = getVal(['receipt_num', 'receipt', 'receiptNum', 'رقم الوصل']);
 
-            let details = [name, house ? `دار:${house}` : '', reason, contract ? `عقد:${contract}` : ''].filter(Boolean).join(' - ');
+            // بناء مصفوفة التفاصيل بشكل ديناميكي (فقط القيم الموجودة)
+            let detailsParts = [];
+            if(name) detailsParts.push(name);
+            if(house) detailsParts.push(`دار:${house}`);
+            if(reason) detailsParts.push(reason);
+            if(receipt) detailsParts.push(`وصل:${receipt}`);
+            if(contract) detailsParts.push(`عقد:${contract}`);
+
+            let details = detailsParts.join(' - ');
             
             h += `<tr>
                 <td>${i+1}</td>

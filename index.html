@@ -37,55 +37,77 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* تنسيقات الطباعة (تم التصحيح) */
-        #printableArea { display: none; }
+        /* =========================================
+           تنسيقات الطباعة الجديدة (مصححة بالكامل)
+           ========================================= */
         @media print {
-            body * { visibility: hidden; }
-            #appContainer, #loader, #cameraModal { display: none !important; }
-            
-            #printableArea { 
-                display: block !important; 
-                visibility: visible; 
-                position: absolute; 
-                left: 0; 
-                top: 0; 
-                width: 100%; 
-                background: white; 
-                padding: 20px; 
-                direction: rtl; 
-                z-index: 9999999;
+            /* 1. إخفاء كل شيء في الصفحة */
+            body * {
+                visibility: hidden;
             }
             
-            #printableArea * { 
-                visibility: visible; 
+            #appContainer, #loader, #cameraModal, .form-section, .modal {
+                display: none !important;
             }
 
-            table { 
-                width: 100%; 
-                border-collapse: collapse; 
-                border: 2px solid #000; 
-                font-size: 14px; 
-                margin-top: 20px; 
+            /* 2. إظهار منطقة الطباعة فقط */
+            #printableArea, #printableArea * {
+                visibility: visible;
+            }
+
+            #printableArea {
+                display: block !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                background-color: white;
+                color: black;
                 direction: rtl;
             }
-            
-            th, td { 
-                border: 1px solid #000; 
-                padding: 8px; 
-                text-align: center; 
+
+            /* 3. تنسيق الجدول للطباعة */
+            table {
+                width: 98% !important; /* ملء عرض الورقة */
+                margin: 20px auto;
+                border-collapse: collapse !important;
+                font-size: 12pt;
+                table-layout: auto; /* السماح للأعمدة بتغيير عرضها حسب المحتوى */
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tr {
+                page-break-inside: avoid;
+            }
+
+            th, td {
+                border: 1px solid #000 !important; /* حدود سوداء واضحة */
+                padding: 8px 5px;
+                text-align: center;
                 vertical-align: middle;
+                color: #000 !important; /* نص أسود */
             }
-            
-            th { 
-                background-color: #f0f0f0 !important; 
-                -webkit-print-color-adjust: exact; 
+
+            th {
+                background-color: #eee !important;
                 font-weight: bold;
-                font-size: 16px;
+                font-size: 14pt;
             }
-            
-            /* منع تكسر الصفوف */
-            tr { page-break-inside: avoid; }
+
+            /* 4. إعدادات الصفحة */
+            @page {
+                size: A4 portrait;
+                margin: 1cm;
+            }
         }
+        /* ========================================= */
+
+        #printableArea { display: none; }
 
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -817,7 +839,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             currentSearchResults = d;
             
-            if(!d.length) return document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin-top:20px;">لا توجد نتائج 📭</div>';
+            if(!d.length) {
+                document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin:30px 0; padding:20px; background:#fff3cd; color:#856404; border-radius:12px; border:1px solid #ffeeba;">⚠️ عذراً، لا توجد نتائج تطابق بحثك 📭</div>';
+                return;
+            }
             
             // --- حساب المجموع الكلي (تعديل جذري للمنطق) ---
             let totalSearchSum = d.reduce((acc, curr) => {

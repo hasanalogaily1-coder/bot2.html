@@ -749,7 +749,33 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if(!d.length) return document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin-top:20px;">لا توجد نتائج 📭</div>';
             
+            // --- حساب المجموع الكلي ---
+            let totalSearchSum = d.reduce((acc, curr) => {
+                const valNum = (obj, keys) => {
+                    for (let k of keys) if(obj[k]) return parseInt(String(obj[k]).replace(/[^0-9]/g,''));
+                    return 0;
+                };
+                let amt = valNum(curr, ['amount', 'Amount', 'المبلغ']);
+                if (amt === 0) amt = valNum(curr, ['down_payment', 'downPayment', 'down', 'advance', 'المقدمة']);
+                return acc + amt;
+            }, 0);
+
             let h = '';
+
+            // --- بطاقة الملخص (في البداية) ---
+            h += `
+            <div class="result-card" style="background: linear-gradient(135deg, #e0f7fa, #b2ebf2); border-right: 5px solid #00bcd4; margin-bottom: 20px; align-items: center;">
+                <div style="flex:1; text-align: center;">
+                    <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">📊 ملخص البحث</div>
+                    <div style="font-size: 14px; display: flex; justify-content: center; gap: 15px;">
+                        <span>عدد النتائج: <b>${d.length}</b></span>
+                        <span>المجموع: <b style="color:#00796b; font-size:15px;">${totalSearchSum.toLocaleString()}</b></span>
+                    </div>
+                </div>
+            </div>
+            `;
+
+            // --- بطاقات النتائج ---
             d.forEach((r, i) => {
                 const borderColor = getColor(r.sheet);
                 const p = getPriority(r.sheet);

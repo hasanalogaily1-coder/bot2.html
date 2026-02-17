@@ -754,27 +754,49 @@ document.addEventListener('DOMContentLoaded', function() {
                 const borderColor = getColor(r.sheet);
                 const p = getPriority(r.sheet);
                 let details = "";
-                let amountDisplay = r.amount ? parseInt(String(r.amount).replace(/[^0-9]/g,'')).toLocaleString() : "0";
+                
+                // Helper to try multiple key variations (Robustness Fix)
+                const getVal = (keys) => {
+                    for (let k of keys) if(r[k] !== undefined && r[k] !== null && r[k] !== "") return r[k];
+                    return '-';
+                };
+                
+                const valNum = (keys) => {
+                    for (let k of keys) if(r[k]) return parseInt(String(r[k]).replace(/[^0-9]/g,'')).toLocaleString();
+                    return '0';
+                };
+
+                const contractNum = getVal(['contract_num', 'contract', 'contractNum', 'رقم العقد']);
+                const houseNum = getVal(['house_num', 'house', 'houseNum', 'رقم الدار']);
+                const name = getVal(['name', 'Name', 'الاسم']);
+                const reason = getVal(['reason', 'Reason', 'السبب']);
+                const subType = getVal(['sub_type', 'subType', 'type', 'النوع']);
+                const receiptNum = getVal(['receipt_num', 'receipt', 'receiptNum', 'رقم الوصل']);
+                
+                const downPayment = valNum(['down_payment', 'downPayment', 'down', 'advance', 'المقدمة']);
+                const totalPrice = valNum(['total_price', 'totalPrice', 'total', 'السعر الكلي']);
+                const amount = valNum(['amount', 'Amount', 'المبلغ']);
 
                 if (p === 1) { // عقد
                     details = `
-                        <div style="font-size:13px; margin-top:5px;"><b>رقم العقد:</b> ${r.contract_num || '-'}</div>
-                        <div style="font-size:13px;"><b>الدار:</b> ${r.house_num || '-'} | <b>الاسم:</b> ${r.name || '-'}</div>
-                        <div style="font-size:13px;"><b>المقدمة:</b> ${r.down_payment ? parseInt(r.down_payment).toLocaleString() : '0'}</div>
-                        <div style="font-size:13px;"><b>السعر الكلي:</b> ${r.total_price ? parseInt(r.total_price).toLocaleString() : '0'}</div>
+                        <div style="font-size:13px; margin-top:5px;"><b>رقم العقد:</b> ${contractNum}</div>
+                        <div style="font-size:13px;"><b>الدار:</b> ${houseNum} | <b>الاسم:</b> ${name}</div>
+                        <div style="font-size:13px;"><b>المقدمة:</b> ${downPayment}</div>
+                        <div style="font-size:13px;"><b>السعر الكلي:</b> ${totalPrice}</div>
                     `;
                 } else if (p === 2 || p === 3) { // مقبوضات أو مصرف
                     details = `
-                        <div style="font-size:13px; margin-top:5px;"><b>رقم الوصل:</b> ${r.receipt_num || '-'}</div>
-                        <div style="font-size:13px;"><b>الدار:</b> ${r.house_num || '-'}</div>
-                        <div style="font-size:13px;"><b>النوع:</b> ${r.sub_type || '-'}</div>
-                        <div style="font-size:13px; color:var(--primary-color); font-weight:bold;">المبلغ: ${amountDisplay}</div>
+                        <div style="font-size:13px; margin-top:5px;"><b>رقم الوصل:</b> ${receiptNum}</div>
+                        <div style="font-size:13px;"><b>الدار:</b> ${houseNum}</div>
+                        <div style="font-size:13px;"><b>النوع:</b> ${subType}</div>
+                        <div style="font-size:13px; color:var(--primary-color); font-weight:bold;">المبلغ: ${amount}</div>
                     `;
                 } else { // مصاريف
                     details = `
-                        <div style="font-size:13px; margin-top:5px;"><b>الاسم:</b> ${r.name || '-'}</div>
-                        <div style="font-size:13px;"><b>السبب:</b> ${r.reason || '-'}</div>
-                        <div style="font-size:13px; color:var(--primary-color); font-weight:bold;">المبلغ: ${amountDisplay}</div>
+                        <div style="font-size:13px; margin-top:5px;"><b>الاسم:</b> ${name}</div>
+                        <div style="font-size:13px;"><b>السبب:</b> ${reason}</div>
+                        <div style="font-size:13px;"><b>الدار:</b> ${houseNum !== '-' ? houseNum : 'عام'}</div>
+                        <div style="font-size:13px; color:var(--primary-color); font-weight:bold;">المبلغ: ${amount}</div>
                     `;
                 }
 
@@ -810,9 +832,23 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let total = 0;
         items.forEach((r, i) => {
-            let amount = parseInt(String(r.amount).replace(/[^0-9]/g,'') || 0);
+            // Helper for print values
+            const getVal = (keys) => { for(let k of keys) if(r[k]) return r[k]; return ''; };
+            const amountVal = (keys) => { for(let k of keys) if(r[k]) return parseInt(String(r[k]).replace(/[^0-9]/g,'')); return 0; };
+
+            let amount = amountVal(['amount', 'Amount', 'المبلغ']);
+            if(amount === 0) { // Fallback to down payment if amount is missing (for contracts)
+                 amount = amountVal(['down_payment', 'downPayment', 'down', 'المقدمة']);
+            }
+            
             total += amount;
-            let details = [r.name, r.house, r.reason, r.contract_num ? `عقد:${r.contract_num}` : ''].filter(Boolean).join(' - ');
+            
+            let name = getVal(['name', 'Name', 'الاسم']);
+            let house = getVal(['house_num', 'house', 'houseNum', 'رقم الدار']);
+            let reason = getVal(['reason', 'Reason', 'السبب']);
+            let contract = getVal(['contract_num', 'contract', 'contractNum', 'رقم العقد']);
+
+            let details = [name, house ? `دار:${house}` : '', reason, contract ? `عقد:${contract}` : ''].filter(Boolean).join(' - ');
             
             h += `<tr>
                 <td>${i+1}</td>

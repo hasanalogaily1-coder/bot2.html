@@ -719,6 +719,16 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`${SEARCH_WEBHOOK_URL}?${p.toString()}`)
         .then(r => r.json())
         .then(d => {
+            // 1. تصفية صفوف المجموع القادمة من السيرفر
+            d = d.filter(r => {
+                const name = r.name || r.Name || "";
+                return !name.includes("مجموع") && !name.includes("Total");
+            });
+
+            // 2. منطق الترتيب (متسلسل للدار عند البحث المتعدد)
+            const houseInput = document.getElementById('s_house').value;
+            const isMultiHouse = houseInput.includes(',') || houseInput.includes('،') || houseInput.includes(' ');
+
             const getPriority = (sheetName) => {
                 const s = String(sheetName).toLowerCase();
                 if (s.includes('contract') || s.includes('عقد') || s.includes('العقود')) return 1;
@@ -737,11 +747,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 return '#ccc';
             };
 
-            // ترتيب النتائج: النوع (أولوية) ثم التاريخ (الأحدث)
             d.sort((a, b) => {
+                // دالة مساعدة لاستخراج رقم الدار بشكل صحيح (رقمي)
+                const getHouse = (obj) => {
+                    // نجرب جميع الاحتمالات لاسم حقل الدار
+                    const h = obj.house_num || obj.house || obj.houseNum || '0';
+                    return parseInt(String(h).replace(/[^0-9]/g, '')) || 0;
+                };
+
+                if (isMultiHouse) {
+                    // إذا كان البحث عن أكثر من دار، الترتيب الأساسي هو رقم الدار تصاعدياً
+                    const hA = getHouse(a);
+                    const hB = getHouse(b);
+                    if (hA !== hB) return hA - hB;
+                }
+
+                // الترتيب الثانوي (أو الأساسي في حالة البحث العادي): حسب الأولوية (النوع)
                 const pA = getPriority(a.sheet);
                 const pB = getPriority(b.sheet);
                 if (pA !== pB) return pA - pB;
+
+                // الترتيب الثالث: التاريخ (الأحدث أولاً)
                 return new Date(b.date) - new Date(a.date);
             });
 

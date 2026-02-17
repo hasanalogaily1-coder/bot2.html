@@ -846,10 +846,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     details = `
                         <div style="font-size:13px; margin-top:5px;"><b>رقم العقد:</b> ${contractNum}</div>
                         <div style="font-size:13px;"><b>الدار:</b> ${houseNum} | <b>الاسم:</b> ${name}</div>
-                        
-                        <!-- المقدمة ملونة بالأزرق -->
-                        <div style="font-size:13px; color:var(--primary-color); font-weight:bold; margin-top:3px;">المقدمة: ${downPayment}</div>
-                        
                         <div style="font-size:13px;"><b>السعر الكلي:</b> ${totalPrice}</div>
                         
                         ${ instDown !== '0' ? `<div style="font-size:13px;"><b>إجمالي قسط/مقدمة:</b> ${instDown}</div>` : '' }
@@ -857,6 +853,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${ lawyer !== '0' ? `<div style="font-size:13px;"><b>أجور محامي:</b> ${lawyer}</div>` : '' }
                         ${ commission !== '0' ? `<div style="font-size:13px;"><b>العمولة:</b> ${commission}</div>` : '' }
                         ${ loan !== '0' ? `<div style="font-size:13px;"><b>القرض:</b> ${loan}</div>` : '' }
+
+                        <div style="font-size:13px; color:var(--primary-color); font-weight:bold; margin-top:3px;">المقدمة: ${downPayment}</div>
                     `;
                 } else if (p === 2 || p === 3) { // مقبوضات أو مصرف
                     details = `

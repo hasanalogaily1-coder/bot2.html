@@ -99,6 +99,83 @@
             padding: 0 15px 50px 15px;
         }
 
+        /* --- بطاقة آخر عملية (Last Entry) --- */
+        .last-entry-container {
+            margin-bottom: 20px;
+            display: none; /* مخفي افتراضياً حتى يتم التحقق من السجل */
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .last-entry-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            padding-right: 5px;
+        }
+
+        .last-entry-card {
+            background: var(--surface-color);
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-right: 5px solid #ccc;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .last-entry-card:active {
+            transform: scale(0.98);
+        }
+
+        .le-icon-box {
+            width: 45px;
+            height: 45px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-left: 12px;
+        }
+
+        .le-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .le-title {
+            font-weight: 800;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .le-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        .le-amount {
+            font-weight: 800;
+            font-size: 15px;
+            color: #00897B; /* اللون المميز الجديد */
+            background: rgba(0, 137, 123, 0.08);
+            padding: 6px 10px;
+            border-radius: 8px;
+        }
+
         /* --- شبكة القائمة الرئيسية (Cards) --- */
         .menu-grid {
             display: grid;
@@ -161,6 +238,11 @@
         @keyframes slideUp { 
             from { opacity: 0; transform: translateY(30px); } 
             to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; } 
+            to { opacity: 1; } 
         }
 
         h3 {
@@ -603,6 +685,15 @@
     </div>
     
     <div id="mainMenu">
+        
+        <!-- قسم بطاقة آخر عملية -->
+        <div id="lastEntryContainer" class="last-entry-container">
+            <div class="last-entry-label"><i class="ph-bold ph-clock-counter-clockwise"></i> آخر عملية قمت بها:</div>
+            <div id="lastEntryCard" class="last-entry-card" onclick="loadFromHistory(0)">
+                <!-- سيتم تعبئة المحتوى بواسطة JavaScript -->
+            </div>
+        </div>
+
         <div class="menu-grid">
             <button class="menu-btn btn-contract" onclick="setupForm('contract')">
                 <i class="ph-fill ph-file-text btn-icon"></i>
@@ -845,7 +936,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedSearchFilters = ['contracts', 'receipts', 'bank'];
     let currentSearchResults = [];
     let fetchedDataCache = []; 
-    let currentSortValue = 'date'; // قيمة الفرز الافتراضية
+    let currentSortValue = 'date'; 
 
     const tg = window.Telegram.WebApp;
     tg.expand();
@@ -860,6 +951,56 @@ document.addEventListener('DOMContentLoaded', function() {
          document.getElementById('userBadge').innerHTML = `مرحباً بك في النظام <i class="ph-duotone ph-hand-waving" style="vertical-align: middle;"></i>`;
     }
 
+    // --- تحديث بطاقة آخر عملية ---
+    window.updateLastEntryPreview = function() {
+        const history = JSON.parse(localStorage.getItem('appHistory') || '[]');
+        const container = document.getElementById('lastEntryContainer');
+        const card = document.getElementById('lastEntryCard');
+        
+        if (!history.length) {
+            container.style.display = 'none';
+            return;
+        }
+        
+        container.style.display = 'block';
+        const last = history[0];
+        const data = last.fullData;
+        
+        let icon = 'ph-file-text';
+        let color = '#f1c40f'; // أصفر (عقد)
+        
+        if(last.type === 'receipt') { icon = 'ph-receipt'; color = '#2ecc71'; } // أخضر (قبض)
+        else if(last.type === 'bank') { icon = 'ph-bank'; color = '#3498db'; } // أزرق (مصرف)
+        else if(last.type === 'expense') { icon = 'ph-coins'; color = '#e74c3c'; } // أحمر (مصاريف)
+
+        let title = last.title;
+        let name = data.name || 'بدون اسم';
+        
+        let amountStr = '';
+        if(last.type === 'contract') amountStr = data.down_payment;
+        else amountStr = data.amount;
+        
+        // إذا كان المبلغ "محامي"، نعرضه كملاحظة أو نتركه كما هو، هنا سنعرض القيمة
+        let displayAmount = amountStr ? Number(String(amountStr).replace(/,/g,'')).toLocaleString() : '0';
+
+        card.style.borderRightColor = color;
+        card.innerHTML = `
+            <div style="display:flex; align-items:center;">
+                <div class="le-icon-box" style="background:${color}20; color:${color};">
+                    <i class="ph-fill ${icon}"></i>
+                </div>
+                <div class="le-info" style="margin-right: 12px;">
+                    <div class="le-title">${title}</div>
+                    <div class="le-subtitle">${name}</div>
+                </div>
+            </div>
+            <div class="le-amount">${displayAmount}</div>
+        `;
+    };
+
+    // استدعاء الدالة عند البدء
+    updateLastEntryPreview();
+
     // --- إدارة القائمة المنسدلة المخصصة ---
     window.toggleSortMenu = function() {
         document.getElementById('sortOptions').classList.toggle('open');
@@ -867,22 +1008,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.selectSort = function(value, element) {
         currentSortValue = value;
-        
-        // تحديث النص المعروض
         const iconHtml = element.querySelector('i').outerHTML;
         const text = element.textContent.trim();
         document.getElementById('sortSelectedText').innerHTML = `${iconHtml} ${text}`;
-        
-        // تحديث التحديد
         document.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
         element.classList.add('selected');
-        
-        // إغلاق القائمة وتطبيق الفرز
         document.getElementById('sortOptions').classList.remove('open');
         applySortAndRender();
     };
 
-    // إغلاق القائمة عند النقر خارجها
     document.addEventListener('click', function(e) {
         const wrapper = document.getElementById('sortWrapper');
         if (wrapper && !wrapper.contains(e.target)) {
@@ -890,7 +1024,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // --- وظيفة عرض التنبيهات (Toast) بدلاً من alert ---
+    // --- وظيفة عرض التنبيهات (Toast) ---
     function showNotification(message, type = 'info') {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
@@ -903,7 +1037,6 @@ document.addEventListener('DOMContentLoaded', function() {
         toast.innerHTML = `<i class="ph-fill ph-${icon}" style="font-size:20px;"></i> <span>${message}</span>`;
         container.appendChild(toast);
         
-        // إزالة التنبيه بعد 3 ثواني
         setTimeout(() => {
             toast.style.opacity = '0';
             toast.style.transform = 'translateY(20px)';
@@ -917,7 +1050,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if(!btn) return;
         
         if (isLoading) {
-            btn.dataset.originalText = btn.innerHTML; // حفظ النص الأصلي
+            btn.dataset.originalText = btn.innerHTML; 
             btn.innerHTML = `<i class="ph-bold ph-spinner ph-spin" style="font-size: 20px;"></i> جاري التحميل...`;
             btn.disabled = true;
         } else {
@@ -1002,6 +1135,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('searchResults').innerHTML = '';
         selectedPhotoFile = null;
         document.getElementById('fileNameDisplay').innerText = 'لم يتم اختيار صورة';
+        // تحديث بطاقة آخر عملية عند العودة للقائمة
+        updateLastEntryPreview();
     };
 
     window.setupForm = function(type) {
@@ -1221,7 +1356,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.applySortAndRender = function() {
         let d = [...fetchedDataCache]; 
-        const sortOption = currentSortValue; // استخدام المتغير الجديد
+        const sortOption = currentSortValue; 
 
         const getAmount = (obj) => {
             const s = String(obj.sheet).toLowerCase();
@@ -1699,6 +1834,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showNotification("✅ تم الإرسال بنجاح!", 'success');
                 showMenu();
                 closeModal();
+                updateLastEntryPreview(); // تحديث بطاقة آخر عملية بعد النجاح
             } else {
                 showNotification("❌ فشل الإرسال لتيليجرام", 'error');
             }
@@ -1820,6 +1956,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if(confirm('هل أنت متأكد من مسح السجل؟')) {
             localStorage.removeItem('appHistory'); 
             window.showHistory(); 
+            updateLastEntryPreview(); // تحديث البطاقة بعد مسح السجل
         }
     };
 });

@@ -490,6 +490,37 @@
         .h-detail { font-size: 14px; color: var(--text-secondary); }
         .status-success { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;}
         .no-history { text-align: center; color: #888; margin-top: 40px; font-style: italic; }
+
+        /* --- تعديل تصميم فلتر الترتيب --- */
+        #sortControls {
+            display: none; 
+            margin: 15px 0; 
+            background: var(--surface-color); 
+            padding: 16px; 
+            border-radius: 18px; 
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            align-items: center; 
+            justify-content: space-between;
+            gap: 15px;
+        }
+        
+        #dynamicSortOption {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #cbd5e0;
+            border-radius: 12px;
+            background: var(--input-bg);
+            font-size: 14px;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 500;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: left 12px top 50%;
+            background-size: 12px auto;
+            padding-left: 30px;
+        }
     </style>
 </head>
 <body>
@@ -683,10 +714,12 @@
             <button onclick="printResults('sel')" style="flex:1; padding:12px; background:#64748b; color:white; border:none; border-radius:12px; font-weight:bold;">طباعة المحدد <i class="ph-bold ph-printer"></i></button>
         </div>
 
-        <!-- القائمة المنسدلة للترتيب -->
-        <div id="sortControls" style="display:none; margin: 15px 0; background: var(--surface-color); padding: 12px; border-radius: 16px; border:1px solid #e2e8f0; align-items: center; justify-content: space-between;">
-            <span style="font-weight:bold; font-size:14px; margin-left:10px; color:var(--text-secondary);">ترتيب حسب:</span>
-            <select id="dynamicSortOption" onchange="applySortAndRender()" style="flex:1; padding:8px; border:1px solid #cbd5e0; border-radius:10px; background:var(--input-bg); font-size:14px; font-family:'Tajawal';">
+        <!-- القائمة المنسدلة للترتيب بتصميم جديد -->
+        <div id="sortControls">
+            <div style="font-weight:bold; font-size:15px; display:flex; align-items:center; gap:5px;">
+                <i class="ph-fill ph-sort-ascending"></i> ترتيب حسب:
+            </div>
+            <select id="dynamicSortOption" onchange="applySortAndRender()">
                 <option value="date">📅 التاريخ (الأحدث)</option>
                 <option value="house">🏠 رقم الدار (تصاعدي)</option>
                 <option value="reason">📝 التفاصيل/السبب (تجميع)</option>
@@ -1151,7 +1184,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         currentSearchResults = d;
-        let totalSearchSum = d.reduce((acc, curr) => acc + getAmount(curr), 0);
+        
+        // تعديل: حساب المجموع مع استثناء "محامي"
+        let totalSearchSum = d.reduce((acc, curr) => {
+            if (curr.sub_type === 'محامي') return acc;
+            return acc + getAmount(curr);
+        }, 0);
 
         let h = `
         <div class="result-card" style="background: linear-gradient(135deg, #e0f7fa, #b2ebf2); border-right: 5px solid #00bcd4; margin-bottom: 20px; align-items: center;">
@@ -1195,6 +1233,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const remaining = valNum(['remaining', 'المتبقي']);
             const amount = valNum(['amount', 'Amount', 'المبلغ']);
 
+            // تعديل: منطق عرض المبلغ (أخضر للعادي، رمادي للمحامي)
+            let amountDisplayHtml = "";
+            if (r.sub_type === 'محامي') {
+                amountDisplayHtml = `<div style="font-size:13px; color:#7f8c8d; font-weight:bold; font-style: italic;">المبلغ: ${amount} (غير مشمول)</div>`;
+            } else {
+                amountDisplayHtml = `<div style="font-size:13px; color:var(--primary-color); font-weight:bold;">المبلغ: ${amount}</div>`;
+            }
+            
+            // للعقود المبلغ الأساسي هو المقدمة
+            let contractAmountDisplay = `<div style="font-size:13px; color:var(--primary-color); font-weight:bold; margin-top:3px;">المقدمة: ${downPayment}</div>`;
+
             let details = "";
             if (p === 1) { // عقد
                 details = `
@@ -1206,21 +1255,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${ lawyer !== '0' ? `<div style="font-size:13px;"><b>أجور محامي:</b> ${lawyer}</div>` : '' }
                     ${ commission !== '0' ? `<div style="font-size:13px;"><b>العمولة:</b> ${commission}</div>` : '' }
                     ${ loan !== '0' ? `<div style="font-size:13px;"><b>القرض:</b> ${loan}</div>` : '' }
-                    <div style="font-size:13px; color:var(--primary-color); font-weight:bold; margin-top:3px;">المقدمة: ${downPayment}</div>
+                    ${contractAmountDisplay}
                 `;
             } else if (p === 2 || p === 3) { // مقبوضات/مصرف
                 details = `
                     <div style="font-size:13px; margin-top:5px;"><b>الاسم:</b> ${name}</div>
                     <div style="font-size:13px;"><b>رقم الوصل:</b> ${receiptNum} | <b>الدار:</b> ${houseNum}</div>
                     <div style="font-size:13px;"><b>النوع:</b> ${subType}</div>
-                    <div style="font-size:13px; color:var(--primary-color); font-weight:bold;">المبلغ: ${amount}</div>
+                    ${amountDisplayHtml}
                 `;
             } else { // مصاريف
                 details = `
                     <div style="font-size:13px; margin-top:5px;"><b>الاسم:</b> ${name}</div>
                     <div style="font-size:13px;"><b>السبب:</b> ${reason}</div>
                     <div style="font-size:13px;"><b>الدار:</b> ${houseNum !== '-' ? houseNum : 'عام'}</div>
-                    <div style="font-size:13px; color:var(--primary-color); font-weight:bold;">المبلغ: ${amount}</div>
+                    ${amountDisplayHtml}
                 `;
             }
 
@@ -1259,7 +1308,10 @@ document.addEventListener('DOMContentLoaded', function() {
                  amount = amountVal(['amount', 'Amount', 'المبلغ']);
             }
             
-            total += amount;
+            // تعديل: استثناء محامي من المجموع الكلي للطباعة
+            if (r.sub_type !== 'محامي') {
+                total += amount;
+            }
             
             let name = getVal(['name', 'Name', 'الاسم']);
             let house = getVal(['house_num', 'house', 'houseNum', 'رقم الدار']);
@@ -1276,16 +1328,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let details = detailsParts.join(' - ');
             
+            // تعديل: تنسيق الصف في الطباعة لتمييز المحامي
+            let rowStyle = "";
+            let amountCell = `<td>${amount.toLocaleString()}</td>`;
+            
+            if (r.sub_type === 'محامي') {
+                amountCell = `<td style="color: #7f8c8d; font-style: italic;">${amount.toLocaleString()} <br><span style="font-size:10px">(غير مشمول)</span></td>`;
+            }
+
             rows += `<tr>
                 <td>${i+1}</td>
                 <td>${r.date}</td>
                 <td>${r.sheet}</td>
                 <td>${details}</td>
-                <td>${amount.toLocaleString()}</td>
+                ${amountCell}
             </tr>`;
         });
         
-        rows += `<tr><td colspan="4"><b>المجموع الكلي</b></td><td><b>${total.toLocaleString()}</b></td></tr>`;
+        rows += `<tr><td colspan="4"><b>المجموع الكلي (باستثناء المحامي)</b></td><td><b>${total.toLocaleString()}</b></td></tr>`;
 
         // Create the full HTML for the iframe
         let printContent = `

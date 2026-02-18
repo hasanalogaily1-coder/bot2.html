@@ -23,12 +23,12 @@
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #0061ff, #60efff);
-            --bg-color: #f0f2f5;
-            --surface-color: #ffffff;
-            --text-primary: #1c1e21;
-            --text-secondary: #65676b;
+            --bg-color: var(--tg-theme-secondary-bg-color, #f0f2f5);
+            --surface-color: var(--tg-theme-bg-color, #ffffff);
+            --text-primary: var(--tg-theme-text-color, #1c1e21);
+            --text-secondary: var(--tg-theme-hint-color, #65676b);
             --border-radius: 20px;
-            --input-bg: #f0f2f5;
+            --input-bg: var(--tg-theme-secondary-bg-color, #f0f2f5);
             --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
             --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
         }
@@ -40,14 +40,15 @@
 
         body {
             font-family: 'Tajawal', sans-serif;
-            background-color: var(--tg-theme-bg-color, var(--bg-color));
-            color: var(--tg-theme-text-color, var(--text-primary));
+            background-color: var(--bg-color);
+            color: var(--text-primary);
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         button, input, select, textarea {
@@ -200,7 +201,7 @@
 
         input:focus, select:focus, textarea:focus { 
             outline: none;
-            background-color: #fff;
+            background-color: var(--surface-color);
             border-color: #2481cc;
             box-shadow: 0 0 0 4px rgba(36, 129, 204, 0.1);
         }
@@ -218,7 +219,7 @@
             font-weight: 700;
             cursor: pointer;
             box-shadow: 0 10px 20px -5px rgba(0, 97, 255, 0.4);
-            transition: transform 0.2s;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -226,6 +227,11 @@
         }
         .submit-btn:active {
             transform: scale(0.97);
+        }
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
         }
 
         .back-btn {
@@ -252,8 +258,8 @@
             padding: 15px;
             border: 2px dashed #cbd5e0;
             border-radius: 16px;
-            background: #f8fafc;
-            color: #64748b;
+            background: var(--input-bg);
+            color: var(--text-secondary);
             font-weight: 600;
             cursor: pointer;
             text-align: center;
@@ -268,7 +274,7 @@
         .photo-label-btn.active {
             border-color: #2ecc71;
             color: #10b981;
-            background: #f0fdf4;
+            background: rgba(16, 185, 129, 0.1);
         }
 
         /* --- الفلاتر (Chips) --- */
@@ -280,12 +286,12 @@
         }
         .filter-chip {
             padding: 10px 16px;
-            background: #e2e8f0;
+            background: var(--input-bg);
             border-radius: 50px;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            color: #475569;
+            color: var(--text-secondary);
             transition: all 0.2s;
         }
         .filter-chip.active { 
@@ -296,11 +302,11 @@
 
         /* --- بطاقات النتائج --- */
         .result-card {
-            background: white; 
+            background: var(--surface-color); 
             padding: 16px;
             margin-bottom: 12px;
             border-radius: 18px;
-            border: 1px solid #f1f5f9;
+            border: 1px solid rgba(0,0,0,0.05);
             border-right-width: 5px !important;
             display: flex;
             gap: 12px;
@@ -315,6 +321,42 @@
             margin-top: 5px;
             width: 20px;
             height: 20px;
+        }
+
+        /* --- التنبيهات (Toast Notifications) --- */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+        .toast {
+            background: rgba(32, 33, 36, 0.95);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideUpToast 0.3s ease-out;
+            backdrop-filter: blur(4px);
+        }
+        .toast.success { border-right: 4px solid #10b981; }
+        .toast.error { border-right: 4px solid #ef4444; }
+        .toast.info { border-right: 4px solid #3b82f6; }
+        
+        @keyframes slideUpToast {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* --- الطباعة (Iframe Technique) --- */
@@ -354,7 +396,7 @@
 
             th, td {
                 border: 1px solid #000 !important;
-                padding: 6px;
+                padding: 8px;
                 text-align: center;
                 vertical-align: middle;
                 color: #000 !important;
@@ -380,9 +422,9 @@
 
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff; z-index: 999999;
+            background: var(--surface-color); z-index: 999999;
             display: flex; justify-content: center; align-items: center;
-            font-size: 20px; font-weight: bold; color: #333; font-family: 'Tajawal';
+            font-size: 20px; font-weight: bold; color: var(--text-primary); font-family: 'Tajawal';
             gap: 10px;
         }
 
@@ -392,13 +434,13 @@
             background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; backdrop-filter: blur(5px);
         }
         .modal-content {
-            background-color: #fff; padding: 25px; border-radius: 24px; width: 85%; max-width: 350px;
+            background-color: var(--surface-color); padding: 25px; border-radius: 24px; width: 85%; max-width: 350px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.2); text-align: right;
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
-        .summary-list { margin: 20px 0; background: #f8fafc; padding: 15px; border-radius: 16px; font-size: 14px; border: 1px solid #e2e8f0; }
+        .summary-list { margin: 20px 0; background: var(--input-bg); padding: 15px; border-radius: 16px; font-size: 14px; border: 1px solid rgba(0,0,0,0.05); }
         .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #cbd5e0; padding-bottom: 5px; }
         
         .modal-buttons { display: flex; gap: 12px; margin-top: 25px; }
@@ -453,6 +495,8 @@
 <body>
 
 <div id="loader"><i class="ph-bold ph-spinner ph-spin" style="font-size: 28px;"></i> جار التحميل...</div>
+<div id="toastContainer" class="toast-container"></div>
+<div id="printableArea"></div>
 
 <!-- نافذة الكاميرا المدمجة -->
 <div id="cameraModal">
@@ -579,7 +623,7 @@
             <input type="file" id="gallery_input" accept="image/*" style="display:none;" onchange="handleFileSelect(this, 'gal')">
         </div>
 
-        <button class="submit-btn" onclick="prepareData()" id="btn">مراجعة وإرسال <i class="ph-bold ph-paper-plane-tilt"></i></button>
+        <button class="submit-btn" onclick="prepareData()" id="btnSubmit">مراجعة وإرسال <i class="ph-bold ph-paper-plane-tilt"></i></button>
     </div>
 
     <!-- قسم البحث الشامل -->
@@ -622,17 +666,17 @@
         </div>
 
         <div id="dateSearchRow" style="margin-bottom:15px; display:none;">
-            <div style="font-size:13px; margin-bottom:5px; font-weight:bold; color:#555;">من تاريخ:</div>
+            <div style="font-size:13px; margin-bottom:5px; font-weight:bold; color:var(--text-secondary);">من تاريخ:</div>
             <div class="date-container" style="margin-bottom:10px;">
                 <select id="sd_d1" class="date-select"></select><select id="sd_m1" class="date-select"></select><select id="sd_y1" class="date-select"></select>
             </div>
-            <div style="font-size:13px; margin-bottom:5px; font-weight:bold; color:#555;">إلى تاريخ:</div>
+            <div style="font-size:13px; margin-bottom:5px; font-weight:bold; color:var(--text-secondary);">إلى تاريخ:</div>
             <div class="date-container">
                 <select id="sd_d2" class="date-select"></select><select id="sd_m2" class="date-select"></select><select id="sd_y2" class="date-select"></select>
             </div>
         </div>
 
-        <button onclick="performSearch()" style="background: var(--primary-gradient); color: white; border: none; border-radius: 16px; padding: 16px; font-weight: bold; width: 100%; box-shadow: 0 4px 15px rgba(36, 129, 204, 0.3);">بحث <i class="ph-bold ph-magnifying-glass"></i></button>
+        <button onclick="performSearch()" id="btnSearch" style="background: var(--primary-gradient); color: white; border: none; border-radius: 16px; padding: 16px; font-weight: bold; width: 100%; box-shadow: 0 4px 15px rgba(36, 129, 204, 0.3);">بحث <i class="ph-bold ph-magnifying-glass"></i></button>
         
         <div id="printActions" style="display:none; gap:10px; margin-top:20px;">
             <button onclick="printResults('all')" style="flex:1; padding:12px; background:#10b981; color:white; border:none; border-radius:12px; font-weight:bold;">طباعة الكل <i class="ph-bold ph-printer"></i></button>
@@ -640,9 +684,9 @@
         </div>
 
         <!-- القائمة المنسدلة للترتيب -->
-        <div id="sortControls" style="display:none; margin: 15px 0; background: #fff; padding: 12px; border-radius: 16px; border:1px solid #e2e8f0; align-items: center; justify-content: space-between;">
-            <span style="font-weight:bold; font-size:14px; margin-left:10px; color:#475569;">ترتيب حسب:</span>
-            <select id="dynamicSortOption" onchange="applySortAndRender()" style="flex:1; padding:8px; border:1px solid #cbd5e0; border-radius:10px; background:#f8fafc; font-size:14px; font-family:'Tajawal';">
+        <div id="sortControls" style="display:none; margin: 15px 0; background: var(--surface-color); padding: 12px; border-radius: 16px; border:1px solid #e2e8f0; align-items: center; justify-content: space-between;">
+            <span style="font-weight:bold; font-size:14px; margin-left:10px; color:var(--text-secondary);">ترتيب حسب:</span>
+            <select id="dynamicSortOption" onchange="applySortAndRender()" style="flex:1; padding:8px; border:1px solid #cbd5e0; border-radius:10px; background:var(--input-bg); font-size:14px; font-family:'Tajawal';">
                 <option value="date">📅 التاريخ (الأحدث)</option>
                 <option value="house">🏠 رقم الدار (تصاعدي)</option>
                 <option value="reason">📝 التفاصيل/السبب (تجميع)</option>
@@ -661,7 +705,7 @@
             رجوع للقائمة
         </button>
         <h3>سجل العمليات <i class="ph-duotone ph-clock-counter-clockwise"></i></h3>
-        <p style="text-align: center; font-size: 13px; color: #64748b; margin-bottom: 20px;">اضغط على أي عملية للتعديل عليها وإعادة إرسالها</p>
+        <p style="text-align: center; font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">اضغط على أي عملية للتعديل عليها وإعادة إرسالها</p>
         <div id="historyList"></div>
         <button onclick="clearHistory()" style="background:none; border:none; color: #ef4444; width:100%; margin-top:25px; cursor:pointer; font-weight: bold; padding: 10px; font-family:'Tajawal';">مسح السجل</button>
     </div>
@@ -695,7 +739,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let cameraStream = null;
     let selectedSearchFilters = ['contracts', 'receipts', 'bank'];
     let currentSearchResults = [];
-    let fetchedDataCache = []; // لتخزين البيانات الخام وإعادة ترتيبها
+    let fetchedDataCache = []; 
 
     const tg = window.Telegram.WebApp;
     tg.expand();
@@ -710,7 +754,42 @@ document.addEventListener('DOMContentLoaded', function() {
          document.getElementById('userBadge').innerHTML = `مرحباً بك في النظام <i class="ph-duotone ph-hand-waving" style="vertical-align: middle;"></i>`;
     }
 
-    // --- دوال التهيئة ---
+    // --- وظيفة عرض التنبيهات (Toast) بدلاً من alert ---
+    function showNotification(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let icon = 'info';
+        if(type === 'success') icon = 'check-circle';
+        if(type === 'error') icon = 'warning-circle';
+        
+        toast.innerHTML = `<i class="ph-fill ph-${icon}" style="font-size:20px;"></i> <span>${message}</span>`;
+        container.appendChild(toast);
+        
+        // إزالة التنبيه بعد 3 ثواني
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(20px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // --- وظيفة تحميل الأزرار ---
+    function setBtnLoading(btnId, isLoading, originalText = '') {
+        const btn = document.getElementById(btnId);
+        if(!btn) return;
+        
+        if (isLoading) {
+            btn.dataset.originalText = btn.innerHTML; // حفظ النص الأصلي
+            btn.innerHTML = `<i class="ph-bold ph-spinner ph-spin" style="font-size: 20px;"></i> جاري التحميل...`;
+            btn.disabled = true;
+        } else {
+            btn.innerHTML = btn.dataset.originalText || originalText;
+            btn.disabled = false;
+        }
+    }
+
     function initDate(dId, mId, yId, isSearch) {
         const dEl = document.getElementById(dId);
         const mEl = document.getElementById(mId);
@@ -742,12 +821,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // تهيئة التواريخ للفورم الرئيسي والبحث
     initDate('date_day', 'date_month', 'date_year', false);
     initDate('sd_d1', 'sd_m1', 'sd_y1', true);
     initDate('sd_d2', 'sd_m2', 'sd_y2', true);
 
-    // دوال المساعدة للأرقام
     function normalizeDigits(str) { 
         return str ? str.toString().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : ''; 
     }
@@ -768,7 +845,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // تحويل الأرقام العربية إلى إنجليزية في جميع الحقول
     document.querySelectorAll('input, textarea').forEach(input => {
         input.addEventListener('input', (e) => {
             let val = e.target.value;
@@ -782,13 +858,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // --- التنقل بين القوائم ---
     window.showMenu = function() {
         document.querySelectorAll('.form-section').forEach(el => el.style.display = 'none');
         document.getElementById('mainMenu').style.display = 'grid';
-        // تصفير حالة البحث
         document.getElementById('printActions').style.display = 'none';
-        document.getElementById('sortControls').style.display = 'none'; // إخفاء الفرز
+        document.getElementById('sortControls').style.display = 'none';
         document.getElementById('searchResults').innerHTML = '';
         selectedPhotoFile = null;
         document.getElementById('fileNameDisplay').innerText = 'لم يتم اختيار صورة';
@@ -827,7 +901,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // --- الكاميرا ---
     window.openCameraModal = async function() {
         const videoElement = document.getElementById('cameraVideo');
         const modal = document.getElementById('cameraModal');
@@ -842,7 +915,7 @@ document.addEventListener('DOMContentLoaded', function() {
             videoElement.onloadedmetadata = () => { videoElement.play().catch(e => console.error(e)); };
         } catch (err) {
             modal.style.display = 'none';
-            tg.showAlert("تعذر تشغيل الكاميرا: " + err.message);
+            showNotification("تعذر تشغيل الكاميرا: " + err.message, 'error');
         }
     };
 
@@ -881,7 +954,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // --- منطق البحث والطباعة (من الكود الثاني) ---
     window.showSearchSection = function() {
         document.getElementById('mainMenu').style.display='none';
         document.getElementById('searchSection').style.display='block';
@@ -903,7 +975,6 @@ document.addEventListener('DOMContentLoaded', function() {
     window.toggleIdsSearch = function() {
         const row = document.getElementById('search_ids_row');
         const icon = document.getElementById('idsToggleIcon');
-        // Toggle flex instead of block for the inputs row
         if (row.style.display === 'none') {
             row.style.display = 'flex';
             icon.innerHTML = '<i class="ph-bold ph-minus-circle"></i>';
@@ -933,7 +1004,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if(isActive) c.classList.add('active'); else c.classList.remove('active');
         });
         
-        // Visibility Logic Update for Inputs inside the collapsible row
         const hasContracts = selectedSearchFilters.includes('contracts');
         const hasReceiptsOrBank = selectedSearchFilters.includes('receipts') || selectedSearchFilters.includes('bank');
         const hasExpenses = selectedSearchFilters.includes('expenses');
@@ -941,11 +1011,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const contractInput = document.getElementById('s_contract');
         const receiptInput = document.getElementById('s_receipt');
         const reasonInput = document.getElementById('s_reason');
-        
-        // Note: The visibility of 'search_ids_row' is now controlled by the user via toggleIdsSearch.
-        // We only control the visibility of individual inputs INSIDE it.
+        const idsRow = document.getElementById('search_ids_row'); 
+
         contractInput.style.display = hasContracts ? 'block' : 'none';
         receiptInput.style.display = hasReceiptsOrBank ? 'block' : 'none';
+        
+        if (!hasContracts && !hasReceiptsOrBank) {
+            if(idsRow) idsRow.style.display = 'none';
+        }
 
         reasonInput.style.display = hasExpenses ? 'block' : 'none';
     };
@@ -967,9 +1040,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const d2 = v('sd_d2'), m2 = v('sd_m2'), y2 = v('sd_y2');
         if(d2 && m2 && y2) p.append('dateTo', `${y2}-${m2.padStart(2,'0')}-${d2.padStart(2,'0')}`);
 
-        document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin-top:20px; color:#64748b;">جار البحث... ⏳</div>';
+        // تفعيل حالة التحميل
+        setBtnLoading('btnSearch', true);
+        document.getElementById('searchResults').innerHTML = '';
         document.getElementById('printActions').style.display = 'none';
-        document.getElementById('sortControls').style.display = 'none'; // إخفاء مؤقت
+        document.getElementById('sortControls').style.display = 'none';
 
         fetch(`${SEARCH_WEBHOOK_URL}?${p.toString()}`)
         .then(async response => {
@@ -978,41 +1053,41 @@ document.addEventListener('DOMContentLoaded', function() {
             return text ? JSON.parse(text) : [];
         })
         .then(d => {
-            // تصفية صفوف المجموع القادمة من السيرفر
+            setBtnLoading('btnSearch', false); // إيقاف التحميل
+            
             d = d.filter(r => {
                 const name = r.name || r.Name || "";
                 return !name.includes("مجموع") && !name.includes("Total");
             });
 
-            // حفظ البيانات في الكاش للمعالجة اللاحقة
             fetchedDataCache = d;
 
             if(!d.length) {
                 document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin:30px 0; padding:20px; background:#fff3cd; color:#856404; border-radius:12px; border:1px solid #ffeeba;"><i class="ph-duotone ph-warning-circle" style="font-size:24px; vertical-align:middle;"></i> ماكو شي مطابق للبحث</div>';
                 document.getElementById('sortControls').style.display = 'none';
+                showNotification('لم يتم العثور على نتائج', 'info');
             } else {
-                // إظهار قائمة الفرز وتطبيق الفرز الافتراضي
                 document.getElementById('sortControls').style.display = 'flex';
-                applySortAndRender(); // استدعاء دالة العرض الرئيسية
+                applySortAndRender();
+                showNotification(`تم العثور على ${d.length} نتيجة`, 'success');
             }
         })
         .catch(e => {
+            setBtnLoading('btnSearch', false); // إيقاف التحميل عند الخطأ
             if (e.message.includes('JSON') || e instanceof SyntaxError) {
                  document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin:30px 0; padding:20px; background:#fff3cd; color:#856404; border-radius:12px; border:1px solid #ffeeba;"><i class="ph-duotone ph-warning-circle" style="font-size:24px; vertical-align:middle;"></i> ماكو شي مطابق للبحث</div>';
             } else {
                  document.getElementById('searchResults').innerHTML = 'خطأ في الاتصال: ' + e.message;
+                 showNotification('حدث خطأ في الاتصال', 'error');
             }
         });
     };
 
-    // دالة جديدة لتطبيق الفرز وإعادة العرض
     window.applySortAndRender = function() {
-        let d = [...fetchedDataCache]; // نسخة من البيانات
+        let d = [...fetchedDataCache]; 
         const sortOption = document.getElementById('dynamicSortOption').value;
 
-        // دالة استخراج المبلغ (رقمي) للفرز
         const getAmount = (obj) => {
-             // تحديد الحقل الصحيح للمبلغ حسب النوع (مثل المقدمة للعقود)
             const s = String(obj.sheet).toLowerCase();
             const keys = (s.includes('contract') || s.includes('عقد')) ? ['down_payment', 'downPayment', 'down', 'advance', 'المقدمة'] : ['amount', 'Amount', 'المبلغ'];
             for (let k of keys) if(obj[k]) return parseInt(String(obj[k]).replace(/,/g, '')) || 0;
@@ -1049,7 +1124,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return parseInt(String(h).replace(/[^0-9]/g, '')) || 0;
         };
 
-        // منطق الفرز
         d.sort((a, b) => {
             if (sortOption === 'amount_desc') return getAmount(b) - getAmount(a);
             if (sortOption === 'amount_asc') return getAmount(a) - getAmount(b);
@@ -1071,18 +1145,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 return parseDate(b.date) - parseDate(a.date);
             }
 
-            // Default: Date
             const pA = getPriority(a.sheet), pB = getPriority(b.sheet);
             if (pA !== pB) return pA - pB;
             return parseDate(b.date) - parseDate(a.date);
         });
 
-        currentSearchResults = d; // تحديث البيانات الحالية للطباعة
-        
-        // حساب المجموع
+        currentSearchResults = d;
         let totalSearchSum = d.reduce((acc, curr) => acc + getAmount(curr), 0);
 
-        // بناء HTML
         let h = `
         <div class="result-card" style="background: linear-gradient(135deg, #e0f7fa, #b2ebf2); border-right: 5px solid #00bcd4; margin-bottom: 20px; align-items: center;">
             <div style="flex:1; text-align: center;">
@@ -1099,7 +1169,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const borderColor = getColor(r.sheet);
             const p = getPriority(r.sheet);
             const getVal = (keys) => { for (let k of keys) if(r[k] !== undefined && r[k] !== null && r[k] !== "") return r[k]; return '-'; };
-            // Robust number formatter for display
+            
             const valNum = (keys) => { 
                 for (let k of keys) if(r[k]) {
                     let clean = String(r[k]).replace(/,/g, '');
@@ -1154,7 +1224,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             }
 
-            h += `<div class="result-card" style="border-right: 5px solid ${borderColor};"><input type="checkbox" class="result-checkbox" value="${i}" style="margin-left:10px;"><div style="flex:1;"><div style="display:flex; justify-content:space-between; color:#777; font-size:11px; font-weight:bold;"><span>${r.sheet}</span><span>${r.date}</span></div>${details}</div></div>`;
+            h += `<div class="result-card" style="border-right: 5px solid ${borderColor};"><input type="checkbox" class="result-checkbox" value="${i}" style="margin-left:10px;"><div style="flex:1;"><div style="display:flex; justify-content:space-between; color:var(--text-secondary); font-size:11px; font-weight:bold;"><span>${r.sheet}</span><span>${r.date}</span></div>${details}</div></div>`;
         });
 
         document.getElementById('searchResults').innerHTML = h;
@@ -1163,16 +1233,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.printResults = function(mode) {
         let items = mode === 'all' ? currentSearchResults : Array.from(document.querySelectorAll('.result-checkbox:checked')).map(c => currentSearchResults[c.value]);
-        if(!items.length) return tg.showAlert('يرجى اختيار عنصر واحد على الأقل للطباعة');
+        if(!items.length) return showNotification('يرجى اختيار عنصر واحد على الأقل للطباعة', 'error');
         
-        let h = ''; // We will construct the entire HTML document for the iframe
-        
+        let h = ''; 
         let rows = '';
         let total = 0;
         
         items.forEach((r, i) => {
             const getVal = (keys) => { for(let k of keys) if(r[k]) return r[k]; return ''; };
-            // Robust number parsing logic for print
             const amountVal = (keys) => { 
                 for(let k of keys) {
                     if(r[k]) {
@@ -1280,9 +1348,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 500);
     };
 
-    // ... (Rest of the functions: validateLimit, prepareData, closeModal, buildCaption, finalSend, saveToHistory, showHistory, loadFromHistory, clearHistory - no changes needed there) ...
-    
-    // --- منطق إرسال البيانات ---
     function validateLimit(id, max, label) {
         const el = document.getElementById(id);
         const val = parseFloat(getCleanNumber(el.value));
@@ -1290,7 +1355,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (val > max) {
             el.style.border = "2px solid #e74c3c"; 
             el.focus();
-            tg.showAlert(`عذراً، القيمة المدخلة في حقل "${label}" غير صحيحة أو خارج النطاق المسموح.`);
+            showNotification(`عذراً، القيمة في "${label}" خارج النطاق المسموح.`, 'error');
             return false;
         }
         el.style.border = "2px solid transparent"; 
@@ -1298,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.prepareData = function() {
-        if (!selectedPhotoFile) { tg.showAlert("يرجى اختيار صورة!"); return; }
+        if (!selectedPhotoFile) { showNotification("يرجى اختيار صورة!", 'error'); return; }
         
         const d = normalizeDigits(document.getElementById('date_day').value).padStart(2,'0');
         const m = normalizeDigits(document.getElementById('date_month').value).padStart(2,'0');
@@ -1320,15 +1385,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (currentType === 'contract') {
-            if (!validateLimit('contractNum', 50000, 'رقم العقد')) return;
-            if (!validateLimit('totalPrice', 500000000, 'السعر الكلي')) return;
-            if (!validateLimit('downPayment', 150000000, 'المقدمة')) return;
+            if (!validateLimit('contractNum', 50000, 'رقم العقد') || !validateLimit('totalPrice', 500000000, 'السعر الكلي') || !validateLimit('downPayment', 150000000, 'المقدمة')) return;
 
-            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
-            if (name.split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
+            if (!name) { showNotification("يرجى كتابة الاسم!", 'error'); return; }
+            if (name.split(/\s+/).length < 3) { showNotification("يرجى كتابة الاسم الثلاثي!", 'error'); return; }
 
             if (!document.getElementById('contractNum').value || !document.getElementById('houseNum').value || !document.getElementById('downPayment').value || !document.getElementById('totalPrice').value) {
-                tg.showAlert("يرجى ملء كافة حقول العقد!"); return;
+                showNotification("يرجى ملء كافة حقول العقد!", 'error'); return;
             }
 
             payload.contract_num = normalizeDigits(document.getElementById('contractNum').value);
@@ -1341,7 +1404,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!validateLimit('amount', 150000000, 'المبلغ')) return;
 
             if (!document.getElementById('receiptNum').value || !document.getElementById('houseNum').value || !document.getElementById('amount').value) {
-                tg.showAlert("يرجى ملء كافة حقول الوصل!"); return;
+                showNotification("يرجى ملء كافة حقول الوصل!", 'error'); return;
             }
 
             payload.sub_type = document.getElementById('transactionType').value;
@@ -1354,7 +1417,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!validateLimit('amount', 150000000, 'المبلغ')) return;
 
             if (!document.getElementById('houseNum').value || !document.getElementById('amount').value) {
-                tg.showAlert("يرجى ملء رقم الدار والمبلغ!"); return;
+                showNotification("يرجى ملء رقم الدار والمبلغ!", 'error'); return;
             }
 
             payload.sub_type = document.getElementById('transactionType').value;
@@ -1365,11 +1428,11 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (currentType === 'expense') {
             if (!validateLimit('amount', 150000000, 'المبلغ')) return;
 
-            if (!name) { tg.showAlert("يرجى كتابة الاسم!"); return; }
-            if (name.split(/\s+/).length < 3) { tg.showAlert("يرجى كتابة الاسم الثلاثي!"); return; }
+            if (!name) { showNotification("يرجى كتابة الاسم!", 'error'); return; }
+            if (name.split(/\s+/).length < 3) { showNotification("يرجى كتابة الاسم الثلاثي!", 'error'); return; }
 
             if (!document.getElementById('reason').value || !document.getElementById('amount').value) {
-                tg.showAlert("يرجى ذكر السبب والمبلغ!"); return;
+                showNotification("يرجى ذكر السبب والمبلغ!", 'error'); return;
             }
 
             payload.house_num = document.getElementById('houseNum').value ? normalizeDigits(document.getElementById('houseNum').value) : "عام";
@@ -1397,7 +1460,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.closeModal = function() { document.getElementById('confirmModal').style.display = 'none'; };
 
-    // بناء نص الرسالة لتيليجرام
     function buildCaption(data) {
         const fmt = (val) => {
             if (!val) return '';
@@ -1437,8 +1499,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.finalSend = function() {
-        const btn = document.getElementById("btnConfirm");
-        btn.innerText = "جاري الإرسال..."; btn.disabled = true;
+        setBtnLoading('btnConfirm', true);
         
         const webhookData = new FormData();
         if(selectedPhotoFile) webhookData.append("photo", selectedPhotoFile);
@@ -1472,18 +1533,17 @@ document.addEventListener('DOMContentLoaded', function() {
         Promise.all([p1, p2])
         .then(results => {
             if(results[0].ok) {
-                tg.showAlert("✅ تم الإرسال بنجاح!");
+                showNotification("✅ تم الإرسال بنجاح!", 'success');
                 showMenu();
                 closeModal();
             } else {
-                tg.showAlert("❌ فشل الإرسال لتيليجرام");
+                showNotification("❌ فشل الإرسال لتيليجرام", 'error');
             }
         })
-        .catch(e => tg.showAlert("Error: " + e))
-        .finally(() => { btn.innerText = "نعم، إرسال ✅"; btn.disabled = false; });
+        .catch(e => showNotification("خطأ: " + e, 'error'))
+        .finally(() => { setBtnLoading('btnConfirm', false, 'نعم، إرسال <i class="ph-bold ph-check-circle"></i>'); });
     };
 
-    // --- سجل العمليات (History) ---
     function saveToHistory(data) {
         try {
             let history = JSON.parse(localStorage.getItem('appHistory') || '[]');
@@ -1589,7 +1649,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        tg.showAlert('تم استرجاع البيانات.\n⚠️ يرجى إعادة التقاط الصورة.');
+        showNotification('تم استرجاع البيانات. يرجى إعادة التقاط الصورة.', 'info');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 

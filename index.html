@@ -31,6 +31,7 @@
             --input-bg: var(--tg-theme-secondary-bg-color, #f0f2f5);
             --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
             --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
+            --primary-color: #2481cc;
         }
 
         * {
@@ -491,7 +492,7 @@
         .status-success { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;}
         .no-history { text-align: center; color: #888; margin-top: 40px; font-style: italic; }
 
-        /* --- تعديل تصميم فلتر الترتيب --- */
+        /* --- تصميم القائمة المنسدلة المخصصة --- */
         #sortControls {
             display: none; 
             margin: 15px 0; 
@@ -504,22 +505,76 @@
             justify-content: space-between;
             gap: 15px;
         }
-        
-        #dynamicSortOption {
+
+        .custom-select-container {
+            position: relative;
             flex: 1;
-            padding: 12px;
+        }
+        .custom-select-trigger {
+            background: var(--input-bg);
             border: 1px solid #cbd5e0;
             border-radius: 12px;
-            background: var(--input-bg);
+            padding: 12px;
             font-size: 14px;
             font-family: 'Tajawal', sans-serif;
             font-weight: 500;
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007CB2%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-            background-repeat: no-repeat;
-            background-position: left 12px top 50%;
-            background-size: 12px auto;
-            padding-left: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+        }
+        .custom-select-trigger:active {
+            transform: scale(0.98);
+        }
+        .custom-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            z-index: 100;
+            margin-top: 5px;
+            overflow: hidden;
+            display: none;
+            border: 1px solid rgba(0,0,0,0.05);
+            animation: fadeIn 0.2s;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .custom-options.open {
+            display: block;
+        }
+        .custom-option {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+            color: var(--text-primary);
+        }
+        .custom-option:last-child { border-bottom: none; }
+        .custom-option:hover {
+            background: #f8fafc;
+            color: #2481cc;
+        }
+        .custom-option.selected {
+            background: #ebf8ff;
+            color: #2481cc;
+            font-weight: bold;
+        }
+        .custom-option i {
+            font-size: 20px;
+            color: #64748b;
+        }
+        .custom-option.selected i {
+            color: #2481cc;
         }
     </style>
 </head>
@@ -714,18 +769,35 @@
             <button onclick="printResults('sel')" style="flex:1; padding:12px; background:#64748b; color:white; border:none; border-radius:12px; font-weight:bold;">طباعة المحدد <i class="ph-bold ph-printer"></i></button>
         </div>
 
-        <!-- القائمة المنسدلة للترتيب بتصميم جديد -->
+        <!-- القائمة المنسدلة للترتيب بتصميم مخصص بالكامل -->
         <div id="sortControls">
             <div style="font-weight:bold; font-size:15px; display:flex; align-items:center; gap:5px;">
                 <i class="ph-fill ph-sort-ascending"></i> ترتيب حسب:
             </div>
-            <select id="dynamicSortOption" onchange="applySortAndRender()">
-                <option value="date">📅 التاريخ (الأحدث)</option>
-                <option value="house">🏠 رقم الدار (تصاعدي)</option>
-                <option value="reason">📝 التفاصيل/السبب (تجميع)</option>
-                <option value="amount_desc">💰 المبلغ (الأعلى)</option>
-                <option value="amount_asc">💰 المبلغ (الأقل)</option>
-            </select>
+            
+            <div class="custom-select-container" id="sortWrapper">
+                <div class="custom-select-trigger" onclick="toggleSortMenu()">
+                    <span id="sortSelectedText"><i class="ph-duotone ph-calendar-blank"></i> التاريخ (الأحدث)</span>
+                    <i class="ph-bold ph-caret-down"></i>
+                </div>
+                <div class="custom-options" id="sortOptions">
+                    <div class="custom-option selected" data-value="date" onclick="selectSort('date', this)">
+                        <i class="ph-duotone ph-calendar-blank"></i> التاريخ (الأحدث)
+                    </div>
+                    <div class="custom-option" data-value="house" onclick="selectSort('house', this)">
+                        <i class="ph-duotone ph-house"></i> رقم الدار (تصاعدي)
+                    </div>
+                    <div class="custom-option" data-value="reason" onclick="selectSort('reason', this)">
+                        <i class="ph-duotone ph-list-dashes"></i> التفاصيل/السبب (تجميع)
+                    </div>
+                    <div class="custom-option" data-value="amount_desc" onclick="selectSort('amount_desc', this)">
+                        <i class="ph-duotone ph-trend-up"></i> المبلغ (الأعلى)
+                    </div>
+                    <div class="custom-option" data-value="amount_asc" onclick="selectSort('amount_asc', this)">
+                        <i class="ph-duotone ph-trend-down"></i> المبلغ (الأقل)
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="searchResults" style="margin-top:25px;"></div>
@@ -773,6 +845,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedSearchFilters = ['contracts', 'receipts', 'bank'];
     let currentSearchResults = [];
     let fetchedDataCache = []; 
+    let currentSortValue = 'date'; // قيمة الفرز الافتراضية
 
     const tg = window.Telegram.WebApp;
     tg.expand();
@@ -786,6 +859,36 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
          document.getElementById('userBadge').innerHTML = `مرحباً بك في النظام <i class="ph-duotone ph-hand-waving" style="vertical-align: middle;"></i>`;
     }
+
+    // --- إدارة القائمة المنسدلة المخصصة ---
+    window.toggleSortMenu = function() {
+        document.getElementById('sortOptions').classList.toggle('open');
+    };
+
+    window.selectSort = function(value, element) {
+        currentSortValue = value;
+        
+        // تحديث النص المعروض
+        const iconHtml = element.querySelector('i').outerHTML;
+        const text = element.textContent.trim();
+        document.getElementById('sortSelectedText').innerHTML = `${iconHtml} ${text}`;
+        
+        // تحديث التحديد
+        document.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+        element.classList.add('selected');
+        
+        // إغلاق القائمة وتطبيق الفرز
+        document.getElementById('sortOptions').classList.remove('open');
+        applySortAndRender();
+    };
+
+    // إغلاق القائمة عند النقر خارجها
+    document.addEventListener('click', function(e) {
+        const wrapper = document.getElementById('sortWrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            document.getElementById('sortOptions').classList.remove('open');
+        }
+    });
 
     // --- وظيفة عرض التنبيهات (Toast) بدلاً من alert ---
     function showNotification(message, type = 'info') {
@@ -1118,7 +1221,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.applySortAndRender = function() {
         let d = [...fetchedDataCache]; 
-        const sortOption = document.getElementById('dynamicSortOption').value;
+        const sortOption = currentSortValue; // استخدام المتغير الجديد
 
         const getAmount = (obj) => {
             const s = String(obj.sheet).toLowerCase();
@@ -1233,16 +1336,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const remaining = valNum(['remaining', 'المتبقي']);
             const amount = valNum(['amount', 'Amount', 'المبلغ']);
 
-            // تعديل: منطق عرض المبلغ (أخضر للعادي، رمادي للمحامي)
+            // تعديل: لون المبلغ المشهول (أزرق غامق مميز)
             let amountDisplayHtml = "";
             if (r.sub_type === 'محامي') {
                 amountDisplayHtml = `<div style="font-size:13px; color:#7f8c8d; font-weight:bold; font-style: italic;">المبلغ: ${amount} (غير مشمول)</div>`;
             } else {
-                amountDisplayHtml = `<div style="font-size:13px; color:var(--primary-color); font-weight:bold;">المبلغ: ${amount}</div>`;
+                amountDisplayHtml = `<div style="font-size:13px; color:#00897B; font-weight:bold;">المبلغ: ${amount}</div>`;
             }
             
             // للعقود المبلغ الأساسي هو المقدمة
-            let contractAmountDisplay = `<div style="font-size:13px; color:var(--primary-color); font-weight:bold; margin-top:3px;">المقدمة: ${downPayment}</div>`;
+            let contractAmountDisplay = `<div style="font-size:13px; color:#00897B; font-weight:bold; margin-top:3px;">المقدمة: ${downPayment}</div>`;
 
             let details = "";
             if (p === 1) { // عقد

@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>نظام مجمع الحسين</title>
     
+    <!-- استيراد خط تجوال الحديث -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- استيراد مكتبة أيقونات Phosphor الحديثة -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
     <script>
         window.onerror = function(msg, url, line, col, error) {
             console.error(msg, line);
@@ -13,49 +19,315 @@
     </script>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
     <style>
         :root {
-            --primary-color: #2481cc;
-            --bg-color: #f4f6f8;
-            --card-bg: #ffffff;
-            --text-primary: #333;
-            --text-secondary: #666;
-            --border-radius: 16px;
-            --input-bg: #f9f9f9;
+            --primary-gradient: linear-gradient(135deg, #0061ff, #60efff);
+            --bg-color: #f0f2f5;
+            --surface-color: #ffffff;
+            --text-primary: #1c1e21;
+            --text-secondary: #65676b;
+            --border-radius: 20px;
+            --input-bg: #f0f2f5;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Tajawal', sans-serif;
             background-color: var(--tg-theme-bg-color, var(--bg-color));
             color: var(--tg-theme-text-color, var(--text-primary));
-            padding: 15px;
             margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            -webkit-tap-highlight-color: transparent;
         }
 
-        /* =========================================
-           تنسيقات الطباعة 
-           ========================================= */
+        button, input, select, textarea {
+            font-family: 'Tajawal', sans-serif !important;
+        }
+
+        /* --- تصميم الهيدر والترحيب --- */
+        .header-container {
+            width: 100%;
+            background: var(--surface-color);
+            padding: 20px 20px 30px 20px;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .app-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0;
+            color: #2481cc;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .user-badge {
+            background: rgba(36, 129, 204, 0.08);
+            color: #2481cc;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 10px;
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+        }
+
+        .container { 
+            width: 100%; 
+            max-width: 480px; 
+            padding: 0 15px 50px 15px;
+        }
+
+        /* --- شبكة القائمة الرئيسية (Cards) --- */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .menu-btn {
+            position: relative;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 20px 15px;
+            cursor: pointer;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            overflow: hidden;
+            height: 140px;
+        }
+
+        .menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-icon {
+            font-size: 38px;
+            margin-bottom: 2px;
+        }
+
+        .btn-text {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        /* تدرجات لونية عصرية */
+        .btn-contract { background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%); }
+        .btn-receipt { background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%); }
+        .btn-bank { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .btn-expense { background: linear-gradient(135deg, #870000 0%, #190a05 100%); }
+        .btn-history { background: linear-gradient(135deg, #667db6 0%, #0082c8 100%, #0082c8 100%, #667db6 100%); background: linear-gradient(135deg, #8E2DE2, #4A00E0); grid-column: span 2; flex-direction: row; height: 75px; gap: 15px; }
+        .btn-search { background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%); grid-column: span 2; flex-direction: row; height: 75px; gap: 15px; }
+
+        /* --- تصميم الفورم --- */
+        .form-section { 
+            display: none; 
+            width: 100%; 
+            background: var(--surface-color);
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: var(--shadow-md);
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        @keyframes slideUp { 
+            from { opacity: 0; transform: translateY(30px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        h3 {
+            margin-top: 0;
+            color: var(--text-primary);
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+            display: none;
+        }
+        
+        label { 
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: block; 
+            color: var(--text-secondary); 
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid transparent;
+            background-color: var(--input-bg);
+            border-radius: 16px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: 'Tajawal', sans-serif;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus { 
+            outline: none;
+            background-color: #fff;
+            border-color: #2481cc;
+            box-shadow: 0 0 0 4px rgba(36, 129, 204, 0.1);
+        }
+
+        /* --- الأزرار الداخلية --- */
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            margin-top: 25px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 20px -5px rgba(0, 97, 255, 0.4);
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .submit-btn:active {
+            transform: scale(0.97);
+        }
+
+        .back-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            gap: 5px;
+        }
+
+        /* --- كروت الصور --- */
+        .photo-buttons-container {
+            display: flex;
+            gap: 12px;
+        }
+        .photo-label-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 16px;
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .photo-label-btn i { font-size: 24px; margin-bottom: 5px; }
+        .photo-label-btn.active {
+            border-color: #2ecc71;
+            color: #10b981;
+            background: #f0fdf4;
+        }
+
+        /* --- الفلاتر (Chips) --- */
+        .filter-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .filter-chip {
+            padding: 10px 16px;
+            background: #e2e8f0;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #475569;
+            transition: all 0.2s;
+        }
+        .filter-chip.active { 
+            background: #2481cc;
+            color: white; 
+            box-shadow: 0 4px 12px rgba(36, 129, 204, 0.3);
+        }
+
+        /* --- بطاقات النتائج --- */
+        .result-card {
+            background: white; 
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 18px;
+            border: 1px solid #f1f5f9;
+            border-right-width: 5px !important;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .result-card:active {
+            transform: scale(0.99);
+        }
+        .result-checkbox {
+            margin-top: 5px;
+            width: 20px;
+            height: 20px;
+        }
+
+        /* --- الطباعة (Iframe Technique) --- */
         #printableArea { display: none; }
+        
         @media print {
             body * { visibility: hidden; }
             #appContainer, #loader, #cameraModal, .form-section, .modal { display: none !important; }
-
-            @page {
-                size: A4 portrait;
-                margin: 10mm;
-            }
-
-            body {
-                margin: 0;
-                padding: 0;
-                background-color: white;
-            }
-
+            
+            @page { size: A4 portrait; margin: 10mm; }
+            
+            body { margin: 0; padding: 0; background-color: white; }
+            
             #printableArea {
                 display: block !important;
                 visibility: visible;
@@ -105,175 +377,35 @@
 
             tr { page-break-inside: avoid; }
         }
-        /* ========================================= */
 
         #loader {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #fff; z-index: 999999;
             display: flex; justify-content: center; align-items: center;
-            font-size: 20px; font-weight: bold; color: #333;
+            font-size: 20px; font-weight: bold; color: #333; font-family: 'Tajawal';
+            gap: 10px;
         }
 
-        .container { 
-            width: 100%; 
-            max-width: 450px; 
-            margin: 0 auto;
-            padding-bottom: 50px;
-            display: none; 
+        /* --- Modal --- */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; backdrop-filter: blur(5px);
         }
+        .modal-content {
+            background-color: #fff; padding: 25px; border-radius: 24px; width: 85%; max-width: 350px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2); text-align: right;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+        .summary-list { margin: 20px 0; background: #f8fafc; padding: 15px; border-radius: 16px; font-size: 14px; border: 1px solid #e2e8f0; }
+        .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #cbd5e0; padding-bottom: 5px; }
         
-        .user-badge {
-            background-color: var(--tg-theme-secondary-bg-color, rgba(36, 129, 204, 0.1));
-            color: var(--tg-theme-text-color, var(--primary-color));
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            text-align: center;
-            display: inline-block;
-            width: 100%;
-            box-sizing: border-box;
-        }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 25px; }
+        .btn-confirm { flex: 2; background: #10b981; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-family: 'Tajawal'; cursor: pointer; }
+        .btn-cancel { flex: 1; background: #ef4444; color: white; border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-family: 'Tajawal'; cursor: pointer; }
 
-        .menu-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .menu-btn {
-            padding: 20px 15px;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transition: all 0.2s ease;
-            width: 100%;
-        }
-        
-        .menu-btn:active { transform: scale(0.96); }
-        .menu-btn.full-width { grid-column: span 2; flex-direction: row; }
-
-        .btn-contract { background: linear-gradient(135deg, #f1c40f, #f39c12); }
-        .btn-receipt { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-        .btn-bank { background: linear-gradient(135deg, #3498db, #2980b9); }
-        .btn-expense { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .btn-history { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
-        .btn-search { background: linear-gradient(135deg, #34495e, #2c3e50); grid-column: span 2; flex-direction: row; }
-
-        .form-section { 
-            display: none; 
-            width: 100%; 
-            background: var(--tg-theme-secondary-bg-color, var(--card-bg));
-            padding: 20px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            box-sizing: border-box;
-            animation: slideUp 0.3s ease-out;
-        }
-        
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        h3 { margin-top: 0; color: var(--tg-theme-text-color, #333); }
-
-        .input-group { margin-bottom: 16px; display: none; }
-        
-        label { 
-            font-weight: 600; font-size: 14px; margin-bottom: 8px; display: block; 
-            color: var(--tg-theme-hint-color, #555); 
-        }
-        
-        input, select, textarea {
-            width: 100%; padding: 14px;
-            border: 2px solid transparent;
-            background-color: var(--tg-theme-bg-color, var(--input-bg));
-            border-radius: 12px;
-            box-sizing: border-box;
-            color: var(--tg-theme-text-color, #000);
-            font-size: 16px;
-            transition: all 0.3s;
-            font-family: inherit;
-        }
-
-        select {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: left 10px center;
-            background-size: 16px;
-            padding-left: 30px;
-        }
-        
-        input:focus, select:focus, textarea:focus { 
-            outline: none; background-color: var(--tg-theme-secondary-bg-color, #fff);
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(36, 129, 204, 0.1);
-        }
-
-        .date-container { display: flex; gap: 8px; }
-        .date-select { flex: 1; text-align: center; cursor: pointer; }
-
-        .submit-btn {
-            width: 100%; padding: 16px; margin-top: 25px;
-            background: linear-gradient(135deg, #2481cc, #1a6cb0);
-            color: white; border: none; border-radius: 12px;
-            font-size: 16px; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(36, 129, 204, 0.3);
-            transition: transform 0.2s;
-        }
-        .submit-btn:active { transform: scale(0.98); }
-
-        .back-btn {
-            background: none; border: none; color: var(--tg-theme-hint-color, #777);
-            margin-bottom: 15px; cursor: pointer; font-size: 14px;
-            display: flex; align-items: center; padding: 0;
-        }
-
-        .photo-buttons-container { display: flex; gap: 10px; }
-        .photo-label-btn {
-            flex: 1; padding: 15px;
-            border: 2px dashed #ccc; border-radius: 12px;
-            background: var(--tg-theme-bg-color, #eee);
-            color: var(--tg-theme-hint-color, #777);
-            font-weight: bold; cursor: pointer; text-align: center;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .photo-label-btn.active {
-            border-color: #2ecc71; color: #2ecc71;
-            background: rgba(46, 204, 113, 0.1);
-        }
-
-        /* تنسيقات البحث */
-        .filter-container { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 15px; }
-        .filter-chip {
-            padding: 8px 12px; background: #e0e0e0; border-radius: 20px;
-            font-size: 12px; font-weight: bold; cursor: pointer;
-        }
-        .filter-chip.active { background: var(--primary-color); color: white; }
-
-        .result-card {
-            background: var(--tg-theme-secondary-bg-color, #f9f9f9); 
-            padding: 10px; margin-bottom: 10px; border-radius: 12px;
-            border-right: 5px solid #ccc; display: flex; gap: 10px; align-items: flex-start;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .result-checkbox { margin-top: 5px; width: 20px; height: 20px; }
-        .res-type { font-size: 12px; color: #888; margin-bottom: 4px; }
-        .res-title { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
-        .res-amount { color: var(--primary-color); font-weight: bold; font-size: 14px; }
-
-        /* الكاميرا المدمجة */
+        /* --- الكاميرا --- */
         #cameraModal {
             display: none; position: fixed; top: 0; left: 0;
             width: 100%; height: 100%; background: #000;
@@ -302,41 +434,25 @@
             border-radius: 30px; border: 1px solid rgba(255,255,255,0.3);
         }
 
-        /* السجل الملون القديم */
+        /* --- السجل --- */
         .history-card {
-            background: var(--tg-theme-secondary-bg-color, #fff);
+            background: var(--surface-color);
             padding: 15px; margin-bottom: 12px; border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-right: 5px solid #ccc;
+            box-shadow: var(--shadow-sm); border-right: 5px solid #ccc;
             display: flex; flex-direction: column; gap: 5px;
             cursor: pointer; transition: transform 0.1s;
         }
         .history-card:active { transform: scale(0.98); }
         .h-header { display: flex; justify-content: space-between; font-size: 12px; color: #888; }
         .h-title { font-weight: bold; font-size: 16px; margin-top: 4px; }
-        .h-detail { font-size: 14px; color: var(--tg-theme-hint-color, #555); }
+        .h-detail { font-size: 14px; color: var(--text-secondary); }
         .status-success { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;}
         .no-history { text-align: center; color: #888; margin-top: 40px; font-style: italic; }
-
-        .modal {
-            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; backdrop-filter: blur(3px);
-        }
-        .modal-content {
-            background-color: var(--tg-theme-secondary-bg-color, #ffffff);
-            padding: 25px; border-radius: 20px; width: 85%; max-width: 350px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: right;
-        }
-        .summary-list { margin: 20px 0; background: var(--tg-theme-bg-color, #f8f9fa); padding: 15px; border-radius: 12px; font-size: 14px; }
-        .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #ddd; padding-bottom: 5px; }
-        .modal-buttons { display: flex; gap: 12px; margin-top: 25px; }
-        .btn-confirm { flex: 2; background: #2ecc71; color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        .btn-cancel { flex: 1; background: #e74c3c; color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="loader">جار التحميل...</div>
-<div id="printableArea"></div>
+<div id="loader"><i class="ph-bold ph-spinner ph-spin" style="font-size: 28px;"></i> جار التحميل...</div>
 
 <!-- نافذة الكاميرا المدمجة -->
 <div id="cameraModal">
@@ -350,27 +466,48 @@
 </div>
 
 <div class="container" id="appContainer">
-    <div class="user-badge" id="userBadge"></div>
+    <!-- الهيدر الجديد -->
+    <div class="header-container">
+        <h1 class="app-title">نظام مجمع الحسين <i class="ph-duotone ph-buildings"></i></h1>
+        <div class="user-badge" id="userBadge"></div>
+    </div>
     
     <div id="mainMenu">
-        <h3 style="text-align: center; margin-bottom: 25px; font-size: 20px;">اختر نوع العملية 👇</h3>
         <div class="menu-grid">
-            <button class="menu-btn btn-contract" onclick="setupForm('contract')"><span>📄</span> عقد جديد</button>
-            <button class="menu-btn btn-receipt" onclick="setupForm('receipt')"><span>📥</span> وصل قبض</button>
-            <button class="menu-btn btn-bank" onclick="setupForm('bank')"><span>🏦</span> وصل مصرف</button>
-            <button class="menu-btn btn-expense" onclick="setupForm('expense')"><span>💸</span> مصاريف</button>
-            <button class="menu-btn btn-history full-width" onclick="showHistory()"><span>🕒</span> سجل العمليات</button>
-            <button class="menu-btn btn-search" onclick="showSearchSection()"><span>🔍</span> بحث شامل</button>
+            <button class="menu-btn btn-contract" onclick="setupForm('contract')">
+                <i class="ph-fill ph-file-text btn-icon"></i>
+                <span class="btn-text">عقد جديد</span>
+            </button>
+            <button class="menu-btn btn-receipt" onclick="setupForm('receipt')">
+                <i class="ph-fill ph-receipt btn-icon"></i>
+                <span class="btn-text">وصل قبض</span>
+            </button>
+            <button class="menu-btn btn-bank" onclick="setupForm('bank')">
+                <i class="ph-fill ph-bank btn-icon"></i>
+                <span class="btn-text">وصل مصرف</span>
+            </button>
+            <button class="menu-btn btn-expense" onclick="setupForm('expense')">
+                <i class="ph-fill ph-coins btn-icon"></i>
+                <span class="btn-text">مصاريف</span>
+            </button>
+            <button class="menu-btn btn-history" onclick="showHistory()">
+                <i class="ph-fill ph-clock-counter-clockwise btn-icon"></i>
+                <span class="btn-text">سجل العمليات</span>
+            </button>
+            <button class="menu-btn btn-search" onclick="showSearchSection()">
+                <i class="ph-bold ph-magnifying-glass btn-icon"></i>
+                <span class="btn-text">بحث شامل</span>
+            </button>
         </div>
     </div>
 
     <!-- قسم الفورم -->
     <div id="formSection" class="form-section">
         <button class="back-btn" onclick="showMenu()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 5px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <i class="ph-bold ph-arrow-right" style="margin-left: 8px; font-size: 18px;"></i>
             رجوع للقائمة
         </button>
-        <h3 id="formTitle" style="text-align: center; margin-bottom: 20px; font-size: 18px;"></h3>
+        <h3 id="formTitle"></h3>
         
         <div class="input-group" id="grp_type">
             <label>نوع العملية:</label>
@@ -379,40 +516,40 @@
 
         <div class="input-group" id="grp_contractNum">
             <label>رقم العقد:</label>
-            <input type="text" inputmode="numeric" id="contractNum">
+            <input type="text" inputmode="numeric" id="contractNum" placeholder="أدخل رقم العقد">
         </div>
 
         <div class="input-group" id="grp_receiptNum">
             <label id="lbl_receiptNum">رقم الوصل:</label>
-            <input type="text" inputmode="numeric" id="receiptNum">
+            <input type="text" inputmode="numeric" id="receiptNum" placeholder="أدخل رقم الوصل">
         </div>
 
         <div class="input-group" id="grp_houseNum">
             <label id="lbl_houseNum">رقم الدار:</label>
-            <input type="text" id="houseNum" inputmode="decimal">
+            <input type="text" id="houseNum" inputmode="decimal" placeholder="أدخل رقم الدار">
             <div id="houseHint" class="hint" style="display:none; font-size:12px; color:#888; margin-top:5px;">يمكنك كتابة عدة أرقام مفصولة بفارزة</div>
         </div>
 
         <div class="input-group" id="grp_name">
             <label>الاسم:</label>
-            <input type="text" id="name">
+            <input type="text" id="name" placeholder="الاسم الثلاثي">
         </div>
 
         <div class="input-group" id="grp_contractDetails">
             <label>المقدمة:</label>
-            <input type="text" inputmode="decimal" id="downPayment" class="amount-field">
+            <input type="text" inputmode="decimal" id="downPayment" class="amount-field" placeholder="0">
             <label style="margin-top:15px;">السعر الكلي:</label>
-            <input type="text" inputmode="decimal" id="totalPrice" class="amount-field">
+            <input type="text" inputmode="decimal" id="totalPrice" class="amount-field" placeholder="0">
         </div>
 
         <div class="input-group" id="grp_amount">
             <label>المبلغ:</label>
-            <input type="text" inputmode="decimal" id="amount" class="amount-field">
+            <input type="text" inputmode="decimal" id="amount" class="amount-field" placeholder="0">
         </div>
 
         <div class="input-group" id="grp_reason">
             <label>سبب الصرف:</label>
-            <textarea id="reason" rows="3"></textarea>
+            <textarea id="reason" rows="3" placeholder="أدخل التفاصيل..."></textarea>
         </div>
 
         <div class="input-group" id="grp_date" style="display:block;">
@@ -425,33 +562,33 @@
         </div>
 
         <div class="input-group" id="grp_photo" style="display:block;">
-            <label>صورة الوصل/العقد:</label>
-            
+            <label>المرفقات:</label>
             <div class="photo-buttons-container">
                 <div class="photo-label-btn" id="btn_visual_cam" onclick="openCameraModal()">
-                    📷 التقاط صورة
+                    <i class="ph-fill ph-camera"></i>
+                    كاميرا
                 </div>
                 <label for="gallery_input" class="photo-label-btn" id="btn_visual_gal">
-                    🖼️ من الاستوديو
+                    <i class="ph-fill ph-image"></i>
+                    استوديو
                 </label>
             </div>
-
             <div id="fileNameDisplay" style="margin-top: 10px; text-align: center; font-size: 13px; color: #777;">
                 لم يتم اختيار صورة
             </div>
             <input type="file" id="gallery_input" accept="image/*" style="display:none;" onchange="handleFileSelect(this, 'gal')">
         </div>
 
-        <button class="submit-btn" onclick="prepareData()" id="btn">مراجعة وإرسال 📤</button>
+        <button class="submit-btn" onclick="prepareData()" id="btn">مراجعة وإرسال <i class="ph-bold ph-paper-plane-tilt"></i></button>
     </div>
 
-    <!-- قسم البحث الشامل (الجديد) -->
+    <!-- قسم البحث الشامل -->
     <div id="searchSection" class="form-section">
         <button class="back-btn" onclick="showMenu()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 5px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+             <i class="ph-bold ph-arrow-right" style="margin-left: 8px; font-size: 18px;"></i>
             رجوع للقائمة
         </button>
-        <h3 style="text-align: center; margin-bottom: 20px;">بحث شامل</h3>
+        <h3>بحث شامل <i class="ph-duotone ph-magnifying-glass"></i></h3>
 
         <div class="filter-container">
             <div class="filter-chip active" data-type="all" onclick="toggleSearchFilter(this)">الكل</div>
@@ -461,28 +598,51 @@
             <div class="filter-chip" data-type="expenses" onclick="toggleSearchFilter(this)">المصاريف</div>
         </div>
         
-        <div style="display:flex; gap:5px; margin-bottom:10px;">
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
             <input type="text" id="s_name" placeholder="الاسم" style="flex:1">
             <input type="tel" id="s_house" placeholder="الدار" style="width:80px">
         </div>
 
-        <!-- زر إظهار/إخفاء البحث بأرقام العقود والوصولات -->
-        <div style="text-align: right; margin-bottom: 10px;">
+        <div style="text-align: right; margin-bottom: 12px;">
             <span onclick="toggleIdsSearch()" style="color: var(--primary-color); cursor: pointer; font-size: 14px; font-weight: bold; display: inline-flex; align-items: center; user-select: none;">
-                <span id="idsToggleIcon">➕</span>&nbsp;بحث برقم العقد/الوصل
+                <span id="idsToggleIcon"><i class="ph-bold ph-plus-circle"></i></span>&nbsp;بحث برقم العقد/الوصل
             </span>
         </div>
 
-        <div id="search_ids_row" style="display:none; gap:5px; margin-bottom:10px;">
+        <div id="search_ids_row" style="display:none; gap:10px; margin-bottom:12px;">
             <input type="tel" id="s_contract" placeholder="رقم العقد" style="flex:1">
             <input type="tel" id="s_receipt" placeholder="رقم الوصل" style="flex:1">
         </div>
-        <input type="text" id="s_reason" placeholder="سبب الصرف" style="width:100%; margin-bottom:10px;">
+        <input type="text" id="s_reason" placeholder="سبب الصرف" style="width:100%; margin-bottom:12px;">
+
+        <div style="text-align: right; margin-bottom: 12px;">
+            <span onclick="toggleDateSearch()" style="color: var(--primary-color); cursor: pointer; font-size: 14px; font-weight: bold; display: inline-flex; align-items: center; user-select: none;">
+                <span id="dateToggleIcon"><i class="ph-bold ph-plus-circle"></i></span>&nbsp;بحث حسب التاريخ
+            </span>
+        </div>
+
+        <div id="dateSearchRow" style="margin-bottom:15px; display:none;">
+            <div style="font-size:13px; margin-bottom:5px; font-weight:bold; color:#555;">من تاريخ:</div>
+            <div class="date-container" style="margin-bottom:10px;">
+                <select id="sd_d1" class="date-select"></select><select id="sd_m1" class="date-select"></select><select id="sd_y1" class="date-select"></select>
+            </div>
+            <div style="font-size:13px; margin-bottom:5px; font-weight:bold; color:#555;">إلى تاريخ:</div>
+            <div class="date-container">
+                <select id="sd_d2" class="date-select"></select><select id="sd_m2" class="date-select"></select><select id="sd_y2" class="date-select"></select>
+            </div>
+        </div>
+
+        <button onclick="performSearch()" style="background: var(--primary-gradient); color: white; border: none; border-radius: 16px; padding: 16px; font-weight: bold; width: 100%; box-shadow: 0 4px 15px rgba(36, 129, 204, 0.3);">بحث <i class="ph-bold ph-magnifying-glass"></i></button>
+        
+        <div id="printActions" style="display:none; gap:10px; margin-top:20px;">
+            <button onclick="printResults('all')" style="flex:1; padding:12px; background:#10b981; color:white; border:none; border-radius:12px; font-weight:bold;">طباعة الكل <i class="ph-bold ph-printer"></i></button>
+            <button onclick="printResults('sel')" style="flex:1; padding:12px; background:#64748b; color:white; border:none; border-radius:12px; font-weight:bold;">طباعة المحدد <i class="ph-bold ph-printer"></i></button>
+        </div>
 
         <!-- القائمة المنسدلة للترتيب -->
-        <div id="sortControls" style="display:none; margin: 15px 0; background: #fff; padding: 10px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); align-items: center; justify-content: space-between;">
-            <span style="font-weight:bold; font-size:13px; margin-left:10px;">ترتيب حسب:</span>
-            <select id="dynamicSortOption" onchange="applySortAndRender()" style="flex:1; padding:8px; border:1px solid #ddd; border-radius:8px; background:#f9f9f9; font-size:14px;">
+        <div id="sortControls" style="display:none; margin: 15px 0; background: #fff; padding: 12px; border-radius: 16px; border:1px solid #e2e8f0; align-items: center; justify-content: space-between;">
+            <span style="font-weight:bold; font-size:14px; margin-left:10px; color:#475569;">ترتيب حسب:</span>
+            <select id="dynamicSortOption" onchange="applySortAndRender()" style="flex:1; padding:8px; border:1px solid #cbd5e0; border-radius:10px; background:#f8fafc; font-size:14px; font-family:'Tajawal';">
                 <option value="date">📅 التاريخ (الأحدث)</option>
                 <option value="house">🏠 رقم الدار (تصاعدي)</option>
                 <option value="reason">📝 التفاصيل/السبب (تجميع)</option>
@@ -491,55 +651,30 @@
             </select>
         </div>
 
-        <!-- زر إظهار/إخفاء التاريخ -->
-        <div style="text-align: right; margin-bottom: 10px;">
-            <span onclick="toggleDateSearch()" style="color: var(--primary-color); cursor: pointer; font-size: 14px; font-weight: bold; display: inline-flex; align-items: center; user-select: none;">
-                <span id="dateToggleIcon">➕</span>&nbsp;بحث حسب التاريخ
-            </span>
-        </div>
-
-        <div id="dateSearchRow" style="margin-bottom:10px; display:none;">
-            <div style="font-size:12px; margin-bottom:2px; font-weight:bold;">من تاريخ:</div>
-            <div class="date-container" style="margin-bottom:5px;">
-                <select id="sd_d1" class="date-select"></select><select id="sd_m1" class="date-select"></select><select id="sd_y1" class="date-select"></select>
-            </div>
-            <div style="font-size:12px; margin-bottom:2px; font-weight:bold;">إلى تاريخ:</div>
-            <div class="date-container">
-                <select id="sd_d2" class="date-select"></select><select id="sd_m2" class="date-select"></select><select id="sd_y2" class="date-select"></select>
-            </div>
-        </div>
-
-        <button onclick="performSearch()" style="background: var(--primary-color); color: white; border: none; border-radius: 12px; padding: 12px; font-weight: bold; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">بحث 🔎</button>
-        
-        <div id="printActions" style="display:none; gap:10px; margin-top:15px;">
-            <button onclick="printResults('all')" style="flex:1; padding:10px; background:#27ae60; color:white; border:none; border-radius:8px; cursor:pointer;">طباعة الكل</button>
-            <button onclick="printResults('sel')" style="flex:1; padding:10px; background:#34495e; color:white; border:none; border-radius:8px; cursor:pointer;">طباعة المحدد</button>
-        </div>
-
-        <div id="searchResults" style="margin-top:20px;"></div>
+        <div id="searchResults" style="margin-top:25px;"></div>
     </div>
 
-    <!-- قسم السجل (التصميم الأصلي الملون) -->
+    <!-- قسم السجل -->
     <div id="historySection" class="form-section">
         <button class="back-btn" onclick="showMenu()">
-             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left: 5px;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+             <i class="ph-bold ph-arrow-right" style="margin-left: 8px; font-size: 18px;"></i>
             رجوع للقائمة
         </button>
-        <h3 style="text-align: center; margin-bottom: 20px;">سجل العمليات 🕒</h3>
-        <p style="text-align: center; font-size: 12px; color: #888; margin-bottom: 15px;">💡 اضغط على أي عملية للتعديل عليها وإعادة إرسالها</p>
+        <h3>سجل العمليات <i class="ph-duotone ph-clock-counter-clockwise"></i></h3>
+        <p style="text-align: center; font-size: 13px; color: #64748b; margin-bottom: 20px;">اضغط على أي عملية للتعديل عليها وإعادة إرسالها</p>
         <div id="historyList"></div>
-        <button onclick="clearHistory()" style="background:none; border:none; color: #e74c3c; width:100%; margin-top:25px; cursor:pointer; font-weight: bold; padding: 10px;">مسح السجل</button>
+        <button onclick="clearHistory()" style="background:none; border:none; color: #ef4444; width:100%; margin-top:25px; cursor:pointer; font-weight: bold; padding: 10px; font-family:'Tajawal';">مسح السجل</button>
     </div>
 </div>
 
 <div id="confirmModal" class="modal">
     <div class="modal-content">
-        <h3 style="text-align: center;">🔍 مراجعة البيانات</h3>
+        <h3>🔍 مراجعة البيانات</h3>
         <div class="summary-list" id="summaryContent"></div>
-        <p style="font-size:13px; color:green; text-align:center; font-weight: bold;">هل أنت متأكد من صحة المعلومات؟</p>
+        <p style="font-size:14px; color:#10b981; text-align:center; font-weight: bold;">هل أنت متأكد من صحة المعلومات؟</p>
         <div class="modal-buttons">
-            <button class="btn-confirm" onclick="finalSend()" id="btnConfirm">نعم، إرسال ✅</button>
-            <button class="btn-cancel" onclick="closeModal()" id="btnCancel">تعديل</button>
+            <button class="btn-confirm" onclick="finalSend()" id="btnConfirm">نعم، إرسال <i class="ph-bold ph-check-circle"></i></button>
+            <button class="btn-cancel" onclick="closeModal()" id="btnCancel">تعديل <i class="ph-bold ph-pencil-simple"></i></button>
         </div>
     </div>
 </div>
@@ -570,7 +705,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const dataEntryChatId = user ? user.id : ""; 
     
     if (dataEntryUser) {
-        document.getElementById('userBadge').innerText = `👤 المستخدم الحالي: ${dataEntryUser}`;
+        document.getElementById('userBadge').innerHTML = `مرحباً، ${dataEntryUser} <i class="ph-duotone ph-hand-waving" style="vertical-align: middle;"></i>`;
+    } else {
+         document.getElementById('userBadge').innerHTML = `مرحباً بك في النظام <i class="ph-duotone ph-hand-waving" style="vertical-align: middle;"></i>`;
     }
 
     // --- دوال التهيئة ---
@@ -667,23 +804,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const typeSelect = document.getElementById('transactionType');
         
         if (type === 'contract') {
-            title.innerText = '📄 عقد جديد';
+            title.innerText = 'عقد جديد';
             ['grp_contractNum','grp_houseNum','grp_name','grp_contractDetails'].forEach(id=>document.getElementById(id).style.display='block');
             document.getElementById('lbl_houseNum').innerText = "رقم الدار:";
         } else if (type === 'receipt') {
-            title.innerText = '📥 وصل قبض';
+            title.innerText = 'وصل قبض';
             ['grp_type','grp_receiptNum','grp_houseNum','grp_amount'].forEach(id=>document.getElementById(id).style.display='block');
             typeSelect.innerHTML = '<option value="قسط">قسط</option><option value="دفعة">دفعة</option>';
             document.getElementById('lbl_receiptNum').innerText = "رقم الوصل:";
             document.getElementById('lbl_houseNum').innerText = "رقم الدار:";
         } else if (type === 'bank') {
-            title.innerText = '🏦 وصل مصرف';
+            title.innerText = 'وصل مصرف';
             ['grp_type','grp_receiptNum','grp_houseNum','grp_amount'].forEach(id=>document.getElementById(id).style.display='block');
             typeSelect.innerHTML = '<option value="محامي">محامي</option><option value="عمولة">عمولة</option><option value="قرض">قرض</option>';
             document.getElementById('lbl_receiptNum').innerText = "رقم الوصل:";
             document.getElementById('lbl_houseNum').innerText = "رقم الدار:";
         } else if (type === 'expense') {
-            title.innerText = '💸 مصاريف';
+            title.innerText = 'مصاريف';
             ['grp_houseNum','grp_name','grp_reason','grp_amount'].forEach(id=>document.getElementById(id).style.display='block');
             document.getElementById('lbl_houseNum').innerText = "رقم الدار:";
             document.getElementById('houseNum').inputmode = 'text';
@@ -756,10 +893,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const icon = document.getElementById('dateToggleIcon');
         if (row.style.display === 'none') {
             row.style.display = 'block';
-            icon.innerText = '➖';
+            icon.innerHTML = '<i class="ph-bold ph-minus-circle"></i>';
         } else {
             row.style.display = 'none';
-            icon.innerText = '➕';
+            icon.innerHTML = '<i class="ph-bold ph-plus-circle"></i>';
         }
     };
 
@@ -769,10 +906,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Toggle flex instead of block for the inputs row
         if (row.style.display === 'none') {
             row.style.display = 'flex';
-            icon.innerText = '➖';
+            icon.innerHTML = '<i class="ph-bold ph-minus-circle"></i>';
         } else {
             row.style.display = 'none';
-            icon.innerText = '➕';
+            icon.innerHTML = '<i class="ph-bold ph-plus-circle"></i>';
         }
     };
 
@@ -830,7 +967,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const d2 = v('sd_d2'), m2 = v('sd_m2'), y2 = v('sd_y2');
         if(d2 && m2 && y2) p.append('dateTo', `${y2}-${m2.padStart(2,'0')}-${d2.padStart(2,'0')}`);
 
-        document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin-top:20px;">جار البحث... ⏳</div>';
+        document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin-top:20px; color:#64748b;">جار البحث... ⏳</div>';
         document.getElementById('printActions').style.display = 'none';
         document.getElementById('sortControls').style.display = 'none'; // إخفاء مؤقت
 
@@ -851,7 +988,7 @@ document.addEventListener('DOMContentLoaded', function() {
             fetchedDataCache = d;
 
             if(!d.length) {
-                document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin:30px 0; padding:20px; background:#fff3cd; color:#856404; border-radius:12px; border:1px solid #ffeeba;">ماكو شي مطابق للبحث 📭</div>';
+                document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin:30px 0; padding:20px; background:#fff3cd; color:#856404; border-radius:12px; border:1px solid #ffeeba;"><i class="ph-duotone ph-warning-circle" style="font-size:24px; vertical-align:middle;"></i> ماكو شي مطابق للبحث</div>';
                 document.getElementById('sortControls').style.display = 'none';
             } else {
                 // إظهار قائمة الفرز وتطبيق الفرز الافتراضي
@@ -861,7 +998,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(e => {
             if (e.message.includes('JSON') || e instanceof SyntaxError) {
-                 document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin:30px 0; padding:20px; background:#fff3cd; color:#856404; border-radius:12px; border:1px solid #ffeeba;">ماكو شي مطابق للبحث 📭</div>';
+                 document.getElementById('searchResults').innerHTML = '<div style="text-align:center; margin:30px 0; padding:20px; background:#fff3cd; color:#856404; border-radius:12px; border:1px solid #ffeeba;"><i class="ph-duotone ph-warning-circle" style="font-size:24px; vertical-align:middle;"></i> ماكو شي مطابق للبحث</div>';
             } else {
                  document.getElementById('searchResults').innerHTML = 'خطأ في الاتصال: ' + e.message;
             }
@@ -949,9 +1086,9 @@ document.addEventListener('DOMContentLoaded', function() {
         let h = `
         <div class="result-card" style="background: linear-gradient(135deg, #e0f7fa, #b2ebf2); border-right: 5px solid #00bcd4; margin-bottom: 20px; align-items: center;">
             <div style="flex:1; text-align: center;">
-                <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">📊 ملخص البحث</div>
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px;"><i class="ph-duotone ph-chart-bar" style="vertical-align:middle;"></i> ملخص البحث</div>
                 <div style="font-size: 14px; display: flex; justify-content: center; gap: 15px;">
-                    <span>عدد النتائج: <b>${d.length}</b></span>
+                    <span>النتائج: <b>${d.length}</b></span>
                     <span>المجموع: <b style="color:#00796b; font-size:15px;">${totalSearchSum.toLocaleString()}</b></span>
                 </div>
             </div>
@@ -1017,16 +1154,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             }
 
-            h += `<div class="result-card" style="border-right: 5px solid ${borderColor};">
-                <input type="checkbox" class="result-checkbox" value="${i}" style="margin-left:10px;">
-                <div style="flex:1;">
-                    <div style="display:flex; justify-content:space-between; color:#777; font-size:11px; font-weight:bold;">
-                        <span>${r.sheet}</span>
-                        <span>${r.date}</span>
-                    </div>
-                    ${details}
-                </div>
-            </div>`;
+            h += `<div class="result-card" style="border-right: 5px solid ${borderColor};"><input type="checkbox" class="result-checkbox" value="${i}" style="margin-left:10px;"><div style="flex:1;"><div style="display:flex; justify-content:space-between; color:#777; font-size:11px; font-weight:bold;"><span>${r.sheet}</span><span>${r.date}</span></div>${details}</div></div>`;
         });
 
         document.getElementById('searchResults').innerHTML = h;
